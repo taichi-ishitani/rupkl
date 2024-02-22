@@ -13,4 +13,14 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  if ENV.key?('COVERAGE')
+    require 'simplecov'
+    SimpleCov.start
+
+    if ENV.key?('CI')
+      require 'simplecov-cobertura'
+      SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
+    end
+  end
 end
