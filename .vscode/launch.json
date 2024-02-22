@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "rdbg",
+      "name": "Debug current RSpec spec file with rdbg",
+      "request": "launch",
+      "command": "rspec",
+      "script": "${file}",
+      "args": [],
+      "useBundler": true,
+      "askParameters": true
+    }
+  ]
+}
