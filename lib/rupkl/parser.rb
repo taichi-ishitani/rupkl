@@ -16,12 +16,16 @@ module RuPkl
           __define_delegator__(method)
           __send__(method, ...)
         else
+          # :nocov:
           super
+          # :nocov:
         end
       end
 
       def respond_to_missing?(method, include_private)
+        # :nocov:
         super || @__transform.respond_to?(method, include_private)
+        # :nocov:
       end
 
       private
