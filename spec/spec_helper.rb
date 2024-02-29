@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
-require 'rupkl'
+require_relative 'support/matchers'
+require_relative 'support/helpers'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -14,6 +15,8 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.include RuPkl::ParserHelpers, :parser
+
   if ENV.key?('COVERAGE')
     require 'simplecov'
     SimpleCov.start
@@ -24,3 +27,5 @@ RSpec.configure do |config|
     end
   end
 end
+
+require 'rupkl'

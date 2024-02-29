@@ -24,4 +24,6 @@ Gem::Specification.new do |spec|
     `git ls-files -z lib *.md *.txt`.split("\x0")
   end
   spec.require_paths = ['lib']
+
+  spec.add_runtime_dependency 'parslet', '>= 2.0.0'
 end
