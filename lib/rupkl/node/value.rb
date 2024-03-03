@@ -14,5 +14,8 @@ module RuPkl
 
     class Boolean < ValueBase
     end
+
+    class Integer < ValueBase
+    end
   end
 end
