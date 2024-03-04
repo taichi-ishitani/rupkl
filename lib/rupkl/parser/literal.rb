@@ -27,12 +27,12 @@ module RuPkl
     define_parser do
       rule(:bin_literal) do
         match('[+-]').maybe >>
-          (str('0b') | str('0B')) >> match('[01]') >> match('[_01]').repeat
+          str('0b') >> match('[01]') >> match('[_01]').repeat
       end
 
       rule(:oct_literal) do
         match('[+-]').maybe >>
-          (str('0o') | str('0O')) >> match('[0-7]') >> match('[_0-7]').repeat
+          str('0o') >> match('[0-7]') >> match('[_0-7]').repeat
       end
 
       rule(:dec_literal) do
@@ -42,7 +42,7 @@ module RuPkl
 
       rule(:hex_literal) do
         match('[+-]').maybe >>
-          (str('0x') | str('0X')) >> match('[\h]') >> match('[_\h]').repeat
+          str('0x') >> match('[\h]') >> match('[_\h]').repeat
       end
 
       rule(:integer_literal) do
@@ -54,7 +54,7 @@ module RuPkl
 
     define_transform do
       rule(integer_literal: simple(:v)) do
-        value = Integer(v.to_s.tr('_', '').sub(/\A(?!0[box])0+/i, ''))
+        value = Integer(v.to_s.tr('_', '').sub(/\A(?!0[box])0+/, ''))
         Node::Integer.new(value, node_position(v))
       end
     end

@@ -101,5 +101,11 @@ RSpec.describe RuPkl::Parser, :parser do
       expect(parser).not_to parse('0o_4567')
       expect(parser).not_to parse('0o__4567')
     end
+
+    specify 'lower case prefixes are only allowed' do
+      expect(parser).not_to parse('0X41')
+      expect(parser).not_to parse('0B10')
+      expect(parser).not_to parse('0O4567')
+    end
   end
 end

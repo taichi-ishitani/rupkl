@@ -82,6 +82,12 @@ module RuPkl
       transform.apply(parser.parse(string), filename: filename)
     end
 
+    def inspect
+      # :nocov:
+      parser.inspect
+      # :nocov:
+    end
+
     private
 
     def parser

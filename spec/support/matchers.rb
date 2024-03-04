@@ -18,6 +18,7 @@ RSpec::Matchers.define(:parse) do |input|
   match_when_negated do |parser|
     begin
       parser.parse(input)
+      false
     rescue Parslet::ParseFailed => e
       trace = e.parse_failure_cause.ascii_tree
       true
