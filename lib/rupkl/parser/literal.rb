@@ -69,21 +69,21 @@ module RuPkl
       }.freeze
 
     define_parser do
-      rule(:sl_string_literal) do
-        str('"').as(:sl_bq) >>
-          sl_portions('').as(:sl_portions).maybe >> sl_eq('').as(:sl_eq)
+      rule(:ss_literal) do
+        ss_bq(custom: false).as(:ss_bq) >>
+          ss_portions('').as(:ss_portions).maybe >> ss_eq('').as(:ss_eq)
       end
 
-      rule(:sl_string_literal_custom_delimiters) do
-        (str('#').repeat(1) >> str('"')).capture(:bq).as(:sl_bq) >>
+      rule(:ss_literal_custom_delimiters) do
+        ss_bq(custom: true).capture(:bq).as(:ss_bq) >>
           dynamic do |_, c|
             pounds = c.captures[:bq].to_s[0..-2]
-            sl_portions(pounds).as(:sl_portions).maybe >> sl_eq(pounds).as(:sl_eq)
+            ss_portions(pounds).as(:ss_portions).maybe >> ss_eq(pounds).as(:ss_eq)
           end
       end
 
       rule(:string_literal) do
-        sl_string_literal_custom_delimiters | sl_string_literal
+        ss_literal_custom_delimiters | ss_literal
       end
 
       private
@@ -97,45 +97,57 @@ module RuPkl
         str("\\#{pounds}u") >> str('{') >> match('[\h]').repeat(1) >> str('}')
       end
 
-      def sl_char(pounds)
-        (str("\n") | sl_eq(pounds)).absent? >> any
+      def ss_char(pounds)
+        (str("\n") | ss_eq(pounds)).absent? >> any
       end
 
-      def sl_string(pounds)
-        (escaped_char(pounds) | unicode_char(pounds) | sl_char(pounds)).repeat(1)
+      def ss_string(pounds)
+        (escaped_char(pounds) | unicode_char(pounds) | ss_char(pounds)).repeat(1)
       end
 
-      def sl_portions(pounds)
-        sl_string(pounds).as(:sl_string).repeat(1)
+      def ss_portions(pounds)
+        ss_string(pounds).as(:ss_string).repeat(1)
       end
 
-      def sl_eq(pounds)
+      def ss_bq(custom:)
+        if custom
+          str('#').repeat(1) >> str('"')
+        else
+          str('"')
+        end
+      end
+
+      def ss_eq(pounds)
         str("\"#{pounds}")
       end
     end
 
     define_transform do
-      rule(sl_bq: simple(:bq), sl_eq: simple(:eq)) do
+      rule(ss_bq: simple(:bq), ss_eq: simple(:eq)) do
         Node::String.new(nil, nil, node_position(bq))
       end
 
-      rule(sl_bq: simple(:bq), sl_portions: sequence(:portions), sl_eq: simple(:eq)) do
-        unescaped_portions = unescape_string_portions(portions, bq.to_s[0..-2])
-        Node::String.new(nil, unescaped_portions, node_position(bq))
-      end
-
-      rule(sl_string: simple(:s)) do
-        s.to_s
+      rule(ss_bq: simple(:bq), ss_portions: subtree(:portions), ss_eq: simple(:eq)) do
+        Node::String.new(nil, process_ss_portions(portions, bq), node_position(bq))
       end
 
       private
 
-      def unescape_string_portions(portions, pounds)
-        portions.map { unescape_string(_1, pounds) }
+      def process_ss_portions(portions, ss_bq)
+        pounds = ss_bq.to_s[0..-2]
+        portions.map { process_sring_portion(_1, pounds) }
+      end
+
+      def process_sring_portion(portion, pounds)
+        type, string = portion.to_a.first
+        case type
+        when :ss_string then unescape_string(string, pounds)
+        end
       end
 
       def unescape_string(string, pounds)
         string
+          .to_s
           .then { unescape_char(_1, pounds) }
           .then { unescape_unicode(_1, pounds) }
       end
