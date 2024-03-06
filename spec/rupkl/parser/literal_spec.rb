@@ -108,4 +108,66 @@ RSpec.describe RuPkl::Parser, :parser do
       expect(parser).not_to parse('0O4567')
     end
   end
+
+  describe 'string literal' do
+    let(:parser) do
+      RuPkl::Parser.new(:string_literal)
+    end
+
+    describe 'single line string literal' do
+      it 'should be parsed by string_literal parser' do
+        expect(parser).to parse('""').as(empty_string_literal)
+        expect(parser).to parse('"Hello, World!"').as(string_literal('Hello, World!'))
+      end
+
+      specify 'tab, line feed, carriage return, verbatim quote and verbatim backslash characters are escaped' do
+        expect(parser).to parse('"\\\\\"\("').as(string_literal('\"\('))
+        expect(parser).to parse('"\t\r\n"').as(string_literal("\t\r\n"))
+      end
+
+      it 'can include escaped unicode code points' do
+        expect(parser)
+          .to parse('"\u{26} \u{E9} \u{1F600}"')
+          .as(string_literal('& é 😀'))
+        expect(parser)
+          .to parse('"\u{9}\u{30}\u{100}\u{1000}\u{10000}\u{010000}\u{0010000}\u{00010000}"')
+          .as(string_literal("\t0Āက𐀀𐀀𐀀𐀀"))
+      end
+
+      it 'should not have an unescaped newline' do
+        expect(parser).not_to parse("\"\n\"")
+        expect(parser).not_to parse("\"foo\nbar\"")
+      end
+
+      specify 'string delimiters and escape characters can be customized' do
+        expect(parser)
+          .to parse('#""#')
+          .as(empty_string_literal)
+        expect(parser)
+          .to parse('##""##')
+          .as(empty_string_literal)
+        expect(parser)
+          .to parse('###""###')
+          .as(empty_string_literal)
+        expect(parser)
+          .to parse('#"\r\n\t\\\\"#')
+          .as(string_literal('\r\n\t\\\\'))
+        expect(parser)
+          .to parse('#"$foo"#')
+          .as(string_literal('$foo'))
+        expect(parser)
+          .to parse('##"# ## ### " "" """ \ \#"##')
+          .as(string_literal('# ## ### " "" """ \\ \\#'))
+        expect(parser)
+          .to parse('###"# ## ### #### " "" """ """" \ \# \##"###')
+          .as(string_literal('# ## ### #### " "" """ """" \\ \\# \\##'))
+        expect(parser)
+          .to parse('#"\#u{61} \#u{1F920}"#')
+          .as(string_literal('a 🤠'))
+        expect(parser)
+          .to parse('###"\###u{61} \###u{1F920}"###')
+          .as(string_literal('a 🤠'))
+      end
+    end
+  end
 end

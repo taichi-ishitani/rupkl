@@ -79,7 +79,8 @@ module RuPkl
     end
 
     def parse(string, filename: nil)
-      transform.apply(parser.parse(string), filename: filename)
+      tree = parser.parse(string)
+      transform.apply(tree, filename: filename)
     end
 
     def inspect

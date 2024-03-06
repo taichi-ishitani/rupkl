@@ -17,5 +17,14 @@ module RuPkl
 
     class Integer < ValueBase
     end
+
+    class String < ValueBase
+      def initialize(value, portions, position)
+        super(value, position)
+        @portions = portions
+      end
+
+      attr_reader :portions
+    end
   end
 end
