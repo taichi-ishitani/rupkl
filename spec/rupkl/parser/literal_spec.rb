@@ -117,21 +117,21 @@ RSpec.describe RuPkl::Parser, :parser do
     describe 'single line string literal' do
       it 'should be parsed by string_literal parser' do
         expect(parser).to parse('""').as(empty_string_literal)
-        expect(parser).to parse('"Hello, World!"').as(string_literal('Hello, World!'))
+        expect(parser).to parse('"Hello, World!"').as(ss_literal('Hello, World!'))
       end
 
       specify 'tab, line feed, carriage return, verbatim quote and verbatim backslash characters are escaped' do
-        expect(parser).to parse('"\\\\\"\("').as(string_literal('\"\('))
-        expect(parser).to parse('"\t\r\n"').as(string_literal("\t\r\n"))
+        expect(parser).to parse('"\\\\\"\("').as(ss_literal('\"\('))
+        expect(parser).to parse('"\t\r\n"').as(ss_literal("\t\r\n"))
       end
 
       it 'can include escaped unicode code points' do
         expect(parser)
           .to parse('"\u{26} \u{E9} \u{1F600}"')
-          .as(string_literal('& é 😀'))
+          .as(ss_literal('& é 😀'))
         expect(parser)
           .to parse('"\u{9}\u{30}\u{100}\u{1000}\u{10000}\u{010000}\u{0010000}\u{00010000}"')
-          .as(string_literal("\t0Āက𐀀𐀀𐀀𐀀"))
+          .as(ss_literal("\t0Āက𐀀𐀀𐀀𐀀"))
       end
 
       it 'should not have an unescaped newline' do
@@ -151,22 +151,198 @@ RSpec.describe RuPkl::Parser, :parser do
           .as(empty_string_literal)
         expect(parser)
           .to parse('#"\r\n\t\\\\"#')
-          .as(string_literal('\r\n\t\\\\'))
+          .as(ss_literal('\r\n\t\\\\'))
         expect(parser)
           .to parse('#"$foo"#')
-          .as(string_literal('$foo'))
+          .as(ss_literal('$foo'))
         expect(parser)
           .to parse('##"# ## ### " "" """ \ \#"##')
-          .as(string_literal('# ## ### " "" """ \\ \\#'))
+          .as(ss_literal('# ## ### " "" """ \\ \\#'))
         expect(parser)
           .to parse('###"# ## ### #### " "" """ """" \ \# \##"###')
-          .as(string_literal('# ## ### #### " "" """ """" \\ \\# \\##'))
+          .as(ss_literal('# ## ### #### " "" """ """" \\ \\# \\##'))
         expect(parser)
           .to parse('#"\#u{61} \#u{1F920}"#')
-          .as(string_literal('a 🤠'))
+          .as(ss_literal('a 🤠'))
         expect(parser)
           .to parse('###"\###u{61} \###u{1F920}"###')
-          .as(string_literal('a 🤠'))
+          .as(ss_literal('a 🤠'))
+      end
+    end
+
+    describe 'multiline string literal' do
+      it 'should be parsed by string_literal parser' do
+        pkl = <<~'PKL'
+          """
+          """
+        PKL
+        expect(parser).to parse(pkl).as(empty_string_literal)
+
+        pkl = <<~'PKL'
+        """
+            """
+        PKL
+        expect(parser).to parse(pkl).as(empty_string_literal)
+
+        pkl = <<~'PKL'
+          """
+
+          """
+        PKL
+        expect(parser).to parse(pkl).as(ms_literal("\n"))
+
+        pkl = <<~'PKL'
+          """
+
+
+          """
+        PKL
+        expect(parser).to parse(pkl).as(ms_literal("\n\n"))
+
+        pkl = <<~'PKL'
+          """
+          Although the Dodo is extinct,
+          the species will be remembered.
+          """
+        PKL
+        out = <<~OUT
+          Although the Dodo is extinct,
+          the species will be remembered.
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
+      end
+
+      specify 'tab, line feed, carriage return, verbatim quote and verbatim backslash characters are escaped' do
+        pkl = <<~'PKL'
+          """
+          \\\"\\(
+          """
+        PKL
+        out = <<~'OUT'
+          \"\(
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
+
+        pkl = <<~'PKL'
+          """
+          \t\r\n
+          """
+        PKL
+        out = <<~OUT
+          \t\r\n
+        OUT
+        expect(parser).to parse(pkl).as(string_literal(out.chomp))
+      end
+
+      it 'can include escaped unicode code points' do
+        pkl = <<~'PKL'
+          """
+          \u{9}\u{30}\u{100}\u{1000}\u{10000}\u{010000}\u{0010000}\u{00010000}
+          """
+        PKL
+        out = <<~OUT
+          \t0Āက𐀀𐀀𐀀𐀀
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
+      end
+
+      specify 'leading whitespaces should be trimmed' do
+        pkl = <<~'PKL'
+          """
+            leading
+            whitespace
+            partially
+            trimmed
+            """
+        PKL
+        out = <<~'OUT'
+          leading
+          whitespace
+          partially
+          trimmed
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
+
+        pkl = <<~'PKL'
+          """
+            leading
+              whitespace
+                partially
+                  trimmed
+            """
+        PKL
+        out = <<~'OUT'
+          leading
+            whitespace
+              partially
+                trimmed
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
+
+        pkl = <<~'PKL'
+          """
+            leading
+              whitespace
+                partially
+                  trimmed
+          """
+        PKL
+        out = <<~'OUT'.tr('|', '')
+          |  leading
+          |    whitespace
+          |      partially
+          |        trimmed
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
+      end
+
+      specify 'string delimiters and escape characters can be customized' do
+        pkl = <<~'PKL'
+          #"""
+          """#
+        PKL
+        expect(parser).to parse(pkl).as(empty_string_literal)
+
+        pkl = <<~'PKL'
+          ###"""
+
+          """###
+        PKL
+        expect(parser).to parse(pkl).as(ms_literal("\n"))
+
+        pkl = <<~'PKL'
+          #"""
+          \#r\#n\#t\#\\#"
+          """#
+        PKL
+        out = <<~OUT
+          \r\n\t\\"
+        OUT
+        expect(parser).to parse(pkl).as(string_literal(out.chomp))
+
+        pkl = <<~'PKL'
+          ##"""
+          # ## ### " "" """ \ \#
+          \##u{61} \##u{1F920}
+          """##
+        PKL
+        out = <<~'OUT'
+          # ## ### " "" """ \ \#
+          a 🤠
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
+
+        pkl = <<~'PKL'
+          #####"""
+          # ## ### #### ##### ###### " "" """ """" """"" \ \# \## \### \####
+          \#####u{61} \#####u{1F920}
+          """#####
+        PKL
+        out = <<~'OUT'
+          # ## ### #### ##### ###### " "" """ """" """"" \ \# \## \### \####
+          a 🤠
+        OUT
+        expect(parser).to parse(pkl).as(ms_literal(out))
       end
     end
   end

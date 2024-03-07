@@ -69,21 +69,61 @@ module RuPkl
       }.freeze
 
     define_parser do
+      rule(:ss_empty_literal) do
+        ss_bq(false).as(:ss_bq) >> ss_eq('').as(:ss_eq)
+      end
+
       rule(:ss_literal) do
-        ss_bq(custom: false).as(:ss_bq) >>
-          ss_portions('').as(:ss_portions).maybe >> ss_eq('').as(:ss_eq)
+        ss_bq(false).as(:ss_bq) >>
+          ss_portions('').as(:ss_portions) >> ss_eq('').as(:ss_eq)
+      end
+
+      rule(:ss_empty_literal_custom_delimiters) do
+        ss_bq(true).capture(:bq).as(:ss_bq) >>
+          dynamic do |_, c|
+            ss_eq(c.captures[:bq].to_s[0..-2]).as(:ss_eq)
+          end
       end
 
       rule(:ss_literal_custom_delimiters) do
-        ss_bq(custom: true).capture(:bq).as(:ss_bq) >>
+        ss_bq(true).capture(:bq).as(:ss_bq) >>
           dynamic do |_, c|
             pounds = c.captures[:bq].to_s[0..-2]
-            ss_portions(pounds).as(:ss_portions).maybe >> ss_eq(pounds).as(:ss_eq)
+            ss_portions(pounds).as(:ss_portions) >> ss_eq(pounds).as(:ss_eq)
+          end
+      end
+
+      rule(:ms_empty_literal) do
+        ms_bq(false).as(:ms_bq) >> ms_eq('', false).as(:ms_eq)
+      end
+
+      rule(:ms_literal) do
+        ms_bq(false).as(:ms_bq) >>
+          ms_portions('').as(:ms_portions) >> ms_eq('', false).as(:ms_eq)
+      end
+
+      rule(:ms_empty_literal_custom_delimiters) do
+        ms_bq(true).capture(:bq).as(:ms_bq) >>
+          dynamic do |_, c|
+            ms_eq(c.captures[:bq].to_s[0..-4], false).as(:ms_eq)
+          end
+      end
+
+      rule(:ms_literal_custom_delimiters) do
+        ms_bq(true).capture(:bq).as(:ms_bq) >>
+          dynamic do |_, c|
+            pounds = c.captures[:bq].to_s[0..-4]
+            ms_portions(pounds).as(:ms_portions) >> ms_eq(pounds, false).as(:ms_eq)
           end
       end
 
       rule(:string_literal) do
-        ss_literal_custom_delimiters | ss_literal
+        [
+          ms_empty_literal_custom_delimiters, ms_literal_custom_delimiters,
+          ms_empty_literal, ms_literal,
+          ss_empty_literal_custom_delimiters, ss_literal_custom_delimiters,
+          ss_empty_literal, ss_literal
+        ].inject(:|)
       end
 
       private
@@ -109,7 +149,7 @@ module RuPkl
         ss_string(pounds).as(:ss_string).repeat(1)
       end
 
-      def ss_bq(custom:)
+      def ss_bq(custom)
         if custom
           str('#').repeat(1) >> str('"')
         else
@@ -119,6 +159,34 @@ module RuPkl
 
       def ss_eq(pounds)
         str("\"#{pounds}")
+      end
+
+      def ms_char(pounds)
+        (str("\n") | ms_eq(pounds, true)).absent? >> any
+      end
+
+      def ms_string(pounds)
+        (escaped_char(pounds) | unicode_char(pounds) | ms_char(pounds)).repeat(1)
+      end
+
+      def ms_portions(pounds)
+        (ms_string(pounds).as(:ms_string).maybe >> nl.as(:ms_nl)).repeat(1)
+      end
+
+      def ms_bq(custom)
+        if custom
+          str('#').repeat(1) >> str('"""') >> nl.ignore
+        else
+          str('"""') >> nl.ignore
+        end
+      end
+
+      def ms_eq(pounds, pattern_only)
+        if pattern_only
+          str('"""'"#{pounds}")
+        else
+          match('[ \t]').repeat >> str('"""'"#{pounds}")
+        end
       end
     end
 
@@ -131,17 +199,53 @@ module RuPkl
         Node::String.new(nil, process_ss_portions(portions, bq), node_position(bq))
       end
 
+      rule(ms_bq: simple(:bq), ms_eq: simple(:eq)) do
+        Node::String.new(nil, nil, node_position(bq))
+      end
+
+      rule(ms_bq: simple(:bq), ms_portions: subtree(:portions), ms_eq: simple(:eq)) do
+        Node::String.new(nil, process_ms_portions(portions, bq, eq), node_position(bq))
+      end
+
       private
 
       def process_ss_portions(portions, ss_bq)
         pounds = ss_bq.to_s[0..-2]
-        portions.map { process_sring_portion(_1, pounds) }
+        portions.map { process_sring_portion(_1.first, pounds) }
+      end
+
+      def process_ms_portions(portions, ms_bq, ms_eq)
+        pounds = ms_bq.to_s[0..-4]
+        portions
+          .flat_map(&:to_a)
+          .then { _1[0..-2] }
+          .then { trim_leading_shapes(_1, ms_eq) }
+          .map { process_sring_portion(_1, pounds) }
+      end
+
+      def trim_leading_shapes(portins, ms_eq)
+        prefix = ms_eq.to_s[/^[ \t]+/]
+        return portins unless prefix
+
+        portins.map do |t, s|
+          if include_bol?(s)
+            [t, s.to_s.delete_prefix(prefix)]
+          else
+            [t, s]
+          end
+        end
+      end
+
+      def include_bol?(string)
+        _, column = string.line_and_column
+        column == 1
       end
 
       def process_sring_portion(portion, pounds)
-        type, string = portion.to_a.first
+        type, string = portion
         case type
-        when :ss_string then unescape_string(string, pounds)
+        when :ss_string, :ms_string then unescape_string(string, pounds)
+        when :ms_nl then "\n"
         end
       end
 

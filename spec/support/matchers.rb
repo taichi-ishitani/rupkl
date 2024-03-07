@@ -7,7 +7,7 @@ RSpec::Matchers.define(:parse) do |input|
 
   match do |parser|
     begin
-      result = parser.parse(input)
+      result = parser.parse(input.chomp)
       values_match?(expectation, result)
     rescue Parslet::ParseFailed => e
       trace = e.parse_failure_cause.ascii_tree

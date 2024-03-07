@@ -20,6 +20,12 @@ module RuPkl
           str(kw) >> match('\\w').absent?
         end
       end
+
+      private
+
+      def nl
+        match('[\n]')
+      end
     end
   end
 end

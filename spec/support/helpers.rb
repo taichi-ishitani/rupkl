@@ -14,6 +14,21 @@ module RuPkl
       be_instance_of(Node::String).and have_attributes(portions: portions)
     end
 
+    alias_method :ss_literal, :string_literal
+
+    def ms_literal(*portions)
+      portions_processed =
+        portions.flat_map do |portion|
+          case portion
+          when String
+            portion.chomp.each_line.flat_map { _1.partition("\n").reject(&:empty?) }
+          else
+            portion
+          end
+        end
+      be_instance_of(Node::String).and have_attributes(portions: portions_processed)
+    end
+
     def empty_string_literal
       be_instance_of(Node::String).and have_attributes(portions: be_nil)
     end
