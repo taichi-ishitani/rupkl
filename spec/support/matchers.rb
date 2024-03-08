@@ -9,8 +9,8 @@ RSpec::Matchers.define(:parse) do |input|
     begin
       result = parser.parse(input.chomp)
       values_match?(expectation, result)
-    rescue Parslet::ParseFailed => e
-      trace = e.parse_failure_cause.ascii_tree
+    rescue RuPkl::ParseError => e
+      trace = e.cause&.ascii_tree
       false
     end
   end
@@ -19,8 +19,8 @@ RSpec::Matchers.define(:parse) do |input|
     begin
       parser.parse(input)
       false
-    rescue Parslet::ParseFailed => e
-      trace = e.parse_failure_cause.ascii_tree
+    rescue RuPkl::ParseError => e
+      trace = e.cause&.ascii_tree
       true
     end
   end

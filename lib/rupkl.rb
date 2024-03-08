@@ -3,6 +3,7 @@
 require 'parslet'
 
 require_relative 'rupkl/version'
+require_relative 'rupkl/exception'
 require_relative 'rupkl/node'
 require_relative 'rupkl/node/value'
 require_relative 'rupkl/parser'

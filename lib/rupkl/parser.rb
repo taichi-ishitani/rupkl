@@ -2,7 +2,43 @@
 
 module RuPkl
   class Parser
+    class Source < Parslet::Source
+      def initialize(str, filename)
+        super(str)
+        @filename = filename
+      end
+
+      attr_reader :filename
+    end
+
     class Parser < Parslet::Parser
+      def parse(io, filename: nil, root: nil)
+        source = Source.new(io, filename)
+        root_parser(root).parse(source)
+      rescue Parslet::ParseFailed => e
+        raise_parse_error(e)
+      end
+
+      def root_parser(root)
+        root && __send__(root) || __send__(:root)
+      end
+
+      private
+
+      def raise_parse_error(error)
+        cause = error.parse_failure_cause
+        source = cause.source
+        filename = source.filename
+        line, column = source.line_and_column(cause.pos)
+        message = compose_error_message(cause)
+        raise ParseError.new(message, filename, line, column, cause)
+      end
+
+      def compose_error_message(cause)
+        Array(cause.message)
+          .map { |m| m.respond_to?(:to_slice) ? m.str.inspect : m.to_s }
+          .join
+      end
     end
 
     class Context < Parslet::Context
@@ -79,21 +115,28 @@ module RuPkl
     end
 
     def parse(string, filename: nil)
-      tree = parser.parse(string)
-      transform.apply(tree, filename: filename)
+      tree = parse_string(string, filename)
+      transform_tree(tree, filename)
     end
 
     def inspect
       # :nocov:
-      parser.inspect
+      parser.root_parser(@root).inspect
       # :nocov:
     end
 
     private
 
+    def parse_string(string, filename)
+      parser.parse(string, filename: filename, root: @root)
+    end
+
     def parser
       @parser ||= Parser.new
-      @root && @parser.__send__(@root) || @parser
+    end
+
+    def transform_tree(tree, filename)
+      transform.apply(tree, filename: filename)
     end
 
     def transform
