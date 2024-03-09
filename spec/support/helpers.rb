@@ -32,5 +32,13 @@ module RuPkl
     def empty_string_literal
       be_instance_of(Node::String).and have_attributes(portions: be_nil)
     end
+
+    def identifer(id)
+      be_instance_of(Node::Identifier).and have_attributes(id: id)
+    end
+
+    def raise_parse_error(message)
+      raise_error(ParseError, message)
+    end
   end
 end

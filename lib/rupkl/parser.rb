@@ -96,6 +96,11 @@ module RuPkl
       def node_position(node)
         Node::Position.new(@filename, *node.line_and_column)
       end
+
+      def parse_error(message, slice)
+        line, column = slice.line_and_column
+        raise ParseError.new(message, @filename, line, column, nil)
+      end
     end
 
     class << self
