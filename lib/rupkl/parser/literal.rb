@@ -138,7 +138,7 @@ module RuPkl
       end
 
       def ss_char(pounds)
-        (str("\n") | ss_eq(pounds)).absent? >> any
+        (nl | ss_eq(pounds)).absent? >> any
       end
 
       def ss_string(pounds)
@@ -162,7 +162,7 @@ module RuPkl
       end
 
       def ms_char(pounds)
-        (str("\n") | ms_eq(pounds, true)).absent? >> any
+        (nl | ms_eq(pounds, true)).absent? >> any
       end
 
       def ms_string(pounds)
