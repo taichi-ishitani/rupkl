@@ -37,6 +37,11 @@ module RuPkl
       be_instance_of(Node::Identifier).and have_attributes(id: id)
     end
 
+    def u_op(operator, operand)
+      be_instance_of(Node::UnaryOperation)
+        .and have_attributes(operator: operator, operand: operand)
+    end
+
     def raise_parse_error(message)
       raise_error(ParseError, message)
     end

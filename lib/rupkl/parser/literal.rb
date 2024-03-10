@@ -26,23 +26,19 @@ module RuPkl
     #
     define_parser do
       rule(:bin_literal) do
-        match('[+-]').maybe >>
-          str('0b') >> match('[01]') >> match('[_01]').repeat
+        str('0b') >> match('[01]') >> match('[_01]').repeat
       end
 
       rule(:oct_literal) do
-        match('[+-]').maybe >>
-          str('0o') >> match('[0-7]') >> match('[_0-7]').repeat
+        str('0o') >> match('[0-7]') >> match('[_0-7]').repeat
       end
 
       rule(:dec_literal) do
-        match('[+-]').maybe >>
-          match('[\d]') >> match('[_\d]').repeat
+        match('[\d]') >> match('[_\d]').repeat
       end
 
       rule(:hex_literal) do
-        match('[+-]').maybe >>
-          str('0x') >> match('[\h]') >> match('[_\h]').repeat
+        str('0x') >> match('[\h]') >> match('[_\h]').repeat
       end
 
       rule(:integer_literal) do

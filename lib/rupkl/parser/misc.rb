@@ -3,10 +3,12 @@
 module RuPkl
   class Parser
     define_parser do
-      private
+      rule(:ws?) do
+        match('[ \t\f\r\n;]').repeat.ignore
+      end
 
-      def nl
-        match('[\n]')
+      rule(:nl) do
+        match('\n')
       end
     end
   end
