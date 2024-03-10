@@ -5,17 +5,13 @@ module RuPkl
   end
 
   class ParseError < RuPklError
-    def initialize(message, filename, line, column, cause)
+    def initialize(message, position, cause)
       super(message)
-      @filename = filename
-      @line = line
-      @column = column
+      @position = position
       @cause = cause
     end
 
-    attr_reader :filename
-    attr_reader :line
-    attr_reader :column
+    attr_reader :position
     attr_reader :cause
   end
 end

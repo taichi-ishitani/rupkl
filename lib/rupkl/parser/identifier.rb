@@ -36,8 +36,11 @@ module RuPkl
 
     define_transform do
       rule(regular_id: simple(:id)) do
-        keyword?(id) &&
-          (parse_error "keyword '#{id}' is not allowed for identifier", id)
+        if keyword?(id)
+          message = "keyword '#{id}' is not allowed for identifier"
+          parse_error(message, node_position(id))
+        end
+
         Node::Identifier.new(id.to_s, node_position(id))
       end
 

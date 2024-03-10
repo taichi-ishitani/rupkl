@@ -2,21 +2,13 @@
 
 module RuPkl
   class Parser
-    class Source < Parslet::Source
-      def initialize(str, filename)
-        super(str)
-        @filename = filename
-      end
-
-      attr_reader :filename
-    end
+    Position = Struct.new(:filename, :line, :column)
 
     class Parser < Parslet::Parser
       def parse(io, filename: nil, root: nil)
-        source = Source.new(io, filename)
-        root_parser(root).parse(source)
+        root_parser(root).parse(io)
       rescue Parslet::ParseFailed => e
-        raise_parse_error(e)
+        raise_parse_error(e, filename)
       end
 
       def root_parser(root)
@@ -25,13 +17,15 @@ module RuPkl
 
       private
 
-      def raise_parse_error(error)
+      def raise_parse_error(error, filename)
         cause = error.parse_failure_cause
-        source = cause.source
-        filename = source.filename
-        line, column = source.line_and_column(cause.pos)
+        pos = create_error_pos(cause, filename)
         message = compose_error_message(cause)
-        raise ParseError.new(message, filename, line, column, cause)
+        raise ParseError.new(message, pos, cause)
+      end
+
+      def create_error_pos(cause, filename)
+        Position.new(filename, *cause.source.line_and_column(cause.pos))
       end
 
       def compose_error_message(cause)
@@ -94,12 +88,11 @@ module RuPkl
       private
 
       def node_position(node)
-        Node::Position.new(@filename, *node.line_and_column)
+        Position.new(@filename, *node.line_and_column)
       end
 
-      def parse_error(message, slice)
-        line, column = slice.line_and_column
-        raise ParseError.new(message, @filename, line, column, nil)
+      def parse_error(message, position)
+        raise ParseError.new(message, position, nil)
       end
     end
 
