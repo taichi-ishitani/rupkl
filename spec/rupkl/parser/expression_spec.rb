@@ -5,11 +5,15 @@ RSpec.describe RuPkl::Parser, :parser do
     RuPkl::Parser.new(:expression)
   end
 
-  def spacing(*portions, excluded_ws: nil)
-    ws =
-      ['', ' ', "\t", "\f", "\r", "\n", ';'] - Array(excluded_ws)
-    portions
-      .inject { |r, i| r + ws.sample([1, 2, 3].sample).join + i }
+  def spacing(*portions)
+    portions.inject do |r, i|
+      ws =
+        case i
+        when '-' then ['', ' ', "\t", "\f"]
+        else ['', ' ', "\t", "\f", "\r", "\n", ';']
+        end
+      r + ws.sample([1, 2, 3].sample).join + i
+    end
   end
 
   describe 'literals' do
@@ -44,23 +48,151 @@ RSpec.describe RuPkl::Parser, :parser do
     end
   end
 
-  describe 'unary operation' do
-    it 'should be parsed by expression parser' do
-      # unaryMinusExpr
-      expect(parser)
-        .to parse('-42')
-        .as(u_op(:-, integer_literal(42)))
-      expect(parser)
-        .to parse(spacing('-', '0x42'))
-        .as(u_op(:-, integer_literal(0x42)))
+  describe 'operation' do
+    describe 'unary operation' do
+      it 'should be parsed by expression parser' do
+        # unaryMinusExpr
+        expect(parser)
+          .to parse('-42')
+          .as(u_op(:-, 42))
+        expect(parser)
+          .to parse(spacing('-', '0x42'))
+          .as(u_op(:-, 0x42))
 
-      # logicalNotExpr
+        # logicalNotExpr
+        expect(parser)
+          .to parse('!true')
+          .as(u_op(:!, true))
+        expect(parser)
+          .to parse(spacing('!', 'false'))
+          .as(u_op(:!, false))
+      end
+    end
+
+    describe 'binary operation' do
+      it 'should be parsed by expression parser' do
+        # exponentiationExpr
+        expect(parser)
+          .to parse('1**2')
+          .as(b_op(:**, 1, 2))
+        expect(parser)
+          .to parse('1**2**3')
+          .as(b_op(:**, 1, b_op(:**, 2, 3)))
+        expect(parser)
+          .to parse(spacing('1', '**', '2', '**', '3'))
+          .as(b_op(:**, 1, b_op(:**, 2, 3)))
+
+        # multiplicativeExpr
+        expect(parser)
+          .to parse('1*2')
+          .as(b_op(:*, 1, 2))
+        expect(parser)
+          .to parse('1/2')
+          .as(b_op(:/, 1, 2))
+        expect(parser)
+          .to parse('1~/2')
+          .as(b_op(:'~/', 1, 2))
+        expect(parser)
+          .to parse('1%2')
+          .as(b_op(:%, 1, 2))
+        expect(parser)
+          .to parse('1*2/3~/4%5')
+          .as(b_op(:%, b_op(:'~/', b_op(:/, b_op(:*, 1, 2), 3), 4), 5))
+        expect(parser)
+          .to parse(spacing('1', '*', '2', '/', '3', '~/', '4', '%', '5'))
+          .as(b_op(:%, b_op(:'~/', b_op(:/, b_op(:*, 1, 2), 3), 4), 5))
+
+        # additiveExpr
+        expect(parser)
+          .to parse('1+2')
+          .as(b_op(:+, 1, 2))
+        expect(parser)
+          .to parse('1-2')
+          .as(b_op(:-, 1, 2))
+        expect(parser)
+          .to parse('1+2-3')
+          .as(b_op(:-, b_op(:+, 1, 2), 3))
+        expect(parser)
+          .to parse(spacing('1', '+', '2', '-', '3'))
+          .as(b_op(:-, b_op(:+, 1, 2), 3))
+
+        # comparisonExpr
+        expect(parser)
+          .to parse('1<2')
+          .as(b_op(:<, 1, 2))
+        expect(parser)
+          .to parse('1>2')
+          .as(b_op(:>, 1, 2))
+        expect(parser)
+          .to parse('1<=2')
+          .as(b_op(:<=, 1, 2))
+        expect(parser)
+          .to parse('1>=2')
+          .as(b_op(:>=, 1, 2))
+        expect(parser)
+          .to parse('1<2>3<=4>=5')
+          .as(b_op(:>=, b_op(:<=, b_op(:>, b_op(:<, 1, 2), 3), 4), 5))
+
+        # logicalAndExpr
+        expect(parser)
+          .to parse('1&&2')
+          .as(b_op(:'&&', 1, 2))
+        expect(parser)
+          .to parse(spacing('1', '&&', '2'))
+          .as(b_op(:'&&', 1, 2))
+
+        # logicalOrExpr
+        expect(parser)
+          .to parse('1||2')
+          .as(b_op(:'||', 1, 2))
+        expect(parser)
+          .to parse(spacing('1', '||', '2'))
+          .as(b_op(:'||', 1, 2))
+      end
+
+      specify "newline or semicolon should not precede the '-' operator" do
+        expect(parser).not_to parse("1\n-2")
+        expect(parser).not_to parse("1;-2")
+        expect(parser).not_to parse("1\n;-2")
+        expect(parser).not_to parse("1;\n-2")
+      end
+    end
+
+    specify 'operators have certain precedence' do
       expect(parser)
-        .to parse('!true')
-        .as(u_op(:!, boolean_literal(true)))
+        .to parse('-1**2').as(b_op(:**, u_op(:-, 1), 2))
       expect(parser)
-        .to parse(spacing('!', 'false'))
-        .as(u_op(:!, boolean_literal(false)))
+        .to parse('-(1**2)').as(u_op(:-, b_op(:**, 1, 2)))
+
+      expect(parser)
+        .to parse('!1**2').as(b_op(:**, u_op(:!, 1), 2))
+      expect(parser)
+        .to parse('!(1**2)').as(u_op(:!, b_op(:**, 1, 2)))
+
+      expect(parser)
+        .to parse('1**2*3').as(b_op(:*, b_op(:**, 1, 2), 3))
+      expect(parser)
+        .to parse('1**(2*3)').as(b_op(:**, 1, b_op(:*, 2, 3)))
+
+      expect(parser)
+        .to parse('1*2+3').as(b_op(:+, b_op(:*, 1, 2), 3))
+      expect(parser)
+        .to parse('1*(2+3)').as(b_op(:*, 1, b_op(:+, 2, 3)))
+
+      expect(parser)
+        .to parse('1+2<3').as(b_op(:<, b_op(:+, 1, 2), 3))
+      expect(parser)
+        .to parse('1+(2<3)').as(b_op(:+, 1, b_op(:<, 2, 3)))
+
+      expect(parser)
+        .to parse('1<2&&3').as(b_op(:'&&', b_op(:<, 1, 2), 3))
+      expect(parser)
+        .to parse('1<(2&&3)').as(b_op(:<, 1, b_op(:'&&', 2, 3)))
+
+      expect(parser)
+        .to parse('1&&2||3').as(b_op(:'||', b_op(:'&&', 1, 2), 3))
+      expect(parser)
+        .to parse('1&&(2||3)').as(b_op(:'&&', 1, b_op(:'||', 2, 3)))
     end
   end
 end

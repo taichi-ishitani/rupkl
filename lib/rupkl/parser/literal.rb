@@ -43,7 +43,7 @@ module RuPkl
 
       rule(:integer_literal) do
         (
-          bin_literal | oct_literal | dec_literal | hex_literal
+          bin_literal | oct_literal | hex_literal | dec_literal
         ).as(:integer_literal)
       end
     end

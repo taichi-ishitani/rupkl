@@ -37,9 +37,24 @@ module RuPkl
       be_instance_of(Node::Identifier).and have_attributes(id: id)
     end
 
+    def operand_matcher(operand)
+      case operand
+      when TrueClass, FalseClass then boolean_literal(operand)
+      when Integer then integer_literal(operand)
+      else operand
+      end
+    end
+
     def u_op(operator, operand)
       be_instance_of(Node::UnaryOperation)
-        .and have_attributes(operator: operator, operand: operand)
+        .and have_attributes(operator: operator, operand: operand_matcher(operand))
+    end
+
+    def b_op(operator, l_operand, r_operand)
+      l_matcher = operand_matcher(l_operand)
+      r_matcher = operand_matcher(r_operand)
+      be_instance_of(Node::BinaryOperation)
+        .and have_attributes(operator: operator, l_operand: l_matcher, r_operand: r_matcher)
     end
 
     def raise_parse_error(message)
