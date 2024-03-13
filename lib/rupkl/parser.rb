@@ -91,6 +91,10 @@ module RuPkl
         Position.new(@filename, *node.line_and_column)
       end
 
+      def sof_position
+        Position.new(@filename, 1, 1)
+      end
+
       def parse_error(message, position)
         raise ParseError.new(message, position, nil)
       end

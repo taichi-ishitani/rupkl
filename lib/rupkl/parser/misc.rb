@@ -7,6 +7,10 @@ module RuPkl
         match('\n')
       end
 
+      rule(:ws) do
+        match('[ \t\f\r\n;]').repeat(1).ignore
+      end
+
       rule(:ws?) do
         match('[ \t\f\r\n;]').repeat.ignore
       end

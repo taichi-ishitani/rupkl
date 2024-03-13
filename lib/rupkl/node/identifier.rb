@@ -9,7 +9,7 @@ module RuPkl
       end
 
       attr_reader :id
-      attr_reader :identifer
+      attr_reader :position
     end
   end
 end

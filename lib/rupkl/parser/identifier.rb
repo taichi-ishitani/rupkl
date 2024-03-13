@@ -41,11 +41,11 @@ module RuPkl
           parse_error(message, node_position(id))
         end
 
-        Node::Identifier.new(id.to_s, node_position(id))
+        Node::Identifier.new(id.to_sym, node_position(id))
       end
 
       rule(quoted_id: simple(:id)) do
-        Node::Identifier.new(id.to_s[1..-2], node_position(id))
+        Node::Identifier.new(id.to_s[1..-2].to_sym, node_position(id))
       end
 
       private

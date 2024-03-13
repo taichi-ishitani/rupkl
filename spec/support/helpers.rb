@@ -34,27 +34,70 @@ module RuPkl
     end
 
     def identifer(id)
-      be_instance_of(Node::Identifier).and have_attributes(id: id)
+      be_instance_of(Node::Identifier).and have_attributes(id: id.to_sym)
     end
 
-    def operand_matcher(operand)
-      case operand
-      when TrueClass, FalseClass then boolean_literal(operand)
-      when Integer then integer_literal(operand)
-      else operand
+    def expression_matcher(expression)
+      case expression
+      when TrueClass, FalseClass then boolean_literal(expression)
+      when Integer then integer_literal(expression)
+      when String then string_literal(expression)
+      else expression
       end
     end
 
     def u_op(operator, operand)
       be_instance_of(Node::UnaryOperation)
-        .and have_attributes(operator: operator, operand: operand_matcher(operand))
+        .and have_attributes(operator: operator, operand: expression_matcher(operand))
     end
 
     def b_op(operator, l_operand, r_operand)
-      l_matcher = operand_matcher(l_operand)
-      r_matcher = operand_matcher(r_operand)
+      l_matcher = expression_matcher(l_operand)
+      r_matcher = expression_matcher(r_operand)
       be_instance_of(Node::BinaryOperation)
         .and have_attributes(operator: operator, l_operand: l_matcher, r_operand: r_matcher)
+    end
+
+    PklClassProperty = Struct.new(:name, :value) do
+      def to_matcher(context)
+        context.instance_exec(name, value) do |n, v|
+          be_instance_of(Node::PklClassProperty)
+            .and have_attributes(name: identifer(n), value: expression_matcher(v))
+        end
+      end
+    end
+
+    PklModule = Struct.new(:properties) do
+      def property(name, value)
+        self.properties ||= []
+        self.properties << PklClassProperty.new(name, value)
+      end
+
+      def to_matcher(context)
+        properties_matcher = create_properties_matcher(context)
+        context.instance_exec do
+          be_instance_of(Node::PklModule)
+            .and have_attributes(properties: properties_matcher )
+        end
+      end
+
+      private
+
+      def create_properties_matcher(context)
+        if self.properties.nil?
+          context.instance_exec { be_nil }
+        else
+          self.properties
+            .map { _1.to_matcher(context) }
+            .then { |m| context.instance_exec { match(m) } }
+        end
+      end
+    end
+
+    def pkl_module
+      m = PklModule.new
+      yield(m) if block_given?
+      m.to_matcher(self)
     end
 
     def raise_parse_error(message)
