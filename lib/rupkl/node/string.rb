@@ -11,6 +11,11 @@ module RuPkl
       end
 
       attr_reader :portions
+
+      def evaluate(_scopes)
+        value = portions&.join || ''
+        self.class.new(value, nil, position)
+      end
     end
   end
 end

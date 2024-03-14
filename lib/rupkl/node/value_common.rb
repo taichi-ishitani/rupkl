@@ -10,6 +10,10 @@ module RuPkl
 
       attr_reader :value
       attr_reader :position
+
+      def to_ruby(scopes)
+        evaluate(scopes).value
+      end
     end
   end
 end

@@ -33,6 +33,10 @@ module RuPkl
       be_instance_of(Node::String).and have_attributes(portions: be_nil)
     end
 
+    def be_evaluated_string(string)
+      be_instance_of(Node::String).and have_attributes(value: string)
+    end
+
     def identifer(id)
       be_instance_of(Node::Identifier).and have_attributes(id: id.to_sym)
     end
