@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe RuPkl::Parser, :parser do
+RSpec.describe RuPkl::Parser do
   def random_upcase(string)
     pos =
       (0...string.size)
@@ -11,9 +11,13 @@ RSpec.describe RuPkl::Parser, :parser do
       .dup.tap { |s| pos.each { |i| s[i] = s[i].upcase } }
   end
 
+  let(:parser) do
+    RuPkl::Parser.new
+  end
+
   describe 'boolean lieral' do
-    let(:parser) do
-      RuPkl::Parser.new(:boolean_literal)
+    def parse(string)
+      parse_string(string, :boolean_literal)
     end
 
     it 'should be parsed by boolean_literal parser' do
@@ -30,8 +34,8 @@ RSpec.describe RuPkl::Parser, :parser do
   end
 
   describe 'integer literal' do
-    let(:parser) do
-      RuPkl::Parser.new(:integer_literal)
+    def parse(string)
+      parse_string(string, :integer_literal)
     end
 
     it 'should be parsed by integer_literal parser' do
@@ -93,8 +97,8 @@ RSpec.describe RuPkl::Parser, :parser do
   end
 
   describe 'string literal' do
-    let(:parser) do
-      RuPkl::Parser.new(:string_literal)
+    def parse(string)
+      parse_string(string, :string_literal)
     end
 
     describe 'single line string literal' do

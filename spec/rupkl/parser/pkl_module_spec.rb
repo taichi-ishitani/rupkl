@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
-RSpec.describe RuPkl::Parser, :parser do
+RSpec.describe RuPkl::Parser do
   let(:parser) do
-    RuPkl::Parser.new(:pkl_module)
+    RuPkl::Parser.new
   end
 
   describe 'pkl module' do
+    def parse(string)
+      parse_string(string, :pkl_module)
+    end
+
     it 'should be parsed by module parser' do
       pkl = <<~'PKL'
       PKL

@@ -15,7 +15,7 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  config.include RuPkl::ParserHelpers, :parser
+  config.include RuPkl::Helpers
 
   if ENV.key?('COVERAGE')
     require 'simplecov'

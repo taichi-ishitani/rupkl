@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
-RSpec.describe RuPkl::Parser, :parser do
+RSpec.describe RuPkl::Parser do
   let(:parser) do
-    RuPkl::Parser.new(:id)
+    RuPkl::Parser.new
+  end
+
+  def parse(string)
+    parse_string(string, :id)
   end
 
   describe 'regular identifier' do
@@ -42,14 +46,14 @@ RSpec.describe RuPkl::Parser, :parser do
       RuPkl::Parser::KEYWORDS.each do |keyword|
         next if /[\W]$/ =~ keyword
 
-        expect { parser.parse(keyword) }
+        expect { parser.parse(keyword, root: :id) }
           .to raise_parse_error "keyword '#{keyword}' is not allowed for identifier"
       end
     end
 
     specify 'reserved keywords cannot be used for regular identifier' do
       RuPkl::Parser::RESERVED_KEYWORDS.each do |keyword|
-        expect { parser.parse(keyword) }
+        expect { parser.parse(keyword, root: :id) }
           .to raise_parse_error "keyword '#{keyword}' is not allowed for identifier"
       end
     end

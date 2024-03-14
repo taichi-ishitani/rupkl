@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
-RSpec.describe RuPkl::Parser, :parser do
+RSpec.describe RuPkl::Parser do
   let(:parser) do
-    RuPkl::Parser.new(:expression)
+    RuPkl::Parser.new
+  end
+
+  def parse(string)
+    parse_string(string, :expression)
   end
 
   def spacing(*portions)

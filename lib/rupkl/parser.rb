@@ -112,25 +112,15 @@ module RuPkl
       end
     end
 
-    def initialize(root = nil)
-      @root = root
-    end
-
-    def parse(string, filename: nil)
-      tree = parse_string(string, filename)
+    def parse(string, filename: nil, root: nil)
+      tree = parse_string(string, filename, root)
       transform_tree(tree, filename)
-    end
-
-    def inspect
-      # :nocov:
-      parser.root_parser(@root).inspect
-      # :nocov:
     end
 
     private
 
-    def parse_string(string, filename)
-      parser.parse(string, filename: filename, root: @root)
+    def parse_string(string, filename, root)
+      parser.parse(string, filename: filename, root: root)
     end
 
     def parser
