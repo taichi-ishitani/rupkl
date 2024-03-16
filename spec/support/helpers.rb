@@ -34,7 +34,7 @@ module RuPkl
     end
 
     def be_evaluated_string(string)
-      be_instance_of(Node::String).and have_attributes(value: string)
+      be_instance_of(Node::String).and have_attributes(value: string, portions: be_nil)
     end
 
     def identifer(id)
@@ -103,6 +103,8 @@ module RuPkl
       yield(m) if block_given?
       m.to_matcher(self)
     end
+
+    alias_method :be_pkl_module, :pkl_module
 
     def raise_parse_error(message)
       raise_error(ParseError, message)

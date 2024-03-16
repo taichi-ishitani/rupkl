@@ -12,6 +12,14 @@ module RuPkl
       attr_reader :name
       attr_reader :value
       attr_reader :position
+
+      def evaluate(scopes)
+        self.class.new(name, value.evaluate(scopes), position)
+      end
+
+      def to_ruby(scopes)
+        [name.to_ruby(scopes), value.to_ruby(scopes)]
+      end
     end
   end
 end

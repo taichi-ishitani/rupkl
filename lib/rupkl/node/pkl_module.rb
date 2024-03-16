@@ -15,6 +15,16 @@ module RuPkl
       attr_reader :properties
       attr_reader :position
 
+      def evaluate(scopes)
+        evaluated_properties =
+          properties&.map { [:property, _1.evaluate(scopes)] }
+        self.class.new(evaluated_properties, position)
+      end
+
+      def to_ruby(scopes)
+        properties&.to_h { _1.to_ruby(scopes) } || {}
+      end
+
       private
 
       def add_property(property)

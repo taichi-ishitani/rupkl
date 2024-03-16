@@ -10,6 +10,10 @@ module RuPkl
 
       attr_reader :id
       attr_reader :position
+
+      def to_ruby(_scopes)
+        id
+      end
     end
   end
 end
