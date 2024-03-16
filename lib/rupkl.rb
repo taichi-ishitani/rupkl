@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'stringio'
 require 'parslet'
 
 require_relative 'rupkl/version'
@@ -19,3 +20,22 @@ require_relative 'rupkl/parser/identifier'
 require_relative 'rupkl/parser/expression'
 require_relative 'rupkl/parser/pkl_class'
 require_relative 'rupkl/parser/pkl_module'
+
+module RuPkl
+  class << self
+    def load(string_or_io, filename: nil)
+      pkl =
+        if string_or_io.respond_to?(:read)
+          string_or_io.read
+        else
+          string_or_io
+        end
+      node = Parser.new.parse(pkl, filename: filename, root: :pkl_module)
+      node.to_ruby(nil)
+    end
+
+    def load_file(filename)
+      File.open(filename, 'r') { |io| load(io, filename: filename) }
+    end
+  end
+end
