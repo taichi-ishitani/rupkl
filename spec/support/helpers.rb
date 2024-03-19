@@ -78,22 +78,21 @@ module RuPkl
       end
 
       def to_matcher(context)
-        properties_matcher = create_properties_matcher(context)
-        context.instance_exec do
+        context.instance_exec(self) do |m|
           be_instance_of(Node::PklModule)
-            .and have_attributes(properties: properties_matcher )
+            .and have_attributes(
+              properties: m.properties_matcher(self)
+            )
         end
       end
 
-      private
-
-      def create_properties_matcher(context)
+      def properties_matcher(context)
         if self.properties.nil?
-          context.instance_exec { be_nil }
+          context.__send__(:be_nil)
         else
           self.properties
             .map { _1.to_matcher(context) }
-            .then { |m| context.instance_exec { match(m) } }
+            .then { |m| context.__send__(:match, m) }
         end
       end
     end
@@ -105,6 +104,109 @@ module RuPkl
     end
 
     alias_method :be_pkl_module, :pkl_module
+
+    PklObjectProperty = Struct.new(:name, :value, :objects) do
+      def to_matcher(context)
+        context.instance_exec(name, value, objects) do |n, v, o|
+          value_matcher =
+            if v.nil?
+              be_nil
+            else
+              expression_matcher(v)
+            end
+          object_matcher =
+            if o.nil?
+              be_nil
+            else
+              o.map { expression_matcher(_1) }.then { match(_1) }
+            end
+          be_instance_of(Node::PklObjectProperty)
+            .and have_attributes(name: identifer(n), value: value_matcher, objects: object_matcher)
+        end
+      end
+    end
+
+    PklObjectElement = Struct.new(:value) do
+      def to_matcher(context)
+        context.__send__(:expression_matcher, value)
+      end
+    end
+
+    PklObjectEntry = Struct.new(:key, :value, :objects) do
+      def to_matcher(context)
+        context.instance_exec(key, value, objects) do |k, v, o|
+          value_matcher =
+            if v.nil?
+              be_nil
+            else
+              expression_matcher(v)
+            end
+          object_matcher =
+            if o.nil?
+              be_nil
+            else
+              o.map { expression_matcher(_1) }.then { match(_1) }
+            end
+          be_instance_of(Node::PklObjectEntry)
+            .and have_attributes(
+              key: expression_matcher(k),
+              value: value_matcher, objects: object_matcher
+            )
+        end
+      end
+    end
+
+    PklObject = Struct.new(:properties, :elements, :entries) do
+      def property(name, value_or_objects)
+        self.properties ||= []
+        self.properties <<
+          case value_or_objects
+          when Array then  PklObjectProperty.new(name, nil, value_or_objects)
+          else PklObjectProperty.new(name, value_or_objects, nil)
+          end
+      end
+
+      def element(value)
+        self.elements ||= []
+        self.elements << PklObjectElement.new(value)
+      end
+
+      def entry(key, value_or_objects)
+        self.entries ||= []
+        self.entries <<
+          case value_or_objects
+          when Array then PklObjectEntry.new(key, nil, value_or_objects)
+          else PklObjectEntry.new(key, value_or_objects, nil)
+          end
+      end
+
+      def to_matcher(context)
+        context.instance_exec(self) do |o|
+          be_instance_of(Node::PklObject)
+            .and have_attributes(
+              properties: o.create_matcher(context, o.properties),
+              elements: o.create_matcher(context, o.elements),
+              entries: o.create_matcher(context, o.entries)
+            )
+        end
+      end
+
+      def create_matcher(context, items)
+        if items.nil?
+          context.__send__(:be_nil)
+        else
+          items
+            .map { _1.to_matcher(context) }
+            .then { |m| context.__send__(:match, m) }
+        end
+      end
+    end
+
+    def pkl_object
+      o = PklObject.new
+      yield(o) if block_given?
+      o.to_matcher(self)
+    end
 
     def raise_parse_error(message)
       raise_error(ParseError, message)

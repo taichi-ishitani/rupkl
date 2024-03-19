@@ -2,17 +2,19 @@
 
 module RuPkl
   class Parser
+    WS_PATTERN = '[ \t\f\r\n;]'
+
     define_parser do
       rule(:nl) do
         match('\n')
       end
 
       rule(:ws) do
-        match('[ \t\f\r\n;]').repeat(1).ignore
+        match(WS_PATTERN).repeat(1).ignore
       end
 
       rule(:ws?) do
-        match('[ \t\f\r\n;]').repeat.ignore
+        match(WS_PATTERN).repeat.ignore
       end
 
       rule(:pure_ws?) do
@@ -22,7 +24,10 @@ module RuPkl
       private
 
       def bracketed(atom, bra = '(', cket = ')')
-        str(bra).ignore >> ws? >> atom >> ws? >> str(cket).ignore
+        bra_matcher, cket_matcher =
+          [bra, cket]
+            .map { _1.is_a?(String) && str(_1).ignore || _1 }
+        bra_matcher >> ws? >> atom >> ws? >> cket_matcher
       end
     end
   end
