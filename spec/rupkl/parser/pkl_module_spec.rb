@@ -52,6 +52,39 @@ RSpec.describe RuPkl::Parser do
         m.property :attendants, 100
         m.property :isInteractive, true
       end)
+
+      pkl = <<~'PKL'
+        mixedObject {
+          name = "Pigeon"
+          lifespan = 8
+          "wing"
+          "claw"
+          ["wing"] = "Not related to the _element_ \"wing\""
+          42
+          extinct = false
+          [false] {
+            description = "Construed object example"
+          }
+        }
+      PKL
+      expect(parser).to parse(pkl).as(pkl_module do |m|
+        m.property :mixedObject, [
+          pkl_object do |o1|
+            o1.property :name, 'Pigeon'
+            o1.property :lifespan, 8
+            o1.element 'wing'
+            o1.element 'claw'
+            o1.entry 'wing', 'Not related to the _element_ "wing"'
+            o1.element 42
+            o1.property :extinct, false
+            o1.entry false, [
+              pkl_object do |o2|
+                o2.property :description, 'Construed object example'
+              end
+            ]
+          end
+        ]
+      end)
     end
   end
 end

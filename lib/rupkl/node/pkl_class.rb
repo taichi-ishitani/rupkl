@@ -3,18 +3,20 @@
 module RuPkl
   module Node
     class PklClassProperty
-      def initialize(name, value, position)
+      def initialize(name, value, objects, position)
         @name = name
         @value = value
+        @objects = objects
         @position = position
       end
 
       attr_reader :name
       attr_reader :value
+      attr_reader :objects
       attr_reader :position
 
       def evaluate(scopes)
-        self.class.new(name, value.evaluate(scopes), position)
+        self.class.new(name, value.evaluate(scopes), nil, position)
       end
 
       def to_ruby(scopes)

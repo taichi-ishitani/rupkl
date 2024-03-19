@@ -62,19 +62,26 @@ module RuPkl
         .and have_attributes(operator: operator, l_operand: l_matcher, r_operand: r_matcher)
     end
 
-    PklClassProperty = Struct.new(:name, :value) do
+    PklClassProperty = Struct.new(:name, :value, :objects) do
       def to_matcher(context)
-        context.instance_exec(name, value) do |n, v|
+        context.instance_exec(name, value, objects) do |n, v, o|
+          value_matcher =
+            (v || v == false) && expression_matcher(v) || be_nil
+          object_matcher =
+            o&.map { expression_matcher(_1) }&.then { match(_1) } || be_nil
           be_instance_of(Node::PklClassProperty)
-            .and have_attributes(name: identifer(n), value: expression_matcher(v))
+            .and have_attributes(name: identifer(n), value: value_matcher, objects: object_matcher)
         end
       end
     end
 
     PklModule = Struct.new(:properties) do
-      def property(name, value)
-        self.properties ||= []
-        self.properties << PklClassProperty.new(name, value)
+      def property(name, value_or_objects)
+        (self.properties ||= []) <<
+          case value_or_objects
+          when Array then PklClassProperty.new(name, nil, value_or_objects)
+          else PklClassProperty.new(name, value_or_objects, nil)
+          end
       end
 
       def to_matcher(context)
@@ -109,17 +116,9 @@ module RuPkl
       def to_matcher(context)
         context.instance_exec(name, value, objects) do |n, v, o|
           value_matcher =
-            if v.nil?
-              be_nil
-            else
-              expression_matcher(v)
-            end
+            (v || v == false) && expression_matcher(v) || be_nil
           object_matcher =
-            if o.nil?
-              be_nil
-            else
-              o.map { expression_matcher(_1) }.then { match(_1) }
-            end
+            o&.map { expression_matcher(_1) }&.then { match(_1) } || be_nil
           be_instance_of(Node::PklObjectProperty)
             .and have_attributes(name: identifer(n), value: value_matcher, objects: object_matcher)
         end
@@ -136,17 +135,9 @@ module RuPkl
       def to_matcher(context)
         context.instance_exec(key, value, objects) do |k, v, o|
           value_matcher =
-            if v.nil?
-              be_nil
-            else
-              expression_matcher(v)
-            end
+            (v || v == false) && expression_matcher(v) || be_nil
           object_matcher =
-            if o.nil?
-              be_nil
-            else
-              o.map { expression_matcher(_1) }.then { match(_1) }
-            end
+            o&.map { expression_matcher(_1) }&.then { match(_1) } || be_nil
           be_instance_of(Node::PklObjectEntry)
             .and have_attributes(
               key: expression_matcher(k),
@@ -158,8 +149,7 @@ module RuPkl
 
     PklObject = Struct.new(:properties, :elements, :entries) do
       def property(name, value_or_objects)
-        self.properties ||= []
-        self.properties <<
+        (self.properties ||= []) <<
           case value_or_objects
           when Array then  PklObjectProperty.new(name, nil, value_or_objects)
           else PklObjectProperty.new(name, value_or_objects, nil)
@@ -167,13 +157,11 @@ module RuPkl
       end
 
       def element(value)
-        self.elements ||= []
-        self.elements << PklObjectElement.new(value)
+        (self.elements ||= []) << PklObjectElement.new(value)
       end
 
       def entry(key, value_or_objects)
-        self.entries ||= []
-        self.entries <<
+        (self.entries ||= []) <<
           case value_or_objects
           when Array then PklObjectEntry.new(key, nil, value_or_objects)
           else PklObjectEntry.new(key, value_or_objects, nil)

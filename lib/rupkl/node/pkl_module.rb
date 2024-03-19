@@ -5,9 +5,9 @@ module RuPkl
     class PklModule
       def initialize(items, position)
         @position = position
-        items&.each do |type, item|
-          case type
-          when :property then add_property(item)
+        items&.each do |item|
+          case item
+          when PklClassProperty then add_property(item)
           end
         end
       end
@@ -17,7 +17,7 @@ module RuPkl
 
       def evaluate(scopes)
         evaluated_properties =
-          properties&.map { [:property, _1.evaluate(scopes)] }
+          properties&.map { _1.evaluate(scopes) }
         self.class.new(evaluated_properties, position)
       end
 
