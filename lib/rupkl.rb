@@ -5,6 +5,7 @@ require 'parslet'
 
 require_relative 'rupkl/version'
 require_relative 'rupkl/exception'
+require_relative 'rupkl/pkl_object'
 require_relative 'rupkl/node/value_common'
 require_relative 'rupkl/node/boolean'
 require_relative 'rupkl/node/integer'

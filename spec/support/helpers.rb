@@ -33,9 +33,11 @@ module RuPkl
       be_instance_of(Node::String).and have_attributes(portions: be_nil)
     end
 
-    def be_evaluated_string(string)
+    def evaluated_string(string)
       be_instance_of(Node::String).and have_attributes(value: string, portions: be_nil)
     end
+
+    alias_method :be_evaluated_string, :evaluated_string
 
     def identifer(id)
       be_instance_of(Node::Identifier).and have_attributes(id: id.to_sym)
@@ -194,6 +196,27 @@ module RuPkl
       o = PklObject.new
       yield(o) if block_given?
       o.to_matcher(self)
+    end
+
+    alias_method :be_pkl_object, :pkl_object
+
+    def match_pkl_object(properties: nil, elements: nil, entries: nil)
+      properties_matcher =
+        properties
+          .then { _1 && match(_1) || be_empty }
+      elements_matcher =
+        elements
+          .then { _1 && match(_1)  || be_empty }
+      entries_matcher =
+        entries
+          .then { _1 && match(_1)  || be_empty }
+
+      be_instance_of(RuPkl::PklObject)
+        .and have_attributes(
+          properties: properties_matcher,
+          elements: elements_matcher,
+          entries: entries_matcher
+        )
     end
 
     def raise_parse_error(message)

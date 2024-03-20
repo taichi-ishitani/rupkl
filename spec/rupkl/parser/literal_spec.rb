@@ -40,7 +40,9 @@ RSpec.describe RuPkl::Parser do
 
     it 'should be parsed by integer_literal parser' do
       # decimal literal
+      expect(parser).to parse('0').as(integer_literal(0))
       expect(parser).to parse('42').as(integer_literal(42))
+      expect(parser).to parse('00').as(integer_literal(0))
       expect(parser).to parse('00042').as(integer_literal(42))
       expect(parser).to parse('123456789123456789').as(integer_literal(123456789123456789))
       expect(parser).to parse('9223372036854775807').as(integer_literal(9223372036854775807))

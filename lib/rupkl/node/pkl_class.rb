@@ -3,6 +3,8 @@
 module RuPkl
   module Node
     class PklClassProperty
+      include PropertyEvaluator
+
       def initialize(name, value, objects, position)
         @name = name
         @value = value
@@ -16,11 +18,12 @@ module RuPkl
       attr_reader :position
 
       def evaluate(scopes)
-        self.class.new(name, value.evaluate(scopes), nil, position)
+        v = evaluate_property(value, objects, scopes)
+        self.class.new(name, v, nil, position)
       end
 
       def to_ruby(scopes)
-        [name.to_ruby(scopes), value.to_ruby(scopes)]
+        [name.id, property_to_ruby(value, objects, scopes)]
       end
     end
   end

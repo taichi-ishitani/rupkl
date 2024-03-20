@@ -50,7 +50,8 @@ module RuPkl
 
     define_transform do
       rule(integer_literal: simple(:v)) do
-        value = Integer(v.to_s.tr('_', '').sub(/\A(?!0[box])0+/, ''))
+        base = { 'b' => 2, 'o' => 8, 'x' => 16 }.fetch(v.to_s[1], 10)
+        value = v.to_s.tr('_', '').to_i(base)
         Node::Integer.new(value, node_position(v))
       end
     end

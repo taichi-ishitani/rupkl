@@ -109,6 +109,34 @@ RSpec.describe RuPkl::Parser::Parser do
           pkl_object { |o2| o2.property(:description, 'Construed object example') }
         ]
       end)
+
+      pkl = <<~'PKL'
+        {
+          foo {
+            bar = 0
+            1
+            ["baz"] = 2
+          } {
+            bar = 3
+            4
+            ["baz"] = 5
+          }
+        }
+      PKL
+      expect(parser).to parse(pkl).as(pkl_object do |o1|
+        o1.property :foo, [
+          pkl_object do |o2|
+            o2.property :bar, 0
+            o2.element 1
+            o2.entry 'baz', 2
+          end,
+          pkl_object do |o2|
+            o2.property :bar, 3
+            o2.element 4
+            o2.entry 'baz', 5
+          end
+        ]
+      end)
     end
   end
 end
