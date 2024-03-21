@@ -16,6 +16,7 @@ RSpec.describe RuPkl::Node::PklModule do
         """
       attendants = 100
       isInteractive = true
+      amountLearned = 13.37
     PKL
     strings << <<~'PKL'
       mixedObject {
@@ -43,6 +44,7 @@ RSpec.describe RuPkl::Node::PklModule do
         m.property :message, be_evaluated_string("Although the Dodo is extinct,\nthe species will be remembered.")
         m.property :attendants, 100
         m.property :isInteractive, true
+        m.property :amountLearned, 13.37
       end)
 
       node = parser.parse(pkl_strings[2], root: :pkl_module)
@@ -75,7 +77,7 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[1], root: :pkl_module)
       expect(node.to_ruby(nil)).to match(
         message: "Although the Dodo is extinct,\nthe species will be remembered.",
-        attendants: 100, isInteractive: true
+        attendants: 100, isInteractive: true, amountLearned: 13.37
       )
 
       node = parser.parse(pkl_strings[2], root: :pkl_module)

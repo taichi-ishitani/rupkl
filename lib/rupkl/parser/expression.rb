@@ -4,7 +4,10 @@ module RuPkl
   class Parser
     define_parser do
       rule(:primary) do
-        boolean_literal | integer_literal | string_literal | bracketed(expression)
+        [
+          float_literal, integer_literal, boolean_literal, string_literal,
+          bracketed(expression)
+        ].inject(:|)
       end
 
       rule(:unary_operation) do

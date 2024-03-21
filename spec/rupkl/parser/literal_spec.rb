@@ -98,6 +98,45 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'float literal' do
+    def parse(string)
+      parse_string(string, :float_literal)
+    end
+
+    it 'should be parsed by float_literal parser' do
+      expect(parser).to parse('0.0').as(float_literal(0.0))
+      expect(parser).to parse('.0').as(float_literal(0.0))
+      expect(parser).to parse('1.0').as(float_literal(1.0))
+      expect(parser).to parse('0.1').as(float_literal(0.1))
+      expect(parser).to parse('.1').as(float_literal(0.1))
+      expect(parser).to parse('1e1').as(float_literal(10.0))
+      expect(parser).to parse('1e-1').as(float_literal(0.1))
+      expect(parser).to parse('1e-_1').as(float_literal(0.1))
+      expect(parser).to parse('123456789.123456789').as(float_literal(123456789.123456789))
+      expect(parser).to parse('123.456e7').as(float_literal(123.456e7))
+      expect(parser).to parse('123.456e-7').as(float_literal(123.456e-7))
+      expect(parser).to parse('4.9E-324').as(float_literal(4.9E-324))
+      expect(parser).to parse('1.7976931348623157E308').as(float_literal(1.7976931348623157E308))
+      expect(parser).to parse('123_456_789.123_456_789').as(float_literal(123456789.123456789))
+      expect(parser).to parse('1____.1____').as(float_literal(1.1))
+      expect(parser).to parse('1____1.1____1').as(float_literal(11.11))
+      expect(parser).to parse('123.4_56e7').as(float_literal(123.456e7))
+      expect(parser).to parse('123.4_56e-7').as(float_literal(123.456e-7))
+      expect(parser).to parse('123.456e1_0').as(float_literal(123.456e10))
+      expect(parser).to parse('1_23.456e-1_0').as(float_literal(123.456e-10))
+    end
+
+    specify 'underscore should not be before \'.\' character' do
+      expect(parser).not_to parse('1._0')
+      expect(parser).not_to parse('._0')
+    end
+
+    specify 'underscore should not be after e/E exponent symbol' do
+      expect(parser).not_to parse('1e_1')
+      expect(parser).not_to parse('1E_1')
+    end
+  end
+
   describe 'string literal' do
     def parse(string)
       parse_string(string, :string_literal)

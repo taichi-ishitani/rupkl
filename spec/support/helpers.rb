@@ -10,6 +10,10 @@ module RuPkl
       be_instance_of(Node::Integer).and have_attributes(value: value)
     end
 
+    def float_literal(value)
+      be_instance_of(Node::Float).and have_attributes(value: value)
+    end
+
     def string_literal(*portions)
       be_instance_of(Node::String).and have_attributes(portions: portions)
     end
@@ -47,6 +51,7 @@ module RuPkl
       case expression
       when TrueClass, FalseClass then boolean_literal(expression)
       when Integer then integer_literal(expression)
+      when Float then float_literal(expression)
       when String then string_literal(expression)
       else expression
       end

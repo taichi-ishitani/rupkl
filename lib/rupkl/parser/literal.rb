@@ -57,6 +57,29 @@ module RuPkl
     end
 
     #
+    # Float literal
+    #
+    define_parser do
+      rule(:float_literal) do
+        (
+          (dec_literal.maybe >> str('.') >> dec_literal >> exponent.maybe) |
+          (dec_literal >> exponent)
+        ).as(:float_literal)
+      end
+
+      rule(:exponent) do
+        match('[eE]') >> (match('[+-]') >> str('_').maybe).maybe >> dec_literal
+      end
+    end
+
+    define_transform do
+      rule(float_literal: simple(:f)) do
+        v = f.to_s.tr('_', '').to_f
+        Node::Float.new(v, node_position(f))
+      end
+    end
+
+    #
     # String literal
     #
     ESCAPED_CHARS =
