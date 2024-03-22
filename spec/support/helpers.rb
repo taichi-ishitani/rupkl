@@ -10,6 +10,8 @@ module RuPkl
       be_instance_of(Node::Integer).and have_attributes(value: value)
     end
 
+    alias_method :be_integer, :integer_literal
+
     def float_literal(value)
       be_instance_of(Node::Float).and have_attributes(value: value)
     end
@@ -226,6 +228,10 @@ module RuPkl
 
     def raise_parse_error(message)
       raise_error(ParseError, message)
+    end
+
+    def raise_evaluation_error(message)
+      raise_error(EvaluationError, message)
     end
   end
 end
