@@ -2,11 +2,13 @@
 
 require 'stringio'
 require 'parslet'
+require 'facets/module/basename'
 
 require_relative 'rupkl/version'
 require_relative 'rupkl/exception'
 require_relative 'rupkl/pkl_object'
 require_relative 'rupkl/node/value_common'
+require_relative 'rupkl/node/operatable'
 require_relative 'rupkl/node/boolean'
 require_relative 'rupkl/node/number'
 require_relative 'rupkl/node/string'

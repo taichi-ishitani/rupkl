@@ -6,6 +6,8 @@ module RuPkl
       be_instance_of(Node::Boolean).and have_attributes(value: value)
     end
 
+    alias_method :be_boolean, :boolean_literal
+
     def integer_literal(value)
       be_instance_of(Node::Integer).and have_attributes(value: value)
     end
@@ -14,6 +16,12 @@ module RuPkl
 
     def float_literal(value)
       be_instance_of(Node::Float).and have_attributes(value: value)
+    end
+
+    alias_method :be_float, :float_literal
+
+    def be_number(number)
+      number.is_a?(Float) && be_float(number) || be_integer(number)
     end
 
     def string_literal(*portions)

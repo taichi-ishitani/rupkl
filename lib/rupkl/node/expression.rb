@@ -12,6 +12,15 @@ module RuPkl
       attr_reader :operator
       attr_reader :operand
       attr_reader :position
+
+      def evaluate(scopes)
+        o = operand.evaluate(scopes)
+        o.u_op(operator)
+      end
+
+      def to_ruby(scopes)
+        evaluate(scopes).to_ruby(scopes)
+      end
     end
 
     class BinaryOperation
@@ -26,6 +35,16 @@ module RuPkl
       attr_reader :l_operand
       attr_reader :r_operand
       attr_reader :position
+
+      def evaluate(scopes)
+        l = l_operand.evaluate(scopes)
+        r = r_operand.evaluate(scopes)
+        l.b_op(operator, r)
+      end
+
+      def to_ruby(scopes)
+        evaluate(scopes).to_ruby(scopes)
+      end
     end
   end
 end

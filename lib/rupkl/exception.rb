@@ -14,4 +14,13 @@ module RuPkl
     attr_reader :position
     attr_reader :cause
   end
+
+  class EvaluationError < RuPklError
+    def initialize(message, position)
+      super(message)
+      @position = position
+    end
+
+    attr_reader :position
+  end
 end

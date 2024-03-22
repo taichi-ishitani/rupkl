@@ -267,6 +267,26 @@ RSpec.describe RuPkl::Parser do
           .to parse('0.1<2.3>4.5<=6.7>=8.9')
           .as(b_op(:>=, b_op(:<=, b_op(:>, b_op(:<, 0.1, 2.3), 4.5), 6.7), 8.9))
 
+        # equalityExpr
+        expect(parser)
+          .to parse('1==2')
+          .as(b_op(:==, 1, 2))
+        expect(parser)
+          .to parse('1!=2')
+          .as(b_op(:'!=', 1, 2))
+        expect(parser)
+          .to parse('1==2!=3')
+          .as(b_op(:'!=', b_op(:==, 1, 2), 3))
+        expect(parser)
+          .to parse('1.0==2.0')
+          .as(b_op(:==, 1.0, 2.0))
+        expect(parser)
+          .to parse('1.0!=2.0')
+          .as(b_op(:'!=', 1.0, 2.0))
+        expect(parser)
+          .to parse('1.0==2.0!=3.0')
+          .as(b_op(:'!=', b_op(:==, 1.0, 2.0), 3.0))
+
         # logicalAndExpr
         expect(parser)
           .to parse('1&&2')
@@ -319,9 +339,14 @@ RSpec.describe RuPkl::Parser do
         .to parse('1+(2<3)').as(b_op(:+, 1, b_op(:<, 2, 3)))
 
       expect(parser)
-        .to parse('1<2&&3').as(b_op(:'&&', b_op(:<, 1, 2), 3))
+        .to parse('1<2==3').as(b_op(:==, b_op(:<, 1, 2), 3))
       expect(parser)
-        .to parse('1<(2&&3)').as(b_op(:<, 1, b_op(:'&&', 2, 3)))
+        .to parse('1<(2==3)').as(b_op(:<, 1, b_op(:==, 2, 3)))
+
+      expect(parser)
+        .to parse('1==2&&3').as(b_op(:'&&', b_op(:==, 1, 2), 3))
+      expect(parser)
+        .to parse('1==(2&&3)').as(b_op(:==, 1, b_op(:'&&', 2, 3)))
 
       expect(parser)
         .to parse('1&&2||3').as(b_op(:'||', b_op(:'&&', 1, 2), 3))

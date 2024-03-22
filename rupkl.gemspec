@@ -25,5 +25,6 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ['lib']
 
+  spec.add_runtime_dependency 'facets', '>= 3.1.0'
   spec.add_runtime_dependency 'parslet', '>= 2.0.0'
 end
