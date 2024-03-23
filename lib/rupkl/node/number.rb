@@ -16,10 +16,6 @@ module RuPkl
         [:!, :'&&', :'||'].include?(operator)
       end
 
-      def short_circuit?(_operator)
-        false
-      end
-
       def invalid_operand?(operand)
         !operand.is_a?(Number)
       end

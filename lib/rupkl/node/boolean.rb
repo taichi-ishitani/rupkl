@@ -23,10 +23,6 @@ module RuPkl
         end
       end
 
-      def invalid_operand?(operand)
-        !operand.is_a?(self.class)
-      end
-
       def coerce(operator, l_operand, r_operand)
         case [operator, l_operand, r_operand]
         in [:'&&' => op, l, r] then [:&, l.value, r.value]

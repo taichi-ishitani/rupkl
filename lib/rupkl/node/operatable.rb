@@ -34,6 +34,10 @@ module RuPkl
           end
       end
 
+      def short_circuit?(_operator)
+        false
+      end
+
       def check_operand(operator, r_operand)
         invalid_operand?(r_operand) &&
           begin
@@ -42,6 +46,10 @@ module RuPkl
               "for operator '#{operator}'"
             raise EvaluationError.new(message, position)
           end
+      end
+
+      def invalid_operand?(operand)
+        !operand.is_a?(self.class)
       end
 
       def create_result(value)
