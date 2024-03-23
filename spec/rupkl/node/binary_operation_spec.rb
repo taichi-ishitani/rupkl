@@ -10,7 +10,7 @@ RSpec.describe RuPkl::Node::BinaryOperation do
       node = parser.parse('1+2', root: :expression)
 
       expect(node.l_operand)
-        .to receive(:b_op).with(:+, be(node.r_operand))
+        .to receive(:b_op).with(:+, be(node.r_operand), be_nil)
         .and_call_original
       expect(node.evaluate(nil)).to be_integer(3)
     end

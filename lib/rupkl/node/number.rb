@@ -16,8 +16,12 @@ module RuPkl
         [:!, :'&&', :'||'].include?(operator)
       end
 
+      def short_circuit?(_operator)
+        false
+      end
+
       def invalid_operand?(operand)
-        !(operand.class <=> Number)
+        !operand.is_a?(Number)
       end
 
       def coerce(operator, l_operand, r_operand)

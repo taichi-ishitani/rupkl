@@ -38,8 +38,7 @@ module RuPkl
 
       def evaluate(scopes)
         l = l_operand.evaluate(scopes)
-        r = r_operand.evaluate(scopes)
-        l.b_op(operator, r)
+        l.b_op(operator, r_operand, scopes)
       end
 
       def to_ruby(scopes)

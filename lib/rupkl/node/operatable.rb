@@ -5,14 +5,20 @@ module RuPkl
     module Operatable
       def u_op(operator)
         check_operator(operator)
-        create_result(value.__send__(:"#{operator}@"))
+
+        result =
+          operator == :- && -value || !value
+        create_result(result)
       end
 
-      def b_op(operator, r_operand)
+      def b_op(operator, r_operand, scopes)
         check_operator(operator)
-        check_operand(operator, r_operand)
+        return self if short_circuit?(operator)
 
-        o, l, r = coerce(operator, self, r_operand)
+        operand = r_operand.evaluate(scopes)
+        check_operand(operator, operand)
+
+        o, l, r = coerce(operator, self, operand)
         create_result(l.__send__(o, r))
       end
 
