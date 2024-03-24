@@ -57,6 +57,17 @@ module RuPkl
       be_instance_of(Node::Identifier).and have_attributes(id: id.to_sym)
     end
 
+    def member_ref(receiver_or_member, member = nil)
+      receiver_matcher, memer_matcher =
+        if member
+          [expression_matcher(receiver_or_member), identifer(member)]
+        else
+          [be_nil, identifer(receiver_or_member)]
+        end
+      be_instance_of(Node::MemberReference)
+        .and have_attributes(receiver: receiver_matcher, member: memer_matcher)
+    end
+
     def expression_matcher(expression)
       case expression
       when TrueClass, FalseClass then boolean_literal(expression)

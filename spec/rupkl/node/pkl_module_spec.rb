@@ -19,6 +19,18 @@ RSpec.describe RuPkl::Node::PklModule do
       amountLearned = 13.37
     PKL
     strings << <<~'PKL'
+      exampleObjectWithJustIntElements {
+        100
+        42
+      }
+
+      exampleObjectWithMixedElements {
+        "Bird Breeder Conference"
+        (2000 + 23)
+        exampleObjectWithJustIntElements
+      }
+    PKL
+    strings << <<~'PKL'
       mixedObject {
         name = "Pigeon"
         lifespan = 8
@@ -48,6 +60,26 @@ RSpec.describe RuPkl::Node::PklModule do
       end)
 
       node = parser.parse(pkl_strings[2], root: :pkl_module)
+      expect(node.evaluate(nil)).to (be_pkl_module do |m|
+        m.property :exampleObjectWithJustIntElements, (
+          pkl_object do |o|
+            o.element 100
+            o.element 42
+          end
+        )
+        m.property :exampleObjectWithMixedElements, (
+          pkl_object do |o1|
+            o1.element be_evaluated_string('Bird Breeder Conference')
+            o1.element 2023
+            o1.element (pkl_object do |o2|
+              o2.element 100
+              o2.element 42
+            end)
+          end
+        )
+      end)
+
+      node = parser.parse(pkl_strings[3], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
         m.property :mixedObject, (
           pkl_object do |o1|
@@ -81,6 +113,21 @@ RSpec.describe RuPkl::Node::PklModule do
       )
 
       node = parser.parse(pkl_strings[2], root: :pkl_module)
+      expect(node.to_ruby(nil))
+        .to match(
+          exampleObjectWithJustIntElements: match_pkl_object(
+            elements: [100, 42]
+          ),
+          exampleObjectWithMixedElements: match_pkl_object(
+            elements: [
+              'Bird Breeder Conference',
+              2023,
+              match_pkl_object(elements: [100, 42])
+            ]
+          )
+        )
+
+      node = parser.parse(pkl_strings[3], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match(
           mixedObject: match_pkl_object(

@@ -59,6 +59,29 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'member reference' do
+    it 'should be parsed by expression parser' do
+      expect(parser)
+        .to parse('foo')
+        .as(member_ref(:foo))
+      expect(parser)
+        .to parse('foo.bar')
+        .as(member_ref(member_ref(:foo), :bar))
+      expect(parser)
+        .to parse('foo.bar.baz')
+        .as(member_ref(member_ref(member_ref(:foo), :bar), :baz))
+      expect(parser)
+        .to parse('"dodo".length')
+        .as(member_ref('dodo', :length))
+      expect(parser)
+        .to parse(spacing('foo', '.', 'bar'))
+        .as(member_ref(member_ref(:foo), :bar))
+      expect(parser)
+        .to parse(spacing('foo', '.', 'bar', '.', 'baz'))
+        .as(member_ref(member_ref(member_ref(:foo), :bar), :baz))
+    end
+  end
+
   describe 'operation' do
     describe 'unary operation' do
       it 'should be parsed by expression parser' do

@@ -105,6 +105,8 @@ module RuPkl
     end
 
     class PklObject
+      include StructCommon
+
       def initialize(members, position)
         @position = position
         members&.each do |member|
@@ -126,16 +128,20 @@ module RuPkl
       end
 
       def evaluate(scopes)
-        new_members = members.map { _1.evaluate(scopes) }
-        self.class.new(new_members, position)
+        push_scope(scopes) do |s|
+          new_members = members.map { _1.evaluate(s) }
+          self.class.new(new_members, position)
+        end
       end
 
       def to_ruby(scopes)
-        RuPkl::PklObject.new(
-          to_ruby_hash(properties, scopes),
-          to_ruby_array(elements, scopes),
-          to_ruby_hash(entries, scopes)
-        )
+        push_scope(scopes) do |s|
+          RuPkl::PklObject.new(
+            to_ruby_hash(properties, s),
+            to_ruby_array(elements, s),
+            to_ruby_hash(entries, s)
+          )
+        end
       end
 
       private

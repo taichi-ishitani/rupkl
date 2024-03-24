@@ -3,17 +3,29 @@
 module RuPkl
   class Parser
     define_parser do
+      rule(:unqualified_member_ref) do
+        id.as(:unqualified_member_ref)
+      end
+
       rule(:primary) do
         [
           float_literal, integer_literal, boolean_literal, string_literal,
-          bracketed(expression)
+          unqualified_member_ref, bracketed(expression)
         ].inject(:|)
+      end
+
+      rule(:qualified_member_ref) do
+        (
+          primary.as(:receiver) >>
+            (ws? >> str('.') >> ws? >> id).repeat(1).as(:member)
+        ).as(:qualified_member_ref) | primary
       end
 
       rule(:unary_operation) do
         (
-          (str(:-) | str(:!)).as(:unary_operator) >> ws? >> primary.as(:operand)
-        ) | primary
+          (str(:-) | str(:!)).as(:unary_operator) >>
+            ws? >> qualified_member_ref.as(:operand)
+        ) | qualified_member_ref
       end
 
       rule(:binary_operation) do
@@ -59,6 +71,19 @@ module RuPkl
     end
 
     define_transform do
+      rule(unqualified_member_ref: simple(:member)) do
+        Node::MemberReference.new(nil, member, member.position)
+      end
+
+      rule(
+        qualified_member_ref:
+          { receiver: simple(:receiver), member: sequence(:member) }
+      ) do
+        member.inject(receiver) do |r, m|
+          Node::MemberReference.new(r, m, r.position)
+        end
+      end
+
       rule(unary_operator: simple(:operator), operand: simple(:operand)) do
         Node::UnaryOperation.new(operator.to_sym, operand, node_position(operator))
       end
