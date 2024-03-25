@@ -4,31 +4,30 @@ module RuPkl
   module Node
     class Number
       include ValueCommon
-      include Operatable
 
       def evaluate(_scopes)
         self
       end
 
-      private
-
       def undefined_operator?(operator)
         [:!, :'&&', :'||'].include?(operator)
       end
 
-      def invalid_operand?(operand)
+      def invalid_r_operand?(operand)
         !operand.is_a?(Number)
       end
 
-      def coerce(operator, l_operand, r_operand)
-        case [operator, l_operand, r_operand]
-        in [:'~/', l, r]
-          [:/, l.value.to_i, r.value.to_i]
-        in [op, Integer => l, Integer => r] unless op == :/
-          [op, l.value.to_i, r.value.to_i]
-        in [op, l, r]
-          [op, l.value.to_f, r.value.to_f]
+      def coerce(operator, r_operand)
+        if force_float?(operator, r_operand)
+          [value.to_f, r_operand.value.to_f]
+        else
+          [value.to_i, r_operand.value.to_i]
         end
+      end
+
+      def force_float?(operator, r_operand)
+        operator == :/ ||
+          operator != :'~/' && [self, r_operand].any?(Float)
       end
     end
 
