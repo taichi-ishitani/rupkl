@@ -9,6 +9,31 @@ module RuPkl
 
       private
 
+      def u_op(scopes)
+        o = operand.evaluate(scopes)
+        check_operator(o)
+
+        result =
+          if operator == :-
+            -o.value
+          else
+            !o.value
+          end
+        create_op_result(result)
+      end
+
+      def b_op(scopes)
+        l = l_operand.evaluate(scopes)
+        check_operator(l)
+        return l if short_circuit?(l)
+
+        r = r_operand.evaluate(scopes)
+        check_r_operand(l, r)
+
+        l, r = coerce(l, r)
+        create_op_result(l.__send__(ruby_op, r))
+      end
+
       def check_operator(operand)
         undefined_operator?(operand) &&
           begin
@@ -24,7 +49,7 @@ module RuPkl
           operand.undefined_operator?(operator)
       end
 
-      def check_operand(l_operand, r_operand)
+      def check_r_operand(l_operand, r_operand)
         invalid_r_operand?(l_operand, r_operand) &&
           begin
             message =
@@ -40,6 +65,23 @@ module RuPkl
         else
           !r_operand.is_a?(l_operand.class)
         end
+      end
+
+      def short_circuit?(l_operand)
+        l_operand.respond_to?(:short_circuit?) &&
+          l_operand.short_circuit?(operator)
+      end
+
+      def coerce(l_operand, r_operand)
+        if l_operand.respond_to?(:coerce)
+          l_operand.coerce(operator, r_operand)
+        else
+          [l_operand.value, r_operand.value]
+        end
+      end
+
+      def ruby_op
+        { '&&': :&, '||': :|, '~/': :/ }.fetch(operator, operator)
       end
 
       def create_op_result(result)
@@ -67,18 +109,7 @@ module RuPkl
       attr_reader :position
 
       def evaluate(scopes)
-        o = operand.evaluate(scopes)
-        u_op(o)
-      end
-
-      private
-
-      def u_op(operand)
-        check_operator(operand)
-
-        result =
-          operator == :- && -operand.value || !operand.value
-        create_op_result(result)
+        u_op(scopes)
       end
     end
 
@@ -98,38 +129,7 @@ module RuPkl
       attr_reader :position
 
       def evaluate(scopes)
-        o = l_operand.evaluate(scopes)
-        b_op(o, scopes)
-      end
-
-      private
-
-      def b_op(l_operand, scopes)
-        check_operator(l_operand)
-        return l_operand if short_circuit?(l_operand)
-
-        operand = r_operand.evaluate(scopes)
-        check_operand(l_operand, operand)
-
-        l, r = coerce(l_operand, operand)
-        create_op_result(l.__send__(ruby_op, r))
-      end
-
-      def short_circuit?(l_operand)
-        l_operand.respond_to?(:short_circuit?) &&
-          l_operand.short_circuit?(operator)
-      end
-
-      def coerce(l_operand, r_operand)
-        if l_operand.respond_to?(:coerce)
-          l_operand.coerce(operator, r_operand)
-        else
-          [l_operand.value, r_operand.value]
-        end
-      end
-
-      def ruby_op
-        { '&&': :&, '||': :|, '~/': :/ }.fetch(operator, operator)
+        b_op(scopes)
       end
     end
   end
