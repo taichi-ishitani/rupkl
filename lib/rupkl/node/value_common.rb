@@ -14,6 +14,14 @@ module RuPkl
       def to_ruby(scopes)
         evaluate(scopes).value
       end
+
+      def ==(other)
+        other.instance_of?(self.class) && value == other.value
+      end
+
+      def coerce(_operator, r_operand)
+        [value, r_operand.value]
+      end
     end
   end
 end

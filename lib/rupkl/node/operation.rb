@@ -44,7 +44,7 @@ module RuPkl
         r = r_operand.evaluate(scopes)
         check_r_operand(l, r)
 
-        l, r = coerce(l, r)
+        l, r = l.coerce(operator, r)
         create_op_result(l.__send__(ruby_op, r))
       end
 
@@ -99,14 +99,6 @@ module RuPkl
       def short_circuit?(l_operand)
         l_operand.respond_to?(:short_circuit?) &&
           l_operand.short_circuit?(operator)
-      end
-
-      def coerce(l_operand, r_operand)
-        if l_operand.respond_to?(:coerce)
-          l_operand.coerce(operator, r_operand)
-        else
-          [l_operand.value, r_operand.value]
-        end
       end
 
       def ruby_op

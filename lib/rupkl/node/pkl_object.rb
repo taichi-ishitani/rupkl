@@ -74,6 +74,10 @@ module RuPkl
       def to_ruby(scopes)
         [name.id, property_to_ruby(value, objects, scopes)]
       end
+
+      def ==(other)
+        name.id == other.name.id && value == other.value
+      end
     end
 
     class PklObjectEntry
@@ -101,6 +105,10 @@ module RuPkl
         k = key.to_ruby(scopes)
         v = property_to_ruby(value, objects, scopes)
         [k, v]
+      end
+
+      def ==(other)
+        key == other.key && value == other.value
       end
     end
 
@@ -144,8 +152,15 @@ module RuPkl
         end
       end
 
+      def ==(other)
+        other.instance_of?(self.class) &&
+          match_members?(properties, other.properties, false) &&
+          match_members?(elements, other.elements, true) &&
+          match_members?(entries, other.entries, false)
+      end
+
       def undefined_operator?(operator)
-        [:[]].none?(operator)
+        [:[], :==, :'!='].none?(operator)
       end
 
       def find_by_key(key)
@@ -180,7 +195,7 @@ module RuPkl
 
       def find_entry(key)
         entries
-          &.find { _1.key.value == key.value }
+          &.find { _1.key == key }
           &.then(&:value)
       end
     end
