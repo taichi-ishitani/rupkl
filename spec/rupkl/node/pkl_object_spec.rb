@@ -148,4 +148,96 @@ RSpec.describe RuPkl::Node::PklObject do
         )
     end
   end
+
+  describe 'subscript operation' do
+    context 'when the given key mathes an element index' do
+      it 'should return the specified element' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo { 0 1 2 }
+          bar_0 = foo[2]
+          bar_1 = foo[1]
+          bar_2 = foo[0]
+        PKL
+        node.evaluate(nil).then do |n|
+          expect(n.properties[-3].value).to be_integer(2)
+          expect(n.properties[-2].value).to be_integer(1)
+          expect(n.properties[-1].value).to be_integer(0)
+        end
+      end
+    end
+
+    context 'when the given key matches an entry key' do
+      it 'should return the specified entry' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo {
+            [true] = 0
+            [false] = 1
+            ["foo"] = 2
+            [0] = 3
+          }
+          bar_0 = foo[0]
+          bar_1 = foo["foo"]
+          bar_2 = foo[false]
+          bar_3 = foo[true]
+        PKL
+        node.evaluate(nil).then do |n|
+          expect(n.properties[-4].value).to be_integer(3)
+          expect(n.properties[-3].value).to be_integer(2)
+          expect(n.properties[-2].value).to be_integer(1)
+          expect(n.properties[-1].value).to be_integer(0)
+        end
+      end
+    end
+
+    context 'when no elements/entries are not found' do
+      it 'should raise EvaluationError' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo { 0 1 2 }
+          bar_0 = foo[-1]
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'-1\''
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo { 0 1 2 }
+          bar_0 = foo[3]
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'3\''
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo {
+            [true] = 0
+            ["foo"] = 1
+            [0] = 2
+          }
+          bar_0 = foo[false]
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'false\''
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo {
+            [true] = 0
+            ["foo"] = 1
+            [0] = 2
+          }
+          bar_0 = foo["bar"]
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'"bar"\''
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo {
+            [true] = 0
+            ["foo"] = 1
+            [0] = 2
+          }
+          bar_0 = foo[-1]
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'-1\''
+      end
+    end
+  end
 end

@@ -10,7 +10,7 @@ module RuPkl
       end
 
       def undefined_operator?(operator)
-        [:!, :'&&', :'||'].include?(operator)
+        [:[], :!, :'&&', :'||'].include?(operator)
       end
 
       def invalid_r_operand?(operand)

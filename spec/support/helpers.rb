@@ -78,6 +78,13 @@ module RuPkl
       end
     end
 
+    def subscript_op(receiver, key)
+      receiver_matcher = expression_matcher(receiver)
+      key_matcher = expression_matcher(key)
+      be_instance_of(Node::SubscriptOperation)
+        .and have_attributes(operator: :[], receiver: receiver_matcher, key: key_matcher)
+    end
+
     def u_op(operator, operand)
       be_instance_of(Node::UnaryOperation)
         .and have_attributes(operator: operator, operand: expression_matcher(operand))

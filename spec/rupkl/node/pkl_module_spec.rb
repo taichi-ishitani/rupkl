@@ -44,6 +44,15 @@ RSpec.describe RuPkl::Node::PklModule do
         }
       }
     PKL
+    strings << <<~'PKL'
+      birds {
+        "Pigeon"
+        "Parrot"
+        "Barn owl"
+        "Falcon"
+      }
+      relatedToSnowOwl = birds[2]
+    PKL
   end
 
   describe '#evaluate' do
@@ -98,6 +107,19 @@ RSpec.describe RuPkl::Node::PklModule do
           end
         )
       end)
+
+      node = parser.parse(pkl_strings[4], root: :pkl_module)
+      expect(node.evaluate(nil)).to (be_pkl_module do |m|
+        m.property :birds, (
+          pkl_object do |o|
+            o.element evaluated_string('Pigeon')
+            o.element evaluated_string('Parrot')
+            o.element evaluated_string('Barn owl')
+            o.element evaluated_string('Falcon')
+          end
+        )
+        m.property :relatedToSnowOwl, evaluated_string('Barn owl')
+      end)
     end
   end
 
@@ -144,6 +166,15 @@ RSpec.describe RuPkl::Node::PklModule do
               )
             }
           )
+        )
+
+      node = parser.parse(pkl_strings[4], root: :pkl_module)
+      expect(node.to_ruby(nil))
+        .to match(
+          birds: match_pkl_object(
+            elements: ['Pigeon', 'Parrot', 'Barn owl', 'Falcon']
+          ),
+          relatedToSnowOwl: 'Barn owl'
         )
     end
   end

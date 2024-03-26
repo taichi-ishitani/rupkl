@@ -63,8 +63,49 @@ RSpec.describe RuPkl::Node::String do
     end
   end
 
-  describe '#u_op' do
-    it 'should raise EvaluationError' do
+  describe 'subscript operation' do
+    it 'returns the specified character' do
+      node = parser.parse('"foo"[0]', root: :expression)
+      expect(node.evaluate(nil)).to be_evaluated_string('f')
+
+      node = parser.parse('"foo"[1]', root: :expression)
+      expect(node.evaluate(nil)).to be_evaluated_string('o')
+
+      node = parser.parse('"foo"[2]', root: :expression)
+      expect(node.evaluate(nil)).to be_evaluated_string('o')
+    end
+
+    context 'when the given index is not Integer type' do
+      it 'should raise EvaluationError' do
+        node = parser.parse('"foo"[true]', root: :expression)
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error "invalid key operand type Boolean is given for operator '[]'"
+
+        node = parser.parse('"foo"[0.0]', root: :expression)
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error "invalid key operand type Float is given for operator '[]'"
+
+        node = parser.parse('"foo"["bar"]', root: :expression)
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error "invalid key operand type String is given for operator '[]'"
+      end
+    end
+
+    context 'when the given index is out of range' do
+      it 'should raise EvaluationError' do
+        node = parser.parse('"foo"[-1]', root: :expression)
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'-1\''
+
+        node = parser.parse('"foo"[3]', root: :expression)
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'3\''
+      end
+    end
+  end
+
+  describe 'unary operation' do
+    specify 'unary operations are not defiend' do
       node = parser.parse('!"foo"', root: :expression)
       expect { node.evaluate(nil) }
         .to raise_evaluation_error 'operator \'!\' is not defined for String type'
@@ -75,7 +116,7 @@ RSpec.describe RuPkl::Node::String do
     end
   end
 
-  describe '#b_op' do
+  describe 'binary operation' do
     context 'when defined operator and valid operand are given' do
       it 'should execlute the given operation' do
         node = parser.parse('"foo"=="foo"', root: :expression)

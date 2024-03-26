@@ -21,11 +21,21 @@ module RuPkl
         ).as(:qualified_member_ref) | primary
       end
 
+      rule(:subscript_operation) do
+        (
+          qualified_member_ref.as(:receiver) >>
+            (
+              pure_ws? >> bracketed(expression, '[', ']') >>
+                (ws? >> str('=')).absent?
+            ).repeat(1).as(:key)
+        ).as(:subscript_operation) | qualified_member_ref
+      end
+
       rule(:unary_operation) do
         (
           (str(:-) | str(:!)).as(:unary_operator) >>
-            ws? >> qualified_member_ref.as(:operand)
-        ) | qualified_member_ref
+            ws? >> subscript_operation.as(:operand)
+        ) | subscript_operation
       end
 
       rule(:binary_operation) do
@@ -81,6 +91,15 @@ module RuPkl
       ) do
         member.inject(receiver) do |r, m|
           Node::MemberReference.new(r, m, r.position)
+        end
+      end
+
+      rule(
+        subscript_operation:
+          { receiver: simple(:receiver), key: sequence(:key) }
+      ) do
+        key.inject(receiver) do |r, k|
+          Node::SubscriptOperation.new(r, k, r.position)
         end
       end
 

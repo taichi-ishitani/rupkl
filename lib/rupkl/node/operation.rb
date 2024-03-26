@@ -9,6 +9,20 @@ module RuPkl
 
       private
 
+      def s_op(scopes)
+        r = receiver.evaluate(scopes)
+        check_operator(r)
+
+        k = key.evaluate(scopes)
+        check_key_operand(r, k)
+
+        r.find_by_key(k) ||
+          begin
+            message = "cannot find key '#{k.value.inspect}'"
+            raise EvaluationError.new(message, position)
+          end
+      end
+
       def u_op(scopes)
         o = operand.evaluate(scopes)
         check_operator(o)
@@ -47,6 +61,21 @@ module RuPkl
       def undefined_operator?(operand)
         !operand.respond_to?(:undefined_operator?) ||
           operand.undefined_operator?(operator)
+      end
+
+      def check_key_operand(receiver, key)
+        invalid_key_operand?(receiver, key) &&
+          begin
+            message =
+              "invalid key operand type #{key.class.basename} is given " \
+              "for operator '#{operator}'"
+            raise EvaluationError.new(message, position)
+          end
+      end
+
+      def invalid_key_operand?(receiver, key)
+        receiver.respond_to?(:invalid_key_operand?) &&
+          receiver.invalid_key_operand?(key)
       end
 
       def check_r_operand(l_operand, r_operand)
@@ -92,6 +121,28 @@ module RuPkl
           when ::TrueClass, ::FalseClass then Boolean
           end
         klass.new(result, position)
+      end
+    end
+
+    class SubscriptOperation
+      include OperationCommon
+
+      def initialize(receiver, key, position)
+        @receiver = receiver
+        @key = key
+        @position = position
+      end
+
+      attr_reader :receiver
+      attr_reader :key
+      attr_reader :position
+
+      def operator
+        :[]
+      end
+
+      def evaluate(scopes)
+        s_op(scopes)
       end
     end
 

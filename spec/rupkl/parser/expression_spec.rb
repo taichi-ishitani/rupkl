@@ -83,6 +83,42 @@ RSpec.describe RuPkl::Parser do
   end
 
   describe 'operation' do
+    describe 'subscript operation' do
+      it 'should be parsed by expression parser' do
+        expect(parser)
+          .to parse('"foo"[0]')
+          .as(subscript_op('foo', 0))
+
+        expect(parser)
+          .to parse('"foo"[bar]')
+          .as(subscript_op('foo', member_ref(:bar)))
+
+        expect(parser)
+          .to parse('foo[0]')
+          .as(subscript_op(member_ref(:foo), 0))
+
+        expect(parser)
+          .to parse('foo[bar]')
+          .as(subscript_op(member_ref(:foo), member_ref(:bar)))
+
+        expect(parser)
+          .to parse('foo.bar[0]')
+          .as(subscript_op(member_ref(member_ref(:foo), :bar), 0))
+
+        expect(parser)
+          .to parse('foo.bar[baz]')
+          .as(subscript_op(member_ref(member_ref(:foo), :bar), member_ref(:baz)))
+
+        expect(parser)
+          .to parse('foo[bar][baz][0]')
+          .as(subscript_op(subscript_op(subscript_op(member_ref(:foo), member_ref(:bar)), member_ref(:baz)), 0))
+
+        expect(parser)
+          .to parse('foo [bar]  [baz]  [0]')
+          .as(subscript_op(subscript_op(subscript_op(member_ref(:foo), member_ref(:bar)), member_ref(:baz)), 0))
+      end
+    end
+
     describe 'unary operation' do
       it 'should be parsed by expression parser' do
         # unaryMinusExpr
@@ -327,11 +363,15 @@ RSpec.describe RuPkl::Parser do
           .as(b_op(:'||', 1, 2))
       end
 
-      specify "newline or semicolon should not precede the '-' operator" do
+      specify "newline or semicolon should not precede '-' or '[]' operator" do
         expect(parser).not_to parse("1\n-2")
         expect(parser).not_to parse("1;-2")
         expect(parser).not_to parse("1\n;-2")
         expect(parser).not_to parse("1;\n-2")
+        expect(parser).not_to parse("foo\n[0]")
+        expect(parser).not_to parse('foo;[0]')
+        expect(parser).not_to parse("foo\n;[0]")
+        expect(parser).not_to parse("foo;\n[0]")
       end
     end
 

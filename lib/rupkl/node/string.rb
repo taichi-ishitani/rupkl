@@ -18,7 +18,18 @@ module RuPkl
       end
 
       def undefined_operator?(operator)
-        [:==, :'!='].none?(operator)
+        [:[], :==, :'!='].none?(operator)
+      end
+
+      def invalid_key_operand?(key)
+        !key.is_a?(Integer)
+      end
+
+      def find_by_key(key)
+        index = key.value
+        return nil unless (0...value.length).include?(index)
+
+        self.class.new(value[index], nil, portions)
       end
     end
   end

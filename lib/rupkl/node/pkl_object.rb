@@ -144,6 +144,14 @@ module RuPkl
         end
       end
 
+      def undefined_operator?(operator)
+        [:[]].none?(operator)
+      end
+
+      def find_by_key(key)
+        find_element(key) || find_entry(key)
+      end
+
       private
 
       def add_property(property)
@@ -164,6 +172,16 @@ module RuPkl
 
       def to_ruby_array(items, scopes)
         items&.map { _1.to_ruby(scopes) } || []
+      end
+
+      def find_element(index)
+        elements&.find&.with_index { |_, i| i == index.value }
+      end
+
+      def find_entry(key)
+        entries
+          &.find { _1.key.value == key.value }
+          &.then(&:value)
       end
     end
   end

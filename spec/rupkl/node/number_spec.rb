@@ -33,7 +33,19 @@ RSpec.describe RuPkl::Node::Number do
     end
   end
 
-  describe '#u_op' do
+  describe 'subscript operation' do
+    specify 'subscript operation is not defined' do
+      node = parser.parse("#{int_value}[0]", root: :expression)
+      expect { node.evaluate(nil) }
+        .to raise_evaluation_error 'operator \'[]\' is not defined for Integer type'
+
+      node = parser.parse("#{float_value}[0]", root: :expression)
+      expect { node.evaluate(nil) }
+        .to raise_evaluation_error 'operator \'[]\' is not defined for Float type'
+    end
+  end
+
+  describe 'unary operation' do
     context 'when the given operator is defined' do
       it 'should execute the given operation' do
         node = parser.parse('-1', root: :expression)
@@ -57,7 +69,7 @@ RSpec.describe RuPkl::Node::Number do
     end
   end
 
-  describe '#b_up' do
+  describe 'binary operation' do
     context 'when defined operator and valid operand are given' do
       it 'should execute the given operation' do
         # equality
