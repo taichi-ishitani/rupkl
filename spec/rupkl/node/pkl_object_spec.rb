@@ -427,7 +427,7 @@ RSpec.describe RuPkl::Node::PklObject do
             #{pkl}
             c = a == b
           PKL
-          node.evaluate(nil) do |n|
+          node.evaluate(nil).then do |n|
             expect(n.properties[-1].value).to be_boolean(true)
           end
 
@@ -435,7 +435,7 @@ RSpec.describe RuPkl::Node::PklObject do
             #{pkl}
             c = a != b
           PKL
-          node.evaluate(nil) do |n|
+          node.evaluate(nil).then do |n|
             expect(n.properties[-1].value).to be_boolean(false)
           end
         end
@@ -445,7 +445,7 @@ RSpec.describe RuPkl::Node::PklObject do
             #{pkl}
             c = a == b
           PKL
-          node.evaluate(nil) do |n|
+          node.evaluate(nil).then do |n|
             expect(n.properties[-1].value).to be_boolean(false)
           end
 
@@ -453,7 +453,7 @@ RSpec.describe RuPkl::Node::PklObject do
             #{pkl}
             c = a != b
           PKL
-          node.evaluate(nil) do |n|
+          node.evaluate(nil).then do |n|
             expect(n.properties[-1].value).to be_boolean(true)
           end
         end
