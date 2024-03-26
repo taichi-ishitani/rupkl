@@ -8,6 +8,10 @@ module RuPkl
         @position = position
       end
 
+      def ==(other)
+        other.instance_of?(self.class) && id == other.id
+      end
+
       attr_reader :id
       attr_reader :position
     end

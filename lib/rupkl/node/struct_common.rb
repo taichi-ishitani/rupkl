@@ -21,6 +21,35 @@ module RuPkl
           lhs == rhs
         end
       end
+
+      def evaluate_hash_members(members, scopes, accessor)
+        members&.each_with_object([]) do |member, result|
+          member.evaluate(scopes).then do |m|
+            duplicate_member?(result, m, accessor) &&
+              (raise EvaluationError.new('duplicate definition of member', m.position))
+            result << m
+          end
+        end
+      end
+
+      def duplicate_member?(members, member, accessor)
+        members
+          .any? { _1.__send__(accessor) == member.__send__(accessor) }
+      end
+
+      def evaluate_array_members(members, scopes)
+        members&.map { _1.evaluate(scopes) }
+      end
+
+      def to_ruby_hash_members(members, scopes, accessor)
+        evaluate_hash_members(members, scopes, accessor)
+          &.to_h { _1.to_ruby(scopes) } || {}
+      end
+
+      def to_ruby_array_members(members, scopes)
+        evaluate_array_members(members, scopes)
+          &.map { _1.to_ruby(scopes) } || []
+      end
     end
   end
 end

@@ -121,6 +121,14 @@ RSpec.describe RuPkl::Node::PklModule do
         m.property :relatedToSnowOwl, evaluated_string('Barn owl')
       end)
     end
+
+    context 'when a property is being defined again' do
+      it 'should raise EvaluationError' do
+        node = parser.parse('foo = 1 foo = 2', root: :pkl_module)
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'duplicate definition of member'
+      end
+    end
   end
 
   describe '#to_ruby' do

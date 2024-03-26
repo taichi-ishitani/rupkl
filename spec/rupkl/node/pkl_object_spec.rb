@@ -99,6 +99,22 @@ RSpec.describe RuPkl::Node::PklObject do
         )
       end)
     end
+
+    context 'when a property/entry is being defined again' do
+      it 'should raise EvaluationError' do
+        node = parser.parse(<<~'PKL'.chomp, root: :pkl_object)
+          { foo = 1 foo = 2 }
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'duplicate definition of member'
+
+        node = parser.parse(<<~'PKL'.chomp, root: :pkl_object)
+          { ["foo"] = 1 ["foo"] = 2 }
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'duplicate definition of member'
+      end
+    end
   end
 
   describe '#to_ruby' do

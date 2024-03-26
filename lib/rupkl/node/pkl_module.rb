@@ -19,15 +19,13 @@ module RuPkl
 
       def evaluate(scopes)
         push_scope(scopes) do |s|
-          evaluated_properties =
-            properties&.map { _1.evaluate(s) }
-          self.class.new(evaluated_properties, position)
+          self.class.new(evaluate_properties(s), position)
         end
       end
 
       def to_ruby(scopes)
         push_scope(scopes) do |s|
-          properties&.to_h { _1.to_ruby(s) } || {}
+          to_ruby_hash_members(properties, s, :name)
         end
       end
 
@@ -35,6 +33,10 @@ module RuPkl
 
       def add_property(property)
         (@properties ||= []) << property
+      end
+
+      def evaluate_properties(scopes)
+        evaluate_hash_members(properties, scopes, :name)
       end
     end
   end

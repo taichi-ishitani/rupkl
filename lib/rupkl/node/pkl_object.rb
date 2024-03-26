@@ -46,7 +46,7 @@ module RuPkl
         lhs.instance_of?(rhs.class) &&
           case lhs
           when PklObjectProperty then lhs.name.id == rhs.name.id
-          when PklObjectEntry then lhs.key.value == rhs.key.value
+          when PklObjectEntry then lhs.key == rhs.key
           end
       end
     end
@@ -137,17 +137,16 @@ module RuPkl
 
       def evaluate(scopes)
         push_scope(scopes) do |s|
-          new_members = members.map { _1.evaluate(s) }
-          self.class.new(new_members, position)
+          self.class.new(evaluate_members(s), position)
         end
       end
 
       def to_ruby(scopes)
         push_scope(scopes) do |s|
           RuPkl::PklObject.new(
-            to_ruby_hash(properties, s),
-            to_ruby_array(elements, s),
-            to_ruby_hash(entries, s)
+            to_ruby_hash_members(properties, s, :name),
+            to_ruby_array_members(elements, s),
+            to_ruby_hash_members(entries, s, :key)
           )
         end
       end
@@ -181,12 +180,12 @@ module RuPkl
         (@elements ||= []) << element
       end
 
-      def to_ruby_hash(items, scopes)
-        items&.to_h { _1.to_ruby(scopes) } || {}
-      end
-
-      def to_ruby_array(items, scopes)
-        items&.map { _1.to_ruby(scopes) } || []
+      def evaluate_members(scopes)
+        [
+          *evaluate_hash_members(properties, scopes, :name),
+          *evaluate_array_members(elements, scopes),
+          *evaluate_hash_members(entries, scopes, :key)
+        ]
       end
 
       def find_element(index)
