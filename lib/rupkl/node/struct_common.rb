@@ -9,8 +9,22 @@ module RuPkl
 
       private
 
-      def push_scope(scopes)
-        yield([*scopes, self])
+      def add_hash_member(members, member, accessor)
+        duplicate_member?(members, member, accessor) &&
+          begin
+            message = 'duplicate definition of member'
+            raise EvaluationError.new(message, member.position)
+          end
+        members << member
+      end
+
+      def duplicate_member?(members, member, accessor)
+        members
+          .any? { _1.__send__(accessor) == member.__send__(accessor) }
+      end
+
+      def add_array_member(members, member)
+        members << member
       end
 
       def match_members?(lhs, rhs, match_order)
@@ -22,32 +36,40 @@ module RuPkl
         end
       end
 
-      def evaluate_hash_members(members, scopes, accessor)
-        members&.each_with_object([]) do |member, result|
-          member.evaluate(scopes).then do |m|
-            duplicate_member?(result, m, accessor) &&
-              (raise EvaluationError.new('duplicate definition of member', m.position))
-            result << m
+      def merge_hash_members(lhs, rhs, accessor)
+        return nil unless lhs || rhs
+        return rhs unless lhs
+
+        rhs&.each do |r|
+          if (index = find_index(lhs, r, accessor))
+            lhs[index] = r
+          else
+            lhs << r
           end
         end
+
+        lhs
       end
 
-      def duplicate_member?(members, member, accessor)
+      def find_index(lhs, rhs, accessor)
+        lhs.find_index { _1.__send__(accessor) == rhs.__send__(accessor) }
+      end
+
+      def merge_array_members(lhs, rhs)
+        return nil unless lhs || rhs
+        return rhs unless lhs
+        return lhs unless rhs
+
+        lhs.concat(rhs)
+      end
+
+      def to_ruby_hash_members(members, scopes)
         members
-          .any? { _1.__send__(accessor) == member.__send__(accessor) }
-      end
-
-      def evaluate_array_members(members, scopes)
-        members&.map { _1.evaluate(scopes) }
-      end
-
-      def to_ruby_hash_members(members, scopes, accessor)
-        evaluate_hash_members(members, scopes, accessor)
           &.to_h { _1.to_ruby(scopes) } || {}
       end
 
       def to_ruby_array_members(members, scopes)
-        evaluate_array_members(members, scopes)
+        members
           &.map { _1.to_ruby(scopes) } || []
       end
     end

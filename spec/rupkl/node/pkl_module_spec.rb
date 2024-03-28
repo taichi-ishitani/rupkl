@@ -62,7 +62,7 @@ RSpec.describe RuPkl::Node::PklModule do
 
       node = parser.parse(pkl_strings[1], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
-        m.property :message, be_evaluated_string("Although the Dodo is extinct,\nthe species will be remembered.")
+        m.property :message, "Although the Dodo is extinct,\nthe species will be remembered."
         m.property :attendants, 100
         m.property :isInteractive, true
         m.property :amountLearned, 13.37
@@ -71,19 +71,21 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[2], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
         m.property :exampleObjectWithJustIntElements, (
-          pkl_object do |o|
+          dynamic do |o|
             o.element 100
             o.element 42
           end
         )
         m.property :exampleObjectWithMixedElements, (
-          pkl_object do |o1|
-            o1.element be_evaluated_string('Bird Breeder Conference')
+          dynamic do |o1|
+            o1.element 'Bird Breeder Conference'
             o1.element 2023
-            o1.element (pkl_object do |o2|
-              o2.element 100
-              o2.element 42
-            end)
+            o1.element (
+              dynamic do |o2|
+                o2.element 100
+                o2.element 42
+              end
+            )
           end
         )
       end)
@@ -91,17 +93,17 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[3], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
         m.property :mixedObject, (
-          pkl_object do |o1|
-            o1.property :name, evaluated_string('Pigeon')
+          dynamic do |o1|
+            o1.property :name, 'Pigeon'
             o1.property :lifespan, 8
-            o1.element evaluated_string('wing')
-            o1.element evaluated_string('claw')
-            o1.entry evaluated_string('wing'), evaluated_string('Not related to the _element_ "wing"')
+            o1.element 'wing'
+            o1.element 'claw'
+            o1.entry 'wing', 'Not related to the _element_ "wing"'
             o1.element 42
             o1.property :extinct, false
             o1.entry false, (
-              pkl_object do |o2|
-                o2.property :description, evaluated_string('Construed object example')
+              dynamic do |o2|
+                o2.property :description, 'Construed object example'
               end
             )
           end
@@ -111,11 +113,11 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[4], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
         m.property :birds, (
-          pkl_object do |o|
-            o.element evaluated_string('Pigeon')
-            o.element evaluated_string('Parrot')
-            o.element evaluated_string('Barn owl')
-            o.element evaluated_string('Falcon')
+          dynamic do |o|
+            o.element 'Pigeon'
+            o.element 'Parrot'
+            o.element 'Barn owl'
+            o.element 'Falcon'
           end
         )
         m.property :relatedToSnowOwl, evaluated_string('Barn owl')
@@ -145,14 +147,14 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[2], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match(
-          exampleObjectWithJustIntElements: match_pkl_object(
+          exampleObjectWithJustIntElements: match_dynamic(
             elements: [100, 42]
           ),
-          exampleObjectWithMixedElements: match_pkl_object(
+          exampleObjectWithMixedElements: match_dynamic(
             elements: [
               'Bird Breeder Conference',
               2023,
-              match_pkl_object(elements: [100, 42])
+              match_dynamic(elements: [100, 42])
             ]
           )
         )
@@ -160,7 +162,7 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[3], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match(
-          mixedObject: match_pkl_object(
+          mixedObject: match_dynamic(
             properties: {
               name: 'Pigeon', lifespan: 8, extinct: false
             },
@@ -169,7 +171,7 @@ RSpec.describe RuPkl::Node::PklModule do
             ],
             entries: {
               'wing' => 'Not related to the _element_ "wing"',
-              false => match_pkl_object(
+              false => match_dynamic(
                 properties: { description: 'Construed object example' }
               )
             }
@@ -179,7 +181,7 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[4], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match(
-          birds: match_pkl_object(
+          birds: match_dynamic(
             elements: ['Pigeon', 'Parrot', 'Barn owl', 'Falcon']
           ),
           relatedToSnowOwl: 'Barn owl'

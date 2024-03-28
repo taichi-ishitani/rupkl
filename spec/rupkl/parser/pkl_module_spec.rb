@@ -69,7 +69,7 @@ RSpec.describe RuPkl::Parser do
       PKL
       expect(parser).to parse(pkl).as(pkl_module do |m|
         m.property :mixedObject, [
-          pkl_object do |o1|
+          unresolved_object do |o1|
             o1.property :name, 'Pigeon'
             o1.property :lifespan, 8
             o1.element 'wing'
@@ -78,7 +78,7 @@ RSpec.describe RuPkl::Parser do
             o1.element 42
             o1.property :extinct, false
             o1.entry false, [
-              pkl_object do |o2|
+              unresolved_object do |o2|
                 o2.property :description, 'Construed object example'
               end
             ]

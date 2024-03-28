@@ -8,7 +8,7 @@ module RuPkl
           id.as(:name) >> ws? >>
           (
             (str('=').ignore >> ws? >> expression.as(:value)) |
-            (pkl_object >> (ws? >> pkl_object).repeat).as(:objects)
+            (object >> (ws? >> object).repeat).as(:objects)
           )
         ).as(:class_property)
       end

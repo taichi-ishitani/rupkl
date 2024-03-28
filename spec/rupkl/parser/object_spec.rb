@@ -5,15 +5,15 @@ RSpec.describe RuPkl::Parser::Parser do
     RuPkl::Parser.new
   end
 
-  describe 'pkl object' do
+  describe 'object' do
     def parse(string)
-      parse_string(string, :pkl_object)
+      parse_string(string, :object)
     end
 
-    it 'should be parsed by pkl object parser' do
-      expect(parser).to parse('{}').as(pkl_object)
+    it 'should be parsed by object parser' do
+      expect(parser).to parse('{}').as(unresolved_object)
 
-      expect(parser).to parse(<<~'PKL').as(pkl_object)
+      expect(parser).to parse(<<~'PKL').as(unresolved_object)
         {
 
 
@@ -21,12 +21,12 @@ RSpec.describe RuPkl::Parser::Parser do
       PKL
 
       pkl = '{ 1 }'
-      expect(parser).to parse(pkl).as(pkl_object do |o|
+      expect(parser).to parse(pkl).as(unresolved_object do |o|
         o.element 1
       end)
 
       pkl = '{ 1 2 3 }'
-      expect(parser).to parse(pkl).as(pkl_object do |o|
+      expect(parser).to parse(pkl).as(unresolved_object do |o|
         o.element 1
         o.element 2
         o.element 3
@@ -38,30 +38,30 @@ RSpec.describe RuPkl::Parser::Parser do
           3
         }
       PKL
-      expect(parser).to parse(pkl).as(pkl_object do |o|
+      expect(parser).to parse(pkl).as(unresolved_object do |o|
         o.element 1
         o.element 2
         o.element 3
       end)
 
       pkl = '{ foo = 1 }'
-      expect(parser).to parse(pkl).as(pkl_object do |o|
+      expect(parser).to parse(pkl).as(unresolved_object do |o|
         o.property :foo, 1
       end)
 
       pkl = '{ foo = 1 bar = 2 }'
-      expect(parser).to parse(pkl).as(pkl_object do |o|
+      expect(parser).to parse(pkl).as(unresolved_object do |o|
         o.property :foo, 1
         o.property :bar, 2
       end)
 
       pkl = '{["foo"] = 1 }'
-      expect(parser).to parse(pkl).as(pkl_object do |o|
+      expect(parser).to parse(pkl).as(unresolved_object do |o|
         o.entry 'foo', 1
       end)
 
       pkl = '{["foo"] = 1 ["bar"] = 2}'
-      expect(parser).to parse(pkl).as(pkl_object do |o|
+      expect(parser).to parse(pkl).as(unresolved_object do |o|
         o.entry 'foo', 1
         o.entry 'bar', 2
       end)
@@ -75,11 +75,11 @@ RSpec.describe RuPkl::Parser::Parser do
           }
         }
       PKL
-      expect(parser).to parse(pkl).as(pkl_object do |o1|
+      expect(parser).to parse(pkl).as(unresolved_object do |o1|
         o1.property :name, 'Common wood pigeon'
         o1.property :diet, 'Seeds'
         o1.property :taxonomy, [
-          pkl_object { |o2| o2.property :species, 'Columba palumbus' }
+          unresolved_object { |o2| o2.property :species, 'Columba palumbus' }
         ]
       end)
 
@@ -97,7 +97,7 @@ RSpec.describe RuPkl::Parser::Parser do
           }
         }
       PKL
-      expect(parser).to parse(pkl).as(pkl_object do |o1|
+      expect(parser).to parse(pkl).as(unresolved_object do |o1|
         o1.property :name, 'Pigeon'
         o1.property :lifespan, 8
         o1.element 'wing'
@@ -106,7 +106,7 @@ RSpec.describe RuPkl::Parser::Parser do
         o1.element 42
         o1.property :extinct, false
         o1.entry false, [
-          pkl_object { |o2| o2.property(:description, 'Construed object example') }
+          unresolved_object { |o2| o2.property(:description, 'Construed object example') }
         ]
       end)
 
@@ -123,14 +123,14 @@ RSpec.describe RuPkl::Parser::Parser do
           }
         }
       PKL
-      expect(parser).to parse(pkl).as(pkl_object do |o1|
+      expect(parser).to parse(pkl).as(unresolved_object do |o1|
         o1.property :foo, [
-          pkl_object do |o2|
+          unresolved_object do |o2|
             o2.property :bar, 0
             o2.element 1
             o2.entry 'baz', 2
           end,
-          pkl_object do |o2|
+          unresolved_object do |o2|
             o2.property :bar, 3
             o2.element 4
             o2.entry 'baz', 5

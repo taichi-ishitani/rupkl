@@ -18,15 +18,14 @@ module RuPkl
       attr_reader :position
 
       def evaluate(scopes)
-        push_scope(scopes) do |s|
+        [*scopes, self].then do |s|
           self.class.new(evaluate_properties(s), position)
         end
       end
 
       def to_ruby(scopes)
-        push_scope(scopes) do |s|
-          to_ruby_hash_members(properties, s, :name)
-        end
+        m = evaluate(scopes)
+        to_ruby_hash_members(m.properties, scopes)
       end
 
       private
@@ -36,7 +35,11 @@ module RuPkl
       end
 
       def evaluate_properties(scopes)
-        evaluate_hash_members(properties, scopes, :name)
+        properties&.each_with_object([]) do |property, result|
+          property
+            .evaluate(scopes)
+            .then { add_hash_member(result, _1, :name) }
+        end
       end
     end
   end
