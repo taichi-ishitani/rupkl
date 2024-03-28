@@ -5,20 +5,36 @@ module RuPkl
     WS_PATTERN = '[ \t\f\r\n;]'
 
     define_parser do
+      rule(:line_comment) do
+        str('//') >> match('[^\n]').repeat >> (nl | eof)
+      end
+
+      rule(:block_comment) do
+        str('/*') >> (block_comment | (str('*/').absent? >> any)).repeat >> str('*/')
+      end
+
+      rule(:comment) do
+        line_comment | block_comment
+      end
+
       rule(:nl) do
         match('\n')
       end
 
+      rule(:eof) do
+        any.absent?
+      end
+
       rule(:ws) do
-        match(WS_PATTERN).repeat(1).ignore
+        (match(WS_PATTERN) | comment).repeat(1).ignore
       end
 
       rule(:ws?) do
-        match(WS_PATTERN).repeat.ignore
+        (match(WS_PATTERN) | comment).repeat.ignore
       end
 
       rule(:pure_ws?) do
-        match('[ \t\f]').repeat.ignore
+        (match('[ \t\f]') | comment).repeat.ignore
       end
 
       private
