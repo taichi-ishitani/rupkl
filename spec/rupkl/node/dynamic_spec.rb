@@ -161,6 +161,13 @@ RSpec.describe RuPkl::Node::Dynamic do
           .to raise_evaluation_error 'cannot find key \'3\''
 
         node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo { 0 1 2 }
+          bar_0 = foo[0.0]
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find key \'0.0\''
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
           foo {
             [true] = 0
             ["foo"] = 1

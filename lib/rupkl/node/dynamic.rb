@@ -83,6 +83,7 @@ module RuPkl
 
       def find_element(index)
         return nil unless elements
+        return nil unless index.value.is_a?(::Integer)
 
         elements
           .find.with_index { |_, i| i == index.value }
