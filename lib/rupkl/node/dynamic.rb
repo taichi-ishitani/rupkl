@@ -20,7 +20,7 @@ module RuPkl
       end
 
       def to_ruby(scopes)
-        RuPkl::Dynamic.new(
+        RuPkl::PklObject.new(
           to_ruby_hash_members(properties, scopes),
           to_ruby_array_members(elements, scopes),
           to_ruby_hash_members(entries, scopes)

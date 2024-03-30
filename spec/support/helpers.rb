@@ -269,7 +269,7 @@ module RuPkl
 
     alias_method :be_dynamic, :dynamic
 
-    def match_dynamic(properties: nil, elements: nil, entries: nil)
+    def match_pkl_object(properties: nil, elements: nil, entries: nil)
       properties_matcher =
         properties
           .then { _1 && match(_1) || be_empty }
@@ -280,7 +280,7 @@ module RuPkl
         entries
           .then { _1 && match(_1)  || be_empty }
 
-      be_instance_of(RuPkl::Dynamic)
+      be_instance_of(RuPkl::PklObject)
         .and have_attributes(
           properties: properties_matcher,
           elements: elements_matcher,

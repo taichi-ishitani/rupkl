@@ -147,14 +147,14 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[2], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match(
-          exampleObjectWithJustIntElements: match_dynamic(
+          exampleObjectWithJustIntElements: match_pkl_object(
             elements: [100, 42]
           ),
-          exampleObjectWithMixedElements: match_dynamic(
+          exampleObjectWithMixedElements: match_pkl_object(
             elements: [
               'Bird Breeder Conference',
               2023,
-              match_dynamic(elements: [100, 42])
+              match_pkl_object(elements: [100, 42])
             ]
           )
         )
@@ -162,7 +162,7 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[3], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match(
-          mixedObject: match_dynamic(
+          mixedObject: match_pkl_object(
             properties: {
               name: 'Pigeon', lifespan: 8, extinct: false
             },
@@ -171,7 +171,7 @@ RSpec.describe RuPkl::Node::PklModule do
             ],
             entries: {
               'wing' => 'Not related to the _element_ "wing"',
-              false => match_dynamic(
+              false => match_pkl_object(
                 properties: { description: 'Construed object example' }
               )
             }
@@ -181,7 +181,7 @@ RSpec.describe RuPkl::Node::PklModule do
       node = parser.parse(pkl_strings[4], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match(
-          birds: match_dynamic(
+          birds: match_pkl_object(
             elements: ['Pigeon', 'Parrot', 'Barn owl', 'Falcon']
           ),
           relatedToSnowOwl: 'Barn owl'

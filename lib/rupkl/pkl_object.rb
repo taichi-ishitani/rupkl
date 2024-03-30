@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RuPkl
-  class Dynamic
+  class PklObject
     def initialize(properties, elements, entries)
       @properties = properties
       @elements = elements

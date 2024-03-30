@@ -53,25 +53,25 @@ RSpec.describe RuPkl::Node::Dynamic do
       parser.parse(string.chomp, root: :object)
     end
 
-    it 'should return a Dynamic object contating evaluated members' do
+    it 'should return a PklObject object contating evaluated members' do
       node = parse(pkl_strings[0])
-      expect(node.to_ruby(nil)).to match_dynamic
+      expect(node.to_ruby(nil)).to match_pkl_object
 
       node = parse(pkl_strings[1])
       expect(node.to_ruby(nil))
-        .to match_dynamic(elements: [0, 1, 2])
+        .to match_pkl_object(elements: [0, 1, 2])
 
       node = parse(pkl_strings[2])
       expect(node.to_ruby(nil))
-        .to match_dynamic(properties: { foo: 1, bar: 2 })
+        .to match_pkl_object(properties: { foo: 1, bar: 2 })
 
       node = parse(pkl_strings[3])
       expect(node.to_ruby(nil))
-        .to match_dynamic(entries: { 'foo' => 1, 'bar' => 2 })
+        .to match_pkl_object(entries: { 'foo' => 1, 'bar' => 2 })
 
       node = parse(pkl_strings[4])
       expect(node.to_ruby(nil))
-        .to match_dynamic(
+        .to match_pkl_object(
           properties: {
             name: 'Pigeon', lifespan: 8, extinct: false
           },
@@ -80,7 +80,7 @@ RSpec.describe RuPkl::Node::Dynamic do
           ],
           entries: {
             'wing' => 'Not related to the _element_ "wing"',
-            false => match_dynamic(
+            false => match_pkl_object(
               properties: { description: 'Construed object example' }
             )
           }
@@ -88,9 +88,9 @@ RSpec.describe RuPkl::Node::Dynamic do
 
       node = parse(pkl_strings[5])
       expect(node.to_ruby(nil))
-        .to match_dynamic(
+        .to match_pkl_object(
           properties: {
-            foo: match_dynamic(
+            foo: match_pkl_object(
               properties: { bar: 3 },
               elements: [1, 4],
               entries: { 'baz' => 5 }

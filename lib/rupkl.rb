@@ -6,7 +6,7 @@ require 'facets/module/basename'
 
 require_relative 'rupkl/version'
 require_relative 'rupkl/exception'
-require_relative 'rupkl/dynamic'
+require_relative 'rupkl/pkl_object'
 require_relative 'rupkl/node/value_common'
 require_relative 'rupkl/node/struct_common'
 require_relative 'rupkl/node/boolean'
