@@ -19,6 +19,15 @@ RSpec.describe RuPkl::Node::PklModule do
       amountLearned = 13.37
     PKL
     strings << <<~'PKL'
+      message = """
+        Although the Dodo is extinct,
+        the species will be remembered.
+        """
+      attendants = 50 + 50
+      isInteractive = true || false
+      amountLearned = 13 + 0.37
+    PKL
+    strings << <<~'PKL'
       exampleObjectWithJustIntElements {
         100
         42
@@ -70,6 +79,14 @@ RSpec.describe RuPkl::Node::PklModule do
 
       node = parser.parse(pkl_strings[2], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
+        m.property :message, "Although the Dodo is extinct,\nthe species will be remembered."
+        m.property :attendants, 100
+        m.property :isInteractive, true
+        m.property :amountLearned, 13.37
+      end)
+
+      node = parser.parse(pkl_strings[3], root: :pkl_module)
+      expect(node.evaluate(nil)).to (be_pkl_module do |m|
         m.property :exampleObjectWithJustIntElements, (
           dynamic do |o|
             o.element 100
@@ -90,7 +107,7 @@ RSpec.describe RuPkl::Node::PklModule do
         )
       end)
 
-      node = parser.parse(pkl_strings[3], root: :pkl_module)
+      node = parser.parse(pkl_strings[4], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
         m.property :mixedObject, (
           dynamic do |o1|
@@ -110,7 +127,7 @@ RSpec.describe RuPkl::Node::PklModule do
         )
       end)
 
-      node = parser.parse(pkl_strings[4], root: :pkl_module)
+      node = parser.parse(pkl_strings[5], root: :pkl_module)
       expect(node.evaluate(nil)).to (be_pkl_module do |m|
         m.property :birds, (
           dynamic do |o|
@@ -147,6 +164,14 @@ RSpec.describe RuPkl::Node::PklModule do
       )
 
       node = parser.parse(pkl_strings[2], root: :pkl_module)
+      expect(node.to_ruby(nil)).to match_pkl_object(
+        properties: {
+          message: "Although the Dodo is extinct,\nthe species will be remembered.",
+          attendants: 100, isInteractive: true, amountLearned: 13.37
+        }
+      )
+
+      node = parser.parse(pkl_strings[3], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match_pkl_object(
           properties: {
@@ -163,7 +188,7 @@ RSpec.describe RuPkl::Node::PklModule do
           }
         )
 
-      node = parser.parse(pkl_strings[3], root: :pkl_module)
+      node = parser.parse(pkl_strings[4], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match_pkl_object(
           properties: {
@@ -184,7 +209,7 @@ RSpec.describe RuPkl::Node::PklModule do
           }
         )
 
-      node = parser.parse(pkl_strings[4], root: :pkl_module)
+      node = parser.parse(pkl_strings[5], root: :pkl_module)
       expect(node.to_ruby(nil))
         .to match_pkl_object(
           properties: {

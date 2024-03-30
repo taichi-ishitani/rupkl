@@ -18,14 +18,14 @@ module RuPkl
       attr_reader :position
 
       def evaluate(scopes)
-        [*scopes, self].then do |s|
+        push_scope(scopes) do |s|
           self.class.new(evaluate_properties(s), position)
         end
       end
 
       def to_ruby(scopes)
-        evaluate(scopes).then do |m|
-          create_pkl_object(m.properties, nil, nil)
+        push_scope(scopes) do |s|
+          create_pkl_object(s, properties, nil, nil)
         end
       end
 

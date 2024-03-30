@@ -49,6 +49,10 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
               bar = 3
               4
               ["baz"] = 5
+            } {
+              qux = 6
+              7
+              ["qux"] = 8
             }
           }
         PKL
@@ -98,9 +102,12 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
           o1.property :foo, (
             dynamic do |o2|
               o2.property :bar, 3
+              o2.property :qux, 6
               o2.element 1
               o2.element 4
+              o2.element 7
               o2.entry 'baz', 5
+              o2.entry 'qux', 8
             end
           )
         end)

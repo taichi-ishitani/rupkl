@@ -10,7 +10,11 @@ module RuPkl
       end
 
       def property_to_ruby(value, objects, scopes)
-        evaluate_property(value, objects, scopes).to_ruby(nil)
+        if value
+          value.to_ruby(scopes)
+        else
+          evaluate_objects(objects, scopes).to_ruby(nil)
+        end
       end
 
       def evaluate_objects(objects, scopes)

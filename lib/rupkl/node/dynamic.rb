@@ -20,7 +20,7 @@ module RuPkl
       end
 
       def to_ruby(_scopes)
-        create_pkl_object(properties, elements, entries)
+        create_pkl_object(nil, properties, elements, entries)
       end
 
       def merge!(other)
@@ -50,7 +50,7 @@ module RuPkl
       def add_members(members, scopes)
         return unless members
 
-        [*scopes, self].then do |s|
+        push_scope(scopes) do |s|
           members.each { |m| add_member(m, s) }
         end
       end

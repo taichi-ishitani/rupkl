@@ -9,6 +9,10 @@ module RuPkl
 
       private
 
+      def push_scope(scopes)
+        yield([*scopes, self])
+      end
+
       def add_hash_member(members, member, accessor)
         duplicate_member?(members, member, accessor) &&
           begin
@@ -63,22 +67,22 @@ module RuPkl
         lhs.concat(rhs)
       end
 
-      def create_pkl_object(properties, elements, entries)
+      def create_pkl_object(scopes, properties, elements, entries)
         RuPkl::PklObject.new(
-          to_ruby_hash_members(properties),
-          to_ruby_array_members(elements),
-          to_ruby_hash_members(entries)
+          to_ruby_hash_members(scopes, properties),
+          to_ruby_array_members(scopes, elements),
+          to_ruby_hash_members(scopes, entries)
         )
       end
 
-      def to_ruby_hash_members(members)
+      def to_ruby_hash_members(scopes, members)
         members
-          &.to_h { _1.to_ruby(nil) }
+          &.to_h { _1.to_ruby(scopes) }
       end
 
-      def to_ruby_array_members(members)
+      def to_ruby_array_members(scopes, members)
         members
-          &.map { _1.to_ruby(nil) }
+          &.map { _1.to_ruby(scopes) }
       end
     end
   end
