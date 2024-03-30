@@ -272,13 +272,13 @@ module RuPkl
     def match_pkl_object(properties: nil, elements: nil, entries: nil)
       properties_matcher =
         properties
-          .then { _1 && match(_1) || be_nil }
+          .then { _1 && match(_1) || be_empty }
       elements_matcher =
         elements
-          .then { _1 && match(_1)  || be_nil }
+          .then { _1 && match(_1)  || be_empty }
       entries_matcher =
         entries
-          .then { _1 && match(_1)  || be_nil }
+          .then { _1 && match(_1)  || be_empty }
 
       be_instance_of(RuPkl::PklObject)
         .and have_attributes(
