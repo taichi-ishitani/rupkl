@@ -24,8 +24,9 @@ module RuPkl
       end
 
       def to_ruby(scopes)
-        m = evaluate(scopes)
-        to_ruby_hash_members(m.properties, scopes)
+        evaluate(scopes).then do |m|
+          create_pkl_object(m.properties, nil, nil)
+        end
       end
 
       private

@@ -272,13 +272,13 @@ module RuPkl
     def match_pkl_object(properties: nil, elements: nil, entries: nil)
       properties_matcher =
         properties
-          .then { _1 && match(_1) || be_empty }
+          .then { _1 && match(_1) || be_nil }
       elements_matcher =
         elements
-          .then { _1 && match(_1)  || be_empty }
+          .then { _1 && match(_1)  || be_nil }
       entries_matcher =
         entries
-          .then { _1 && match(_1)  || be_empty }
+          .then { _1 && match(_1)  || be_nil }
 
       be_instance_of(RuPkl::PklObject)
         .and have_attributes(
@@ -286,6 +286,10 @@ module RuPkl
           elements: elements_matcher,
           entries: entries_matcher
         )
+    end
+
+    def to_be_empty_pkl_object
+      match_pkl_object
     end
 
     def raise_parse_error(message)

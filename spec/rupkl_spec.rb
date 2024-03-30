@@ -11,17 +11,21 @@ RSpec.describe RuPkl do
     end
 
     it 'should load Pkl string' do
-      expect(RuPkl.load(input)).to match(
-        name: 'Pkl: Configure your Systems in New Ways',
-        attendants: 100, isInteractive: true
+      expect(RuPkl.load(input)).to match_pkl_object(
+        properties: {
+          name: 'Pkl: Configure your Systems in New Ways',
+          attendants: 100, isInteractive: true
+        }
       )
     end
 
     it 'should load Pkl string from the given IO object' do
       io = StringIO.new(input)
-      expect(RuPkl.load(io)).to match(
-        name: 'Pkl: Configure your Systems in New Ways',
-        attendants: 100, isInteractive: true
+      expect(RuPkl.load(io)).to match_pkl_object(
+          properties: {
+          name: 'Pkl: Configure your Systems in New Ways',
+          attendants: 100, isInteractive: true
+        }
       )
     end
   end
@@ -43,10 +47,12 @@ RSpec.describe RuPkl do
       io = StringIO.new(input)
       allow(File).to receive(:open).with(input_file, 'r').and_yield(io)
 
-      expect(RuPkl.load_file(input_file)).to match(
+      expect(RuPkl.load_file(input_file)).to match_pkl_object(
+        properties: {
         name: 'Pkl: Configure your Systems in New Ways',
         attendants: 100, isInteractive: true
-      )
+      }
+    )
     end
   end
 end

@@ -134,57 +134,65 @@ RSpec.describe RuPkl::Node::PklModule do
   end
 
   describe '#to_ruby' do
-    it 'should return a hash object contating evaluated properties' do
+    it 'should return a PklObject object contating evaluated properties' do
       node = parser.parse(pkl_strings[0], root: :pkl_module)
-      expect(node.to_ruby(nil)).to be_empty
+      expect(node.to_ruby(nil)).to to_be_empty_pkl_object
 
       node = parser.parse(pkl_strings[1], root: :pkl_module)
-      expect(node.to_ruby(nil)).to match(
-        message: "Although the Dodo is extinct,\nthe species will be remembered.",
-        attendants: 100, isInteractive: true, amountLearned: 13.37
+      expect(node.to_ruby(nil)).to match_pkl_object(
+        properties: {
+          message: "Although the Dodo is extinct,\nthe species will be remembered.",
+          attendants: 100, isInteractive: true, amountLearned: 13.37
+        }
       )
 
       node = parser.parse(pkl_strings[2], root: :pkl_module)
       expect(node.to_ruby(nil))
-        .to match(
-          exampleObjectWithJustIntElements: match_pkl_object(
-            elements: [100, 42]
-          ),
-          exampleObjectWithMixedElements: match_pkl_object(
-            elements: [
-              'Bird Breeder Conference',
-              2023,
-              match_pkl_object(elements: [100, 42])
-            ]
-          )
+        .to match_pkl_object(
+          properties: {
+            exampleObjectWithJustIntElements: match_pkl_object(
+              elements: [100, 42]
+            ),
+            exampleObjectWithMixedElements: match_pkl_object(
+              elements: [
+                'Bird Breeder Conference',
+                2023,
+                match_pkl_object(elements: [100, 42])
+              ]
+            )
+          }
         )
 
       node = parser.parse(pkl_strings[3], root: :pkl_module)
       expect(node.to_ruby(nil))
-        .to match(
-          mixedObject: match_pkl_object(
-            properties: {
-              name: 'Pigeon', lifespan: 8, extinct: false
-            },
-            elements: [
-              'wing', 'claw', 42
-            ],
-            entries: {
-              'wing' => 'Not related to the _element_ "wing"',
-              false => match_pkl_object(
-                properties: { description: 'Construed object example' }
-              )
-            }
-          )
+        .to match_pkl_object(
+          properties: {
+            mixedObject: match_pkl_object(
+              properties: {
+                name: 'Pigeon', lifespan: 8, extinct: false
+              },
+              elements: [
+                'wing', 'claw', 42
+              ],
+              entries: {
+                'wing' => 'Not related to the _element_ "wing"',
+                false => match_pkl_object(
+                  properties: { description: 'Construed object example' }
+                )
+              }
+            )
+          }
         )
 
       node = parser.parse(pkl_strings[4], root: :pkl_module)
       expect(node.to_ruby(nil))
-        .to match(
-          birds: match_pkl_object(
-            elements: ['Pigeon', 'Parrot', 'Barn owl', 'Falcon']
-          ),
-          relatedToSnowOwl: 'Barn owl'
+        .to match_pkl_object(
+          properties: {
+            birds: match_pkl_object(
+              elements: ['Pigeon', 'Parrot', 'Barn owl', 'Falcon']
+            ),
+            relatedToSnowOwl: 'Barn owl'
+          }
         )
     end
   end

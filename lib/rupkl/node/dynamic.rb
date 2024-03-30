@@ -19,12 +19,8 @@ module RuPkl
         self
       end
 
-      def to_ruby(scopes)
-        RuPkl::PklObject.new(
-          to_ruby_hash_members(properties, scopes),
-          to_ruby_array_members(elements, scopes),
-          to_ruby_hash_members(entries, scopes)
-        )
+      def to_ruby(_scopes)
+        create_pkl_object(properties, elements, entries)
       end
 
       def merge!(other)

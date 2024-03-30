@@ -63,14 +63,22 @@ module RuPkl
         lhs.concat(rhs)
       end
 
-      def to_ruby_hash_members(members, scopes)
-        members
-          &.to_h { _1.to_ruby(scopes) } || {}
+      def create_pkl_object(properties, elements, entries)
+        RuPkl::PklObject.new(
+          to_ruby_hash_members(properties),
+          to_ruby_array_members(elements),
+          to_ruby_hash_members(entries)
+        )
       end
 
-      def to_ruby_array_members(members, scopes)
+      def to_ruby_hash_members(members)
         members
-          &.map { _1.to_ruby(scopes) } || []
+          &.to_h { _1.to_ruby(nil) }
+      end
+
+      def to_ruby_array_members(members)
+        members
+          &.map { _1.to_ruby(nil) }
       end
     end
   end
