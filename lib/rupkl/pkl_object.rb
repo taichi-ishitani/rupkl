@@ -11,6 +11,16 @@ module RuPkl
       define_property_accessors
     end
 
+    def [](key)
+      if properties.key?(key)
+        properties[key]
+      elsif key.is_a?(Integer) && key < elements.size
+        elements[key]
+      else
+        entries[key]
+      end
+    end
+
     def members
       @members ||=
         [

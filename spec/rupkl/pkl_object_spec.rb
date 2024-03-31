@@ -20,6 +20,69 @@ RSpec.describe RuPkl::PklObject do
     expect(objects[4].bar).to eq 1
   end
 
+  describe '#[]' do
+    it 'should return the specified member' do
+      expect(objects[1][:foo]).to eq 0
+      expect(objects[1][:bar]).to eq 1
+
+      expect(objects[2][0]).to eq 2
+      expect(objects[2][1]).to eq 3
+      expect(objects[2][-2]).to eq 2
+      expect(objects[2][-1]).to eq 3
+
+      expect(objects[3]['baz']).to eq 4
+      expect(objects[3]['qux']).to eq 5
+
+      expect(objects[4][:foo]).to eq 0
+      expect(objects[4][:bar]).to eq 1
+      expect(objects[4][0]).to eq 2
+      expect(objects[4][1]).to eq 3
+      expect(objects[4][-2]).to eq 2
+      expect(objects[4][-1]).to eq 3
+      expect(objects[4]['baz']).to eq 4
+      expect(objects[4]['qux']).to eq 5
+    end
+
+    context 'when the specified member does not exist' do
+      it 'should return nil' do
+        expect(objects[0][:foo]).to be_nil
+        expect(objects[0][:bar]).to be_nil
+        expect(objects[0][0]).to be_nil
+        expect(objects[0][1]).to be_nil
+        expect(objects[0]['baz']).to be_nil
+        expect(objects[0]['qux']).to be_nil
+
+        expect(objects[1][:baz]).to be_nil
+        expect(objects[1][:qux]).to be_nil
+        expect(objects[1][0]).to be_nil
+        expect(objects[1][1]).to be_nil
+        expect(objects[1]['baz']).to be_nil
+        expect(objects[1]['qux']).to be_nil
+
+        expect(objects[2][:foo]).to be_nil
+        expect(objects[2][:bar]).to be_nil
+        expect(objects[2][2]).to be_nil
+        expect(objects[2][3]).to be_nil
+        expect(objects[2]['baz']).to be_nil
+        expect(objects[2]['qux']).to be_nil
+
+        expect(objects[3][:foo]).to be_nil
+        expect(objects[3][:baz]).to be_nil
+        expect(objects[3][0]).to be_nil
+        expect(objects[3][1]).to be_nil
+        expect(objects[3]['foo']).to be_nil
+        expect(objects[3]['bar']).to be_nil
+
+        expect(objects[4][:baz]).to be_nil
+        expect(objects[4][:qux]).to be_nil
+        expect(objects[4][2]).to be_nil
+        expect(objects[4][3]).to be_nil
+        expect(objects[4]['foo']).to be_nil
+        expect(objects[4]['bar']).to be_nil
+      end
+    end
+  end
+
   describe '#members' do
     it 'should return its members' do
       expect(objects[0].members).to be_empty
