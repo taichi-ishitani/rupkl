@@ -18,7 +18,7 @@ module RuPkl
 
         r.find_by_key(k) ||
           begin
-            message = "cannot find key '#{k.value.inspect}'"
+            message = "cannot find key '#{k.to_pkl_string(scopes)}'"
             raise EvaluationError.new(message, position)
           end
       end

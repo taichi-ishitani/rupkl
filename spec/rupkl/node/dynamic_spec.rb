@@ -5,54 +5,54 @@ RSpec.describe RuPkl::Node::Dynamic do
     RuPkl::Parser.new
   end
 
+  let(:pkl_strings) do
+    strings = []
+    strings << <<~'PKL'
+      {}
+    PKL
+    strings << <<~'PKL'
+      { 0 1 1 + 1 }
+    PKL
+    strings << <<~'PKL'
+      { foo = 0 bar = 1 baz = 1 + 1 }
+    PKL
+    strings << <<~'PKL'
+      { ["foo"] = 0 ["bar"] = 1 ["baz"] = 1 + 1 }
+    PKL
+    strings << <<~'PKL'
+      {
+        name = "Pigeon"
+        lifespan = 8
+        "wing"
+        "claw"
+        ["wing"] = "Not related to \nthe _element_ \"wing\""
+        42
+        extinct = false
+        [false] {
+          description = "Construed object example"
+        }
+      }
+    PKL
+    strings << <<~'PKL'
+      {
+        foo {
+          bar = 0
+          1
+          ["baz"] = 2
+        } {
+          bar = 3
+          4
+          ["baz"] = 5
+        }
+      }
+    PKL
+  end
+
+  def parse(string)
+    parser.parse(string.chomp, root: :object)
+  end
+
   describe '#to_ruby' do
-    let(:pkl_strings) do
-      strings = []
-      strings << <<~'PKL'
-        {}
-      PKL
-      strings << <<~'PKL'
-        { 0 1 2 }
-      PKL
-      strings << <<~'PKL'
-        { foo = 1 bar = 2 }
-      PKL
-      strings << <<~'PKL'
-        { ["foo"] = 1 ["bar"] = 2 }
-      PKL
-      strings << <<~'PKL'
-        {
-          name = "Pigeon"
-          lifespan = 8
-          "wing"
-          "claw"
-          ["wing"] = "Not related to the _element_ \"wing\""
-          42
-          extinct = false
-          [false] {
-            description = "Construed object example"
-          }
-        }
-      PKL
-      strings << <<~'PKL'
-        {
-          foo {
-            bar = 0
-            1
-            ["baz"] = 2
-          } {
-            bar = 3
-            4
-            ["baz"] = 5
-          }
-        }
-      PKL
-    end
-
-    def parse(string)
-      parser.parse(string.chomp, root: :object)
-    end
-
     it 'should return a PklObject object contating evaluated members' do
       node = parse(pkl_strings[0])
       expect(node.to_ruby(nil)).to match_pkl_object
@@ -63,11 +63,11 @@ RSpec.describe RuPkl::Node::Dynamic do
 
       node = parse(pkl_strings[2])
       expect(node.to_ruby(nil))
-        .to match_pkl_object(properties: { foo: 1, bar: 2 })
+        .to match_pkl_object(properties: { foo: 0, bar: 1, baz: 2 })
 
       node = parse(pkl_strings[3])
       expect(node.to_ruby(nil))
-        .to match_pkl_object(entries: { 'foo' => 1, 'bar' => 2 })
+        .to match_pkl_object(entries: { 'foo' => 0, 'bar' => 1, 'baz' => 2 })
 
       node = parse(pkl_strings[4])
       expect(node.to_ruby(nil))
@@ -79,7 +79,7 @@ RSpec.describe RuPkl::Node::Dynamic do
             'wing', 'claw', 42
           ],
           entries: {
-            'wing' => 'Not related to the _element_ "wing"',
+            'wing' => "Not related to \nthe _element_ \"wing\"",
             false => match_pkl_object(
               properties: { description: 'Construed object example' }
             )
@@ -97,6 +97,31 @@ RSpec.describe RuPkl::Node::Dynamic do
             )
           }
         )
+    end
+  end
+
+  describe '#to_pkl_string' do
+    it 'should return a string repasenting itself' do
+      node = parse(pkl_strings[0])
+      expect(node.to_pkl_string(nil)).to eq 'new Dynamic {}'
+
+      node = parse(pkl_strings[1])
+      expect(node.to_pkl_string(nil)).to eq 'new Dynamic { 0; 1; 2 }'
+
+      node = parse(pkl_strings[2])
+      expect(node.to_pkl_string(nil)).to eq 'new Dynamic { foo = 0; bar = 1; baz = 2 }'
+
+      node = parse(pkl_strings[3])
+      expect(node.to_pkl_string(nil)).to eq 'new Dynamic { ["foo"] = 0; ["bar"] = 1; ["baz"] = 2 }'
+
+      node = parse(pkl_strings[4])
+      expect(node.to_pkl_string(nil))
+        .to eq 'new Dynamic { ' \
+               'name = "Pigeon"; lifespan = 8; extinct = false; ' \
+               '["wing"] = "Not related to \nthe _element_ \"wing\""; ' \
+               '[false] { description = "Construed object example" }; ' \
+               '"wing"; "claw"; 42 ' \
+               '}'
     end
   end
 

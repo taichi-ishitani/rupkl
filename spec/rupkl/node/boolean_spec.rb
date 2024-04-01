@@ -25,6 +25,16 @@ RSpec.describe RuPkl::Node::Boolean do
     end
   end
 
+  describe '#to_pkl_string' do
+    it 'should return a Pkl string representing its value' do
+      node = parser.parse('true', root: :boolean_literal)
+      expect(node.to_pkl_string(nil)).to eq 'true'
+
+      node = parser.parse('false', root: :boolean_literal)
+      expect(node.to_pkl_string(nil)).to eq 'false'
+    end
+  end
+
   describe 'subscript operation' do
     specify 'subscript operation is not defined' do
       node = parser.parse('true[0]', root: :expression)

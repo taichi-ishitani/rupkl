@@ -84,6 +84,23 @@ module RuPkl
         members
           &.map { _1.to_ruby(scopes) }
       end
+
+      def to_pkl_string_object(*members, **options)
+        to_pkl_string_members(members, **options)
+          .then do |s|
+            options[:object_body_only] && s ||
+              "new #{self.class.basename} #{s}"
+          end
+      end
+
+      def to_pkl_string_members(members, **options)
+        return '{}' if members.empty?
+
+        members
+          .map { _1.to_pkl_string(nil, object_body_only: true, **options) }
+          .join('; ')
+          .then { "{ #{_1} }" }
+      end
     end
   end
 end

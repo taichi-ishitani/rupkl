@@ -149,7 +149,7 @@ RSpec.describe RuPkl::Parser do
       end
 
       specify 'tab, line feed, carriage return, verbatim quote and verbatim backslash characters are escaped' do
-        expect(parser).to parse('"\\\\\"\("').as(ss_literal('\"\('))
+        expect(parser).to parse('"\\\\\\"\\\\("').as(ss_literal('\"\('))
         expect(parser).to parse('"\t\r\n"').as(ss_literal("\t\r\n"))
       end
 

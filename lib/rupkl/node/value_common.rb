@@ -15,6 +15,10 @@ module RuPkl
         evaluate(scopes).value
       end
 
+      def to_pkl_string(scopes, **_options)
+        to_ruby(scopes).to_s
+      end
+
       def ==(other)
         other.instance_of?(self.class) && value == other.value
       end

@@ -63,6 +63,40 @@ RSpec.describe RuPkl::Node::String do
     end
   end
 
+  describe '#to_pkl_string' do
+    it 'should return a Pkl string representing its value' do
+      node = parser.parse('""', root: :string_literal)
+      expect(node.to_pkl_string(nil)).to eq '""'
+
+      node = parser.parse('"Hellow, World!"', root: :string_literal)
+      expect(node.to_pkl_string(nil)).to eq '"Hellow, World!"'
+
+      node = parser.parse('"\\\\\\"\\\\("', root: :string_literal)
+      expect(node.to_pkl_string(nil)).to eq '"\\\\\\"\\\\("'
+
+      node = parser.parse('"\t\r\n"', root: :string_literal)
+      expect(node.to_pkl_string(nil)).to eq '"\t\r\n"'
+
+      node = parser.parse('"foo\nbar"', root: :string_literal)
+      expect(node.to_pkl_string(nil)).to eq '"foo\nbar"'
+
+      node = parser.parse(<<~'PKL'.chomp, root: :string_literal)
+        """
+        """
+      PKL
+      expect(node.to_pkl_string(nil)).to eq '""'
+
+      node = parser.parse(<<~'PKL'.chomp, root: :string_literal)
+        """
+        Although the Dodo is extinct,
+        the species will be remembered.
+        """
+      PKL
+      expect(node.to_pkl_string(nil))
+        .to eq '"Although the Dodo is extinct,\nthe species will be remembered."'
+    end
+  end
+
   describe 'subscript operation' do
     it 'returns the specified character' do
       node = parser.parse('"foo"[0]', root: :expression)

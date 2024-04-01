@@ -23,6 +23,10 @@ module RuPkl
         create_pkl_object(nil, properties, elements, entries)
       end
 
+      def to_pkl_string(_scopes, **options)
+        to_pkl_string_object(*properties, *entries, *elements, **options)
+      end
+
       def merge!(other)
         @properties = merge_hash_members(properties, other.properties, :name)
         @elements = merge_array_members(elements, other.elements)

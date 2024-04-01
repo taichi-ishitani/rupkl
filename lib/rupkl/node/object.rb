@@ -17,6 +17,14 @@ module RuPkl
         end
       end
 
+      def property_to_pkl_string(value, objects, scopes, **options)
+        if value
+          value.to_pkl_string(scopes, **options)
+        else
+          evaluate_objects(objects, scopes).to_pkl_string(nil, **options)
+        end
+      end
+
       def evaluate_objects(objects, scopes)
         objects
           .map { _1.evaluate(scopes) }
@@ -46,6 +54,15 @@ module RuPkl
 
       def to_ruby(scopes)
         [name.id, property_to_ruby(value, objects, scopes)]
+      end
+
+      def to_pkl_string(scopes, **options)
+        v = property_to_pkl_string(value, objects, scopes, **options)
+        if objects || value.is_a?(StructCommon)
+          "#{name.id} #{v}"
+        else
+          "#{name.id} = #{v}"
+        end
       end
 
       def ==(other)
@@ -80,6 +97,16 @@ module RuPkl
         [k, v]
       end
 
+      def to_pkl_string(scopes, **options)
+        k = key.to_pkl_string(scopes, **options)
+        v = property_to_pkl_string(value, objects, scopes, **options)
+        if objects || value.is_a?(StructCommon)
+          "[#{k}] #{v}"
+        else
+          "[#{k}] = #{v}"
+        end
+      end
+
       def ==(other)
         key == other.key && value == other.value
       end
@@ -100,6 +127,10 @@ module RuPkl
 
       def to_ruby(scopes)
         evaluate(scopes).to_ruby(nil)
+      end
+
+      def to_pkl_string(scopes, **options)
+        evaluate(scopes).to_pkl_string(nil, **options)
       end
     end
   end
