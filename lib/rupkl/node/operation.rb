@@ -4,7 +4,15 @@ module RuPkl
   module Node
     module OperationCommon
       def to_ruby(scopes)
-        evaluate(scopes).to_ruby(scopes)
+        evaluate(scopes).to_ruby(nil)
+      end
+
+      def to_string(scopes)
+        evaluate(scopes).to_string(nil)
+      end
+
+      def to_pkl_string(scopes)
+        evaluate(scopes).to_pkl_string(nil)
       end
 
       private
@@ -106,13 +114,12 @@ module RuPkl
       end
 
       def create_op_result(result)
-        klass =
-          case result
-          when ::Integer then Integer
-          when ::Float then Float
-          when ::TrueClass, ::FalseClass then Boolean
-          end
-        klass.new(result, position)
+        case result
+        when ::Integer then Integer.new(result, position)
+        when ::Float then Float.new(result, position)
+        when ::String then String.new(result, nil, position)
+        when ::TrueClass, ::FalseClass then Boolean.new(result, position)
+        end
       end
     end
 

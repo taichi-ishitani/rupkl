@@ -25,7 +25,7 @@ module RuPkl
     end
 
     def string_literal(*portions)
-      be_instance_of(Node::String).and have_attributes(portions: portions)
+      be_instance_of(Node::String).and have_attributes(portions: match(portions))
     end
 
     alias_method :ss_literal, :string_literal
@@ -40,7 +40,7 @@ module RuPkl
             portion
           end
         end
-      be_instance_of(Node::String).and have_attributes(portions: portions_processed)
+      be_instance_of(Node::String).and have_attributes(portions: match(portions_processed))
     end
 
     def empty_string_literal

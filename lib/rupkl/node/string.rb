@@ -12,19 +12,19 @@ module RuPkl
 
       attr_reader :portions
 
-      def evaluate(_scopes)
-        s = value || portions&.join || ''
+      def evaluate(scopes)
+        s = value || evaluate_portions(scopes) || ''
         self.class.new(s, nil, position)
       end
 
-      def to_pkl_string(scopes, **options)
-        super(scopes, **options)
+      def to_pkl_string(scopes)
+        super(scopes)
           .then { |s| escape(s) }
           .then { |s| "\"#{s}\"" }
       end
 
       def undefined_operator?(operator)
-        [:[], :==, :'!='].none?(operator)
+        [:[], :==, :'!=', :+].none?(operator)
       end
 
       def invalid_key_operand?(key)
@@ -39,6 +39,20 @@ module RuPkl
       end
 
       private
+
+      def evaluate_portions(scopes)
+        portions
+          &.map { evaluate_portion(scopes, _1) }
+          &.join
+      end
+
+      def evaluate_portion(scopes, portion)
+        if portion.respond_to?(:to_string)
+          portion.to_string(scopes)
+        else
+          portion
+        end
+      end
 
       def escape(string)
         replace = {

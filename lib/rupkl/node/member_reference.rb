@@ -23,6 +23,14 @@ module RuPkl
         member_node.evaluate(scopes).value
       end
 
+      def to_string(scopes)
+        evaluate(scopes).to_string(nil)
+      end
+
+      def to_pkl_string(scopes)
+        evaluate(scopes).to_pkl_string(nil)
+      end
+
       private
 
       def find_member(scopes)

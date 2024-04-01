@@ -33,12 +33,14 @@ RSpec.describe RuPkl::Node::Number do
     end
   end
 
-  describe '#to_pkl_string' do
-    it 'should return a Pkl string representing its value' do
+  describe '#to_string/#to_pkl_string' do
+    it 'should return a string representing its value' do
       node = parser.parse(int_value.to_s, root: :integer_literal)
+      expect(node.to_string(nil)).to eq int_value.to_s
       expect(node.to_pkl_string(nil)).to eq int_value.to_s
 
       node = parser.parse(float_value.to_s, root: :float_literal)
+      expect(node.to_string(nil)).to eq float_value.to_s
       expect(node.to_pkl_string(nil)).to eq float_value.to_s
     end
   end

@@ -3,6 +3,10 @@
 module RuPkl
   module Node
     module StructCommon
+      def to_string(_scopes)
+        "new #{self.class.basename} #{to_pkl_string(nil)}"
+      end
+
       def coerce(_operator, r_operand)
         [self, r_operand]
       end
@@ -85,19 +89,11 @@ module RuPkl
           &.map { _1.to_ruby(scopes) }
       end
 
-      def to_pkl_string_object(*members, **options)
-        to_pkl_string_members(members, **options)
-          .then do |s|
-            options[:object_body_only] && s ||
-              "new #{self.class.basename} #{s}"
-          end
-      end
-
-      def to_pkl_string_members(members, **options)
+      def to_pkl_string_object(*members)
         return '{}' if members.empty?
 
         members
-          .map { _1.to_pkl_string(nil, object_body_only: true, **options) }
+          .map { _1.to_pkl_string(nil) }
           .join('; ')
           .then { "{ #{_1} }" }
       end

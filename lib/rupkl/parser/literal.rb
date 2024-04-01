@@ -148,6 +148,10 @@ module RuPkl
 
       private
 
+      def interplation(pounds)
+        str("\\#{pounds}") >> bracketed(expression, '(', ')')
+      end
+
       def escaped_char(pounds)
         str("\\#{pounds}") >>
           match("[#{Regexp.escape(ESCAPED_CHARS.keys.join)}]")
@@ -158,7 +162,7 @@ module RuPkl
       end
 
       def ss_char(pounds)
-        (nl | ss_eq(pounds)).absent? >> any
+        (nl | str("\\#{pounds}(") | ss_eq(pounds)).absent? >> any
       end
 
       def ss_string(pounds)
@@ -166,7 +170,10 @@ module RuPkl
       end
 
       def ss_portions(pounds)
-        ss_string(pounds).as(:ss_string).repeat(1)
+        (
+          interplation(pounds).as(:interplation) |
+          ss_string(pounds).as(:ss_string)
+        ).repeat(1)
       end
 
       def ss_bq(custom)
@@ -182,15 +189,22 @@ module RuPkl
       end
 
       def ms_char(pounds)
-        (nl | ms_eq(pounds, true)).absent? >> any
+        (nl | str("\\#{pounds}(") | ms_eq(pounds, true)).absent? >> any
       end
 
       def ms_string(pounds)
         (escaped_char(pounds) | unicode_char(pounds) | ms_char(pounds)).repeat(1)
       end
 
+      def ms_portion(pounds)
+        (
+          interplation(pounds).as(:interplation) |
+          ms_string(pounds).as(:ms_string)
+        ).repeat(1)
+      end
+
       def ms_portions(pounds)
-        (ms_string(pounds).as(:ms_string).maybe >> nl.as(:ms_nl)).repeat(1)
+        (ms_portion(pounds).maybe >> nl.as(:ms_nl)).repeat(1)
       end
 
       def ms_bq(custom)
@@ -266,6 +280,7 @@ module RuPkl
         case type
         when :ss_string, :ms_string then unescape_string(string, pounds)
         when :ms_nl then "\n"
+        when :interplation then string
         end
       end
 

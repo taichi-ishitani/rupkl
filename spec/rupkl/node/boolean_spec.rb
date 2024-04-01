@@ -25,12 +25,14 @@ RSpec.describe RuPkl::Node::Boolean do
     end
   end
 
-  describe '#to_pkl_string' do
-    it 'should return a Pkl string representing its value' do
+  describe '#to_string/#to_pkl_string' do
+    it 'should return a string representing its value' do
       node = parser.parse('true', root: :boolean_literal)
+      expect(node.to_string(nil)).to eq 'true'
       expect(node.to_pkl_string(nil)).to eq 'true'
 
       node = parser.parse('false', root: :boolean_literal)
+      expect(node.to_string(nil)).to eq 'false'
       expect(node.to_pkl_string(nil)).to eq 'false'
     end
   end

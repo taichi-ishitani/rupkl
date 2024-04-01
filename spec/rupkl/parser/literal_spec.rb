@@ -162,6 +162,36 @@ RSpec.describe RuPkl::Parser do
           .as(ss_literal("\t0Āက𐀀𐀀𐀀𐀀"))
       end
 
+      it 'can include interpolations' do
+        expect(parser).to parse('"\(str1) are \(str2) today? Are \(str2) hungry?"')
+          .as(ss_literal(
+            member_ref(:str1), ' are ', member_ref(:str2),
+            ' today? Are ', member_ref(:str2), ' hungry?'
+          ))
+
+        expect(parser).to parse('"Can \(str2 + " nest \(str3)") for me?"')
+          .as(ss_literal(
+            'Can ',
+            b_op(:+, member_ref(:str2), ss_literal(' nest ', member_ref(:str3))),
+            ' for me?'
+          ))
+
+        expect(parser).to parse('"\(42)"')
+          .as(ss_literal(integer_literal(42)))
+
+        expect(parser).to parse('"\(40 + 2)"')
+          .as(ss_literal(b_op(:+, 40, 2)))
+
+        expect(parser).to parse('"\(1.23)"')
+          .as(ss_literal(float_literal(1.23)))
+
+        expect(parser).to parse('"\("Pigion")"')
+          .as(ss_literal(ss_literal('Pigion')))
+
+        expect(parser).to parse('"\(false)"')
+          .as(ss_literal(boolean_literal(false)))
+      end
+
       it 'should not have an unescaped newline' do
         expect(parser).not_to parse("\"\n\"")
         expect(parser).not_to parse("\"foo\nbar\"")
@@ -272,6 +302,22 @@ RSpec.describe RuPkl::Parser do
           \t0Āက𐀀𐀀𐀀𐀀
         OUT
         expect(parser).to parse(pkl).as(ms_literal(out))
+      end
+
+      it 'can include interpolations' do
+        pkl = <<~'PKL'
+          """
+          How are you today?
+          Are \(str2) hungry?
+          Can \(str2 + " nest \(str3)") for me?
+          """
+        PKL
+        expect(parser).to parse(pkl)
+          .as(ms_literal(
+            "How are you today?\nAre ", member_ref(:str2), " hungry?\nCan ",
+            b_op(:+, member_ref(:str2), ss_literal(' nest ', member_ref(:str3))),
+            ' for me?'
+          ))
       end
 
       specify 'leading whitespaces should be trimmed' do

@@ -30,6 +30,53 @@ RSpec.describe RuPkl::Node::String do
           Although the Dodo is extinct,
           the species will be remembered.
         OUT
+
+        node = parser.parse('"\(42)"', root: :string_literal)
+        expect(node.evaluate(nil)).to be_evaluated_string('42')
+
+        node = parser.parse('"\(40 + 2)"', root: :string_literal)
+        expect(node.evaluate(nil)).to be_evaluated_string('42')
+
+        node = parser.parse('"\(1.23)"', root: :string_literal)
+        expect(node.evaluate(nil)).to be_evaluated_string('1.23')
+
+        node = parser.parse('"\("Pigion")"', root: :string_literal)
+        expect(node.evaluate(nil)).to be_evaluated_string('Pigion')
+
+        node = parser.parse('"\(false)"', root: :string_literal)
+        expect(node.evaluate(nil)).to be_evaluated_string('false')
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          str1 = "How"
+          str2 = "you"
+          str3 = "\(str1) are \(str2) today? Are \(str2) hungry?"
+        PKL
+        node.evaluate(nil).then do |n|
+          expect(n.properties[-1].value).to be_evaluated_string('How are you today? Are you hungry?')
+        end
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          str1 = "How"
+          str2 = "you"
+          str3 = "this"
+          str4 = "Can \(str2 + " nest \(str3)") for me?"
+        PKL
+        node.evaluate(nil).then do |n|
+          expect(n.properties[-1].value).to be_evaluated_string('Can you nest this for me?')
+        end
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo { foo = 1 ["foo"] = 2 1 + 2 }
+          bar { foo }
+          baz = "\(foo) \(bar)"
+        PKL
+        node.evaluate(nil).then do |n|
+          expect(n.properties[-1].value)
+            .to be_evaluated_string(
+              'new Dynamic { foo = 1; ["foo"] = 2; 3 } ' \
+              'new Dynamic { { foo = 1; ["foo"] = 2; 3 } }'
+            )
+        end
       end
     end
   end
@@ -63,6 +110,37 @@ RSpec.describe RuPkl::Node::String do
     end
   end
 
+  describe '#to_string' do
+    it 'should return a string representing its value' do
+      node = parser.parse('""', root: :string_literal)
+      expect(node.to_string(nil)).to eq ''
+
+      node = parser.parse('"Hellow, World!"', root: :string_literal)
+      expect(node.to_string(nil)).to eq 'Hellow, World!'
+
+      node = parser.parse('"\\\\\\"\\\\("', root: :string_literal)
+      expect(node.to_string(nil)).to eq '\"\('
+
+      node = parser.parse('"\t\r\n"', root: :string_literal)
+      expect(node.to_string(nil)).to eq "\t\r\n"
+
+      node = parser.parse(<<~'PKL'.chomp, root: :string_literal)
+        """
+        """
+      PKL
+      expect(node.to_string(nil)).to eq ''
+
+      node = parser.parse(<<~'PKL'.chomp, root: :string_literal)
+        """
+        Although the Dodo is extinct,
+        the species will be remembered.
+        """
+      PKL
+      expect(node.to_string(nil))
+        .to eq "Although the Dodo is extinct,\nthe species will be remembered."
+    end
+  end
+
   describe '#to_pkl_string' do
     it 'should return a Pkl string representing its value' do
       node = parser.parse('""', root: :string_literal)
@@ -76,9 +154,6 @@ RSpec.describe RuPkl::Node::String do
 
       node = parser.parse('"\t\r\n"', root: :string_literal)
       expect(node.to_pkl_string(nil)).to eq '"\t\r\n"'
-
-      node = parser.parse('"foo\nbar"', root: :string_literal)
-      expect(node.to_pkl_string(nil)).to eq '"foo\nbar"'
 
       node = parser.parse(<<~'PKL'.chomp, root: :string_literal)
         """
@@ -158,6 +233,9 @@ RSpec.describe RuPkl::Node::String do
 
         node = parser.parse('"foo"=="bar"', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('"foo"+"bar"', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('foobar')
       end
     end
 
@@ -165,7 +243,7 @@ RSpec.describe RuPkl::Node::String do
       it 'should raise EvaluationError' do
         [
           '>', '<', '>=', '<=',
-          '+', '-', '*', '/', '~/', '%', '**',
+          '-', '*', '/', '~/', '%', '**',
           '&&', '||'
         ].each do |op|
           node = parser.parse("\"foo\"#{op}\"bar\"", root: :expression)

@@ -23,8 +23,8 @@ module RuPkl
         create_pkl_object(nil, properties, elements, entries)
       end
 
-      def to_pkl_string(_scopes, **options)
-        to_pkl_string_object(*properties, *entries, *elements, **options)
+      def to_pkl_string(_scopes)
+        to_pkl_string_object(*properties, *entries, *elements)
       end
 
       def merge!(other)

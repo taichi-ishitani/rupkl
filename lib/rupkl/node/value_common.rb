@@ -15,8 +15,12 @@ module RuPkl
         evaluate(scopes).value
       end
 
-      def to_pkl_string(scopes, **_options)
+      def to_string(scopes)
         to_ruby(scopes).to_s
+      end
+
+      def to_pkl_string(scopes)
+        to_string(scopes)
       end
 
       def ==(other)

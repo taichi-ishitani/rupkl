@@ -100,23 +100,48 @@ RSpec.describe RuPkl::Node::Dynamic do
     end
   end
 
-  describe '#to_pkl_string' do
+  describe '#to_string' do
     it 'should return a string repasenting itself' do
       node = parse(pkl_strings[0])
-      expect(node.to_pkl_string(nil)).to eq 'new Dynamic {}'
+      expect(node.to_string(nil)).to eq 'new Dynamic {}'
 
       node = parse(pkl_strings[1])
-      expect(node.to_pkl_string(nil)).to eq 'new Dynamic { 0; 1; 2 }'
+      expect(node.to_string(nil)).to eq 'new Dynamic { 0; 1; 2 }'
 
       node = parse(pkl_strings[2])
-      expect(node.to_pkl_string(nil)).to eq 'new Dynamic { foo = 0; bar = 1; baz = 2 }'
+      expect(node.to_string(nil)).to eq 'new Dynamic { foo = 0; bar = 1; baz = 2 }'
 
       node = parse(pkl_strings[3])
-      expect(node.to_pkl_string(nil)).to eq 'new Dynamic { ["foo"] = 0; ["bar"] = 1; ["baz"] = 2 }'
+      expect(node.to_string(nil)).to eq 'new Dynamic { ["foo"] = 0; ["bar"] = 1; ["baz"] = 2 }'
+
+      node = parse(pkl_strings[4])
+      expect(node.to_string(nil))
+        .to eq 'new Dynamic { ' \
+               'name = "Pigeon"; lifespan = 8; extinct = false; ' \
+               '["wing"] = "Not related to \nthe _element_ \"wing\""; ' \
+               '[false] { description = "Construed object example" }; ' \
+               '"wing"; "claw"; 42 ' \
+               '}'
+    end
+  end
+
+  describe '#to_pkl_string' do
+    it 'should return a Pkl string repasenting its body' do
+      node = parse(pkl_strings[0])
+      expect(node.to_pkl_string(nil)).to eq '{}'
+
+      node = parse(pkl_strings[1])
+      expect(node.to_pkl_string(nil)).to eq '{ 0; 1; 2 }'
+
+      node = parse(pkl_strings[2])
+      expect(node.to_pkl_string(nil)).to eq '{ foo = 0; bar = 1; baz = 2 }'
+
+      node = parse(pkl_strings[3])
+      expect(node.to_pkl_string(nil)).to eq '{ ["foo"] = 0; ["bar"] = 1; ["baz"] = 2 }'
 
       node = parse(pkl_strings[4])
       expect(node.to_pkl_string(nil))
-        .to eq 'new Dynamic { ' \
+        .to eq '{ ' \
                'name = "Pigeon"; lifespan = 8; extinct = false; ' \
                '["wing"] = "Not related to \nthe _element_ \"wing\""; ' \
                '[false] { description = "Construed object example" }; ' \
