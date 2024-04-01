@@ -152,21 +152,20 @@ module RuPkl
         str("\\#{pounds}") >> bracketed(expression, '(', ')')
       end
 
-      def escaped_char(pounds)
-        str("\\#{pounds}") >>
-          match("[#{Regexp.escape(ESCAPED_CHARS.keys.join)}]")
-      end
-
       def unicode_char(pounds)
         str("\\#{pounds}u") >> str('{') >> match('[\h]').repeat(1) >> str('}')
       end
 
+      def escaped_char(pounds)
+        str("\\#{pounds}") >> match('[^\(u]')
+      end
+
       def ss_char(pounds)
-        (nl | str("\\#{pounds}(") | ss_eq(pounds)).absent? >> any
+        (nl | str("\\#{pounds}") | ss_eq(pounds)).absent? >> any
       end
 
       def ss_string(pounds)
-        (escaped_char(pounds) | unicode_char(pounds) | ss_char(pounds)).repeat(1)
+        (unicode_char(pounds) | escaped_char(pounds) | ss_char(pounds)).repeat(1)
       end
 
       def ss_portions(pounds)
@@ -189,11 +188,11 @@ module RuPkl
       end
 
       def ms_char(pounds)
-        (nl | str("\\#{pounds}(") | ms_eq(pounds, true)).absent? >> any
+        (nl | str("\\#{pounds}") | ms_eq(pounds, true)).absent? >> any
       end
 
       def ms_string(pounds)
-        (escaped_char(pounds) | unicode_char(pounds) | ms_char(pounds)).repeat(1)
+        (unicode_char(pounds) | escaped_char(pounds) | ms_char(pounds)).repeat(1)
       end
 
       def ms_portion(pounds)
@@ -287,18 +286,23 @@ module RuPkl
       def unescape_string(string, pounds)
         string
           .to_s
-          .then { unescape_char(_1, pounds) }
           .then { unescape_unicode(_1, pounds) }
-      end
-
-      def unescape_char(string, pounds)
-        re = /\\#{pounds}([#{Regexp.escape(ESCAPED_CHARS.keys.join)}])/
-        string.gsub(re) { ESCAPED_CHARS[Regexp.last_match(1)] }
+          .then { unescape_char(_1, pounds, string) }
       end
 
       def unescape_unicode(string, pounds)
         re = /\\#{pounds}u\{([\h]+)\}/
         string.gsub(re) { Regexp.last_match(1).to_i(16).chr(Encoding::UTF_8) }
+      end
+
+      def unescape_char(string, pounds, node)
+        string.gsub(/(\\#{pounds}.)/) do |m|
+          ESCAPED_CHARS[m[-1]] ||
+            begin
+              message = "invalid escape sequence is given: #{m}"
+              parse_error(message, node_position(node))
+            end
+        end
       end
     end
   end

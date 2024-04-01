@@ -419,5 +419,40 @@ RSpec.describe RuPkl::Parser do
         expect(parser).to parse(pkl).as(ms_literal(out))
       end
     end
+
+    context 'invalid escape sequence is given' do
+      it 'should raise ParseError' do
+        expect { parser.parse('"\ab"', root: :string_literal) }
+          .to raise_parse_error 'invalid escape sequence is given: \a'
+        expect { parser.parse('"\12"', root: :string_literal) }
+          .to raise_parse_error 'invalid escape sequence is given: \1'
+        expect { parser.parse('"\{"', root: :string_literal) }
+          .to raise_parse_error 'invalid escape sequence is given: \{'
+
+        pkl = <<~'PKL'.chomp
+          """
+          \ab
+          """
+        PKL
+        expect { parser.parse(pkl, root: :string_literal) }
+          .to raise_parse_error 'invalid escape sequence is given: \a'
+
+        pkl = <<~'PKL'.chomp
+          """
+          \12
+          """
+        PKL
+        expect { parser.parse(pkl, root: :string_literal) }
+          .to raise_parse_error 'invalid escape sequence is given: \1'
+
+        pkl = <<~'PKL'.chomp
+          """
+          \{}
+          """
+        PKL
+        expect { parser.parse(pkl, root: :string_literal) }
+          .to raise_parse_error 'invalid escape sequence is given: \{'
+      end
+    end
   end
 end
