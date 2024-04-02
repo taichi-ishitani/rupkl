@@ -1,0 +1,20 @@
+version: "2"
+checks:
+  method-complexity:
+    config:
+      threshold: 10
+  method-count:
+    config:
+      threshold: 30
+plugins:
+  duplication:
+      enabled: true
+      config:
+        languages:
+          ruby:
+            mass_threshold: 40
+  rubocop:
+    enabled: true
+    channel: rubocop-1-56-3
+exclude_patterns:
+  - "spec/"
