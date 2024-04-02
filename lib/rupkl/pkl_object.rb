@@ -64,6 +64,18 @@ module RuPkl
       M
     end
 
+    def to_s
+      "{#{members_to_s}}"
+    end
+
+    def inspect
+      to_s
+    end
+
+    def pretty_print(pp)
+      pp.group(1, '{', '}') { pp_body(pp) }
+    end
+
     private
 
     def define_property_accessors
@@ -78,6 +90,33 @@ module RuPkl
             properties[__method__]
           end
         M
+      end
+    end
+
+    def members_to_s
+      [properties, entries, elements]
+        .reject(&:empty?)
+        .map { _1.to_s[1..-2] }
+        .join(', ')
+    end
+
+    def pp_body(pp)
+      pp.seplist([*properties, *entries, *elements], nil, :each) do |member|
+        case member
+        when Array then pp_hash_member(pp, *member)
+        else pp.pp(member)
+        end
+      end
+    end
+
+    def pp_hash_member(pp, key, value)
+      pp.group do
+        pp.pp(key)
+        pp.text('=>')
+        pp.group(1) do
+          pp.breakable('')
+          pp.pp(value)
+        end
       end
     end
   end

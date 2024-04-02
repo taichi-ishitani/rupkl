@@ -8,6 +8,20 @@ RSpec.describe RuPkl::PklObject do
     o << described_class.new(nil, [2, 3], nil)
     o << described_class.new(nil, nil, { 'baz' => 4, 'qux' => 5 })
     o << described_class.new({ foo: 0, bar: 1 }, [2, 3], { 'baz' => 4, 'qux' => 5 })
+    o << RuPkl.load(<<~'PKL')
+      mixedObject {
+        name = "Pigeon"
+        lifespan = 8
+        "wing"
+        "claw"
+        ["wing"] = "Not related to the _element_ \"wing\""
+        42
+        extinct = false
+        [false] {
+          description = "Construed object example"
+        }
+      }
+    PKL
   end
 
   it 'should have accessor methods for each property' do
@@ -292,6 +306,52 @@ RSpec.describe RuPkl::PklObject do
         expect { |b| objects[4].each_entry.each(&b) }
           .to yield_successive_args(['baz', 4], ['qux', 5])
       end
+    end
+  end
+
+  describe '#to_s' do
+    it 'should return a string representing itself' do
+      expect(objects[0].to_s).to eq '{}'
+      expect(objects[1].to_s).to eq '{:foo=>0, :bar=>1}'
+      expect(objects[2].to_s).to eq '{2, 3}'
+      expect(objects[3].to_s).to eq '{"baz"=>4, "qux"=>5}'
+      expect(objects[4].to_s).to eq '{:foo=>0, :bar=>1, "baz"=>4, "qux"=>5, 2, 3}'
+      expect(objects[5].to_s).to eq <<~'S'.chomp.tr("\n", ' ')
+        {:mixedObject=>{:name=>"Pigeon", :lifespan=>8, :extinct=>false,
+        "wing"=>"Not related to the _element_ \"wing\"",
+        false=>{:description=>"Construed object example"}, "wing", "claw", 42}}
+      S
+    end
+  end
+
+  describe '#pretty_print' do
+    it 'should return pretty printed output representing itself' do
+      expect { pp objects[0] }.to output(<<~'OUT').to_stdout
+        {}
+      OUT
+      expect { pp objects[1] }.to output(<<~'OUT').to_stdout
+        {:foo=>0, :bar=>1}
+      OUT
+      expect { pp objects[2] }.to output(<<~'OUT').to_stdout
+        {2, 3}
+      OUT
+      expect { pp objects[3] }.to output(<<~'OUT').to_stdout
+        {"baz"=>4, "qux"=>5}
+      OUT
+      expect { pp objects[4] }.to output(<<~'OUT').to_stdout
+        {:foo=>0, :bar=>1, "baz"=>4, "qux"=>5, 2, 3}
+      OUT
+      expect { pp objects[5] }.to output(<<~'OUT').to_stdout
+        {:mixedObject=>
+          {:name=>"Pigeon",
+           :lifespan=>8,
+           :extinct=>false,
+           "wing"=>"Not related to the _element_ \"wing\"",
+           false=>{:description=>"Construed object example"},
+           "wing",
+           "claw",
+           42}}
+      OUT
     end
   end
 end
