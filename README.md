@@ -1,4 +1,10 @@
-# Rupkl
+[![CI](https://github.com/taichi-ishitani/rupkl/actions/workflows/ci.yml/badge.svg)](https://github.com/taichi-ishitani/rupkl/actions/workflows/ci.yml)
+[![Maintainability](https://api.codeclimate.com/v1/badges/ee9795f03af99994d139/maintainability)](https://codeclimate.com/github/taichi-ishitani/rupkl/maintainability)
+[![codecov](https://codecov.io/github/taichi-ishitani/rupkl/graph/badge.svg?token=CrcaXQ9FjI)](https://codecov.io/github/taichi-ishitani/rupkl)
+
+# RuPkl
+
+
 
 TODO: Delete this and the text below, and describe your gem
 
