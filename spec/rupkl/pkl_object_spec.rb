@@ -5,9 +5,9 @@ RSpec.describe RuPkl::PklObject do
     o = []
     o << described_class.new(nil, nil, nil)
     o << described_class.new({ foo: 0, bar: 1 }, nil, nil)
-    o << described_class.new(nil, [2, 3], nil)
-    o << described_class.new(nil, nil, { 'baz' => 4, 'qux' => 5 })
-    o << described_class.new({ foo: 0, bar: 1 }, [2, 3], { 'baz' => 4, 'qux' => 5 })
+    o << described_class.new(nil, { 'baz' => 2, 'qux' => 3 }, nil)
+    o << described_class.new(nil, nil, [4, 5])
+    o << described_class.new({ foo: 0, bar: 1 }, { 'baz' => 2, 'qux' => 3 }, [4, 5])
     o << RuPkl.load(<<~'PKL')
       mixedObject {
         name = "Pigeon"
@@ -39,60 +39,61 @@ RSpec.describe RuPkl::PklObject do
       expect(objects[1][:foo]).to eq 0
       expect(objects[1][:bar]).to eq 1
 
-      expect(objects[2][0]).to eq 2
-      expect(objects[2][1]).to eq 3
-      expect(objects[2][-2]).to eq 2
-      expect(objects[2][-1]).to eq 3
+      expect(objects[2]['baz']).to eq 2
+      expect(objects[2]['qux']).to eq 3
 
-      expect(objects[3]['baz']).to eq 4
-      expect(objects[3]['qux']).to eq 5
+      expect(objects[3][0]).to eq 4
+      expect(objects[3][1]).to eq 5
+      expect(objects[3][-2]).to eq 4
+      expect(objects[3][-1]).to eq 5
 
       expect(objects[4][:foo]).to eq 0
       expect(objects[4][:bar]).to eq 1
-      expect(objects[4][0]).to eq 2
-      expect(objects[4][1]).to eq 3
-      expect(objects[4][-2]).to eq 2
-      expect(objects[4][-1]).to eq 3
-      expect(objects[4]['baz']).to eq 4
-      expect(objects[4]['qux']).to eq 5
+      expect(objects[4]['baz']).to eq 2
+      expect(objects[4]['qux']).to eq 3
+      expect(objects[4][0]).to eq 4
+      expect(objects[4][1]).to eq 5
+      expect(objects[4][-2]).to eq 4
+      expect(objects[4][-1]).to eq 5
+
     end
 
     context 'when the specified member does not exist' do
       it 'should return nil' do
         expect(objects[0][:foo]).to be_nil
         expect(objects[0][:bar]).to be_nil
-        expect(objects[0][0]).to be_nil
-        expect(objects[0][1]).to be_nil
         expect(objects[0]['baz']).to be_nil
         expect(objects[0]['qux']).to be_nil
+        expect(objects[0][0]).to be_nil
+        expect(objects[0][1]).to be_nil
 
         expect(objects[1][:baz]).to be_nil
         expect(objects[1][:qux]).to be_nil
-        expect(objects[1][0]).to be_nil
-        expect(objects[1][1]).to be_nil
         expect(objects[1]['baz']).to be_nil
         expect(objects[1]['qux']).to be_nil
+        expect(objects[1][0]).to be_nil
+        expect(objects[1][1]).to be_nil
 
         expect(objects[2][:foo]).to be_nil
         expect(objects[2][:bar]).to be_nil
-        expect(objects[2][2]).to be_nil
-        expect(objects[2][3]).to be_nil
-        expect(objects[2]['baz']).to be_nil
-        expect(objects[2]['qux']).to be_nil
+        expect(objects[2]['foo']).to be_nil
+        expect(objects[2]['bar']).to be_nil
+        expect(objects[2][0]).to be_nil
+        expect(objects[2][1]).to be_nil
 
         expect(objects[3][:foo]).to be_nil
-        expect(objects[3][:baz]).to be_nil
-        expect(objects[3][0]).to be_nil
-        expect(objects[3][1]).to be_nil
+        expect(objects[3][:bar]).to be_nil
         expect(objects[3]['foo']).to be_nil
         expect(objects[3]['bar']).to be_nil
+        expect(objects[3][2]).to be_nil
+        expect(objects[3][3]).to be_nil
 
         expect(objects[4][:baz]).to be_nil
         expect(objects[4][:qux]).to be_nil
-        expect(objects[4][2]).to be_nil
-        expect(objects[4][3]).to be_nil
         expect(objects[4]['foo']).to be_nil
         expect(objects[4]['bar']).to be_nil
+        expect(objects[4][2]).to be_nil
+        expect(objects[4][3]).to be_nil
       end
     end
   end
@@ -101,9 +102,9 @@ RSpec.describe RuPkl::PklObject do
     it 'should return its members' do
       expect(objects[0].members).to be_empty
       expect(objects[1].members).to eq [[:foo, 0], [:bar, 1]]
-      expect(objects[2].members).to eq [[0, 2], [1, 3]]
-      expect(objects[3].members).to eq [['baz', 4], ['qux', 5]]
-      expect(objects[4].members).to eq [[:foo, 0], [:bar, 1], [0, 2], [1, 3], ['baz', 4], ['qux', 5]]
+      expect(objects[2].members).to eq [['baz', 2], ['qux', 3]]
+      expect(objects[3].members).to eq [4, 5]
+      expect(objects[4].members).to eq [[:foo, 0], [:bar, 1], ['baz', 2], ['qux', 3], 4, 5]
     end
   end
 
@@ -116,13 +117,13 @@ RSpec.describe RuPkl::PklObject do
           .to yield_successive_args([:foo, 0], [:bar, 1])
 
         expect { |b| objects[2].each(&b) }
-          .to yield_successive_args([0, 2], [1, 3])
+          .to yield_successive_args(['baz', 2], ['qux', 3])
 
         expect { |b| objects[3].each(&b) }
-          .to yield_successive_args(['baz', 4], ['qux', 5])
+          .to yield_successive_args(4, 5)
 
         expect { |b| objects[4].each(&b) }
-          .to yield_successive_args([:foo, 0], [:bar, 1], [0, 2], [1, 3], ['baz', 4], ['qux', 5])
+          .to yield_successive_args([:foo, 0], [:bar, 1], ['baz', 2], ['qux', 3], 4, 5)
       end
 
       it 'should return the iterated array' do
@@ -142,13 +143,13 @@ RSpec.describe RuPkl::PklObject do
           .to yield_successive_args([:foo, 0], [:bar, 1])
 
         expect { |b| objects[2].each.each(&b) }
-          .to yield_successive_args([0, 2], [1, 3])
+          .to yield_successive_args(['baz', 2], ['qux', 3])
 
         expect { |b| objects[3].each.each(&b) }
-          .to yield_successive_args(['baz', 4], ['qux', 5])
+          .to yield_successive_args(4, 5)
 
         expect { |b| objects[4].each.each(&b) }
-          .to yield_successive_args([:foo, 0], [:bar, 1], [0, 2], [1, 3], ['baz', 4], ['qux', 5])
+          .to yield_successive_args([:foo, 0], [:bar, 1], ['baz', 2], ['qux', 3], 4, 5)
       end
     end
   end
@@ -205,13 +206,65 @@ RSpec.describe RuPkl::PklObject do
     end
   end
 
+  describe 'entries' do
+    it 'should return its entries' do
+      expect(objects[0].entries).to be_empty
+      expect(objects[1].entries).to be_empty
+      expect(objects[2].entries).to eq({ 'baz' => 2, 'qux' => 3 })
+      expect(objects[3].entries).to be_empty
+      expect(objects[4].entries).to eq({ 'baz' => 2, 'qux' => 3 })
+    end
+  end
+
+  describe '#each_entry' do
+    context 'when a block is given' do
+      it 'should call the given block one for each entry' do
+        expect { |b| objects[0].each_entry(&b) }.not_to yield_control
+
+        expect { |b| objects[1].each_entry(&b) }.not_to yield_control
+
+        expect { |b| objects[2].each_entry(&b) }
+          .to yield_successive_args(['baz', 2], ['qux', 3])
+
+        expect { |b| objects[3].each_entry(&b) }.not_to yield_control
+
+        expect { |b| objects[4].each_entry(&b) }
+          .to yield_successive_args(['baz', 2], ['qux', 3])
+      end
+
+      it 'should return the iterated entries' do
+        expect(objects[0].each_entry {}).to be_empty
+        expect(objects[1].each_entry {}).to be_empty
+        expect(objects[2].each_entry {}).to eq objects[2].entries
+        expect(objects[3].each_entry {}).to be_empty
+        expect(objects[4].each_entry {}).to eq objects[4].entries
+      end
+    end
+
+    context 'when no block is given' do
+      it 'should return an Enumerator object' do
+        expect { |b| objects[0].each_entry.each(&b) }.not_to yield_control
+
+        expect { |b| objects[1].each_entry.each(&b) }.not_to yield_control
+
+        expect { |b| objects[2].each_entry.each(&b) }
+          .to yield_successive_args(['baz', 2], ['qux', 3])
+
+        expect { |b| objects[3].each_entry.each(&b) }.not_to yield_control
+
+        expect { |b| objects[4].each_entry.each(&b) }
+          .to yield_successive_args(['baz', 2], ['qux', 3])
+      end
+    end
+  end
+
   describe '#elements' do
     it 'should return its elements' do
       expect(objects[0].elements).to be_empty
       expect(objects[1].elements).to be_empty
-      expect(objects[2].elements).to eq([2, 3])
-      expect(objects[3].elements).to be_empty
-      expect(objects[4].elements).to eq([2, 3])
+      expect(objects[2].elements).to be_empty
+      expect(objects[3].elements).to eq([4, 5])
+      expect(objects[4].elements).to eq([4, 5])
     end
   end
 
@@ -222,20 +275,20 @@ RSpec.describe RuPkl::PklObject do
 
         expect { |b| objects[1].each_element(&b) }.not_to yield_control
 
-        expect { |b| objects[2].each_element(&b) }
-          .to yield_successive_args(2, 3)
+        expect { |b| objects[2].each_element(&b) }.not_to yield_control
 
-        expect { |b| objects[3].each_element(&b) }.not_to yield_control
+        expect { |b| objects[3].each_element(&b) }
+          .to yield_successive_args(4, 5)
 
         expect { |b| objects[4].each_element(&b) }
-          .to yield_successive_args(2, 3)
+          .to yield_successive_args(4, 5)
       end
 
       it 'should return the iterated elements' do
         expect(objects[0].each_element {}).to be_empty
         expect(objects[1].each_element {}).to be_empty
-        expect(objects[2].each_element {}).to eq objects[2].elements
-        expect(objects[3].each_element {}).to be_empty
+        expect(objects[2].each_element {}).to be_empty
+        expect(objects[3].each_element {}).to eq objects[3].elements
         expect(objects[4].each_element {}).to eq objects[4].elements
       end
     end
@@ -247,64 +300,12 @@ RSpec.describe RuPkl::PklObject do
         expect { |b| objects[1].each_element.each(&b) }.not_to yield_control
 
         expect { |b| objects[2].each_element.each(&b) }
-          .to yield_successive_args(2, 3)
 
         expect { |b| objects[3].each_element.each(&b) }
+          .to yield_successive_args(4, 5)
 
         expect { |b| objects[4].each_element.each(&b) }
-          .to yield_successive_args(2, 3)
-      end
-    end
-  end
-
-  describe 'entries' do
-    it 'should return its entries' do
-      expect(objects[0].entries).to be_empty
-      expect(objects[1].entries).to be_empty
-      expect(objects[2].entries).to be_empty
-      expect(objects[3].entries).to eq({ 'baz' => 4, 'qux' => 5 })
-      expect(objects[4].entries).to eq({ 'baz' => 4, 'qux' => 5 })
-    end
-  end
-
-  describe '#each_entry' do
-    context 'when a block is given' do
-      it 'should call the given block one for each entry' do
-        expect { |b| objects[0].each_entry(&b) }.not_to yield_control
-
-        expect { |b| objects[1].each_entry(&b) }.not_to yield_control
-
-        expect { |b| objects[2].each_entry(&b) }.not_to yield_control
-
-        expect { |b| objects[3].each_entry(&b) }
-          .to yield_successive_args(['baz', 4], ['qux', 5])
-
-        expect { |b| objects[4].each_entry(&b) }
-          .to yield_successive_args(['baz', 4], ['qux', 5])
-      end
-
-      it 'should return the iterated entries' do
-        expect(objects[0].each_entry {}).to be_empty
-        expect(objects[1].each_entry {}).to be_empty
-        expect(objects[2].each_entry {}).to be_empty
-        expect(objects[3].each_entry {}).to eq objects[3].entries
-        expect(objects[4].each_entry {}).to eq objects[4].entries
-      end
-    end
-
-    context 'when no block is given' do
-      it 'should return an Enumerator object' do
-        expect { |b| objects[0].each_entry.each(&b) }.not_to yield_control
-
-        expect { |b| objects[1].each_entry.each(&b) }.not_to yield_control
-
-        expect { |b| objects[2].each_entry.each(&b) }.not_to yield_control
-
-        expect { |b| objects[3].each_entry.each(&b) }
-          .to yield_successive_args(['baz', 4], ['qux', 5])
-
-        expect { |b| objects[4].each_entry.each(&b) }
-          .to yield_successive_args(['baz', 4], ['qux', 5])
+          .to yield_successive_args(4, 5)
       end
     end
   end
@@ -313,9 +314,9 @@ RSpec.describe RuPkl::PklObject do
     it 'should return a string representing itself' do
       expect(objects[0].to_s).to eq '{}'
       expect(objects[1].to_s).to eq '{:foo=>0, :bar=>1}'
-      expect(objects[2].to_s).to eq '{2, 3}'
-      expect(objects[3].to_s).to eq '{"baz"=>4, "qux"=>5}'
-      expect(objects[4].to_s).to eq '{:foo=>0, :bar=>1, "baz"=>4, "qux"=>5, 2, 3}'
+      expect(objects[2].to_s).to eq '{"baz"=>2, "qux"=>3}'
+      expect(objects[3].to_s).to eq '[4, 5]'
+      expect(objects[4].to_s).to eq '{:foo=>0, :bar=>1, "baz"=>2, "qux"=>3, 4, 5}'
       expect(objects[5].to_s).to eq <<~'S'.chomp.tr("\n", ' ')
         {:mixedObject=>{:name=>"Pigeon", :lifespan=>8, :extinct=>false,
         "wing"=>"Not related to the _element_ \"wing\"",
@@ -333,13 +334,13 @@ RSpec.describe RuPkl::PklObject do
         {:foo=>0, :bar=>1}
       OUT
       expect { pp objects[2] }.to output(<<~'OUT').to_stdout
-        {2, 3}
+        {"baz"=>2, "qux"=>3}
       OUT
       expect { pp objects[3] }.to output(<<~'OUT').to_stdout
-        {"baz"=>4, "qux"=>5}
+        [4, 5]
       OUT
       expect { pp objects[4] }.to output(<<~'OUT').to_stdout
-        {:foo=>0, :bar=>1, "baz"=>4, "qux"=>5, 2, 3}
+        {:foo=>0, :bar=>1, "baz"=>2, "qux"=>3, 4, 5}
       OUT
       expect { pp objects[5] }.to output(<<~'OUT').to_stdout
         {:mixedObject=>

@@ -4,10 +4,10 @@ module RuPkl
   class PklObject
     include Enumerable
 
-    def initialize(properties, elements, entries)
+    def initialize(properties, entries, elements)
       @properties = properties
-      @elements = elements
       @entries = entries
+      @elements = elements
       define_property_accessors
     end
 
@@ -25,8 +25,8 @@ module RuPkl
       @members ||=
         [
           *properties.to_a,
-          *elements.map.with_index { |e, i| [i, e] },
-          *entries.to_a
+          *entries.to_a,
+          *elements
         ]
     end
 
@@ -34,17 +34,17 @@ module RuPkl
       @properties ||= {}
     end
 
-    def elements
-      @elements ||= []
-    end
-
     def entries
       @entries ||= {}
     end
 
+    def elements
+      @elements ||= []
+    end
+
     {
       members: :each, properties: :each_property,
-      elements: :each_element, entries: :each_entry
+      entries: :each_entry, elements: :each_element
     }.each do |accessor, method|
       class_eval(<<~M, __FILE__, __LINE__ + 1)
         # def each(&block)
@@ -65,7 +65,11 @@ module RuPkl
     end
 
     def to_s
-      "{#{members_to_s}}"
+      if element_only?
+        elements.to_s
+      else
+        "{#{mixed_to_s}}"
+      end
     end
 
     def inspect
@@ -73,7 +77,11 @@ module RuPkl
     end
 
     def pretty_print(pp)
-      pp.group(1, '{', '}') { pp_body(pp) }
+      if element_only?
+        pp.pp(elements)
+      else
+        pp_mixed(pp)
+      end
     end
 
     private
@@ -93,23 +101,42 @@ module RuPkl
       end
     end
 
-    def members_to_s
+    def element_only?
+      properties.empty? && entries.empty? && !elements.empty?
+    end
+
+    def mixed_to_s
       [properties, entries, elements]
         .reject(&:empty?)
         .map { _1.to_s[1..-2] }
         .join(', ')
     end
 
-    def pp_body(pp)
-      pp.seplist([*properties, *entries, *elements], nil, :each) do |member|
-        case member
-        when Array then pp_hash_member(pp, *member)
-        else pp.pp(member)
+    def pp_mixed(pp)
+      pp.group(1, '{', '}') do
+        pp.seplist(pp_members, nil, :each) do |(member, type)|
+          pp_mixed_body(pp, type, member)
         end
       end
     end
 
-    def pp_hash_member(pp, key, value)
+    def pp_members
+      [
+        *properties.to_a.product([:property]),
+        *entries.to_a.product([:entry]),
+        *elements.product([:element])
+      ]
+    end
+
+    def pp_mixed_body(pp, type, member)
+      if type in :property | :entry
+        pp_hash_pair(pp, *member)
+      else
+        pp.pp(member)
+      end
+    end
+
+    def pp_hash_pair(pp, key, value)
       pp.group do
         pp.pp(key)
         pp.text('=>')

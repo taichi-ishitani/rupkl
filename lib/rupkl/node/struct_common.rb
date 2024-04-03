@@ -71,11 +71,11 @@ module RuPkl
         lhs.concat(rhs)
       end
 
-      def create_pkl_object(scopes, properties, elements, entries)
+      def create_pkl_object(scopes, properties, entries, elements)
         RuPkl::PklObject.new(
           to_ruby_hash_members(scopes, properties),
-          to_ruby_array_members(scopes, elements),
-          to_ruby_hash_members(scopes, entries)
+          to_ruby_hash_members(scopes, entries),
+          to_ruby_array_members(scopes, elements)
         )
       end
 

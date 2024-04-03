@@ -11,8 +11,8 @@ module RuPkl
       end
 
       attr_reader :properties
-      attr_reader :elements
       attr_reader :entries
+      attr_reader :elements
       attr_reader :position
 
       def evaluate(_scopes)
@@ -20,7 +20,7 @@ module RuPkl
       end
 
       def to_ruby(_scopes)
-        create_pkl_object(nil, properties, elements, entries)
+        create_pkl_object(nil, properties, entries, elements)
       end
 
       def to_pkl_string(_scopes)
@@ -29,16 +29,16 @@ module RuPkl
 
       def merge!(other)
         @properties = merge_hash_members(properties, other.properties, :name)
-        @elements = merge_array_members(elements, other.elements)
         @entries = merge_hash_members(entries, other.entries, :key)
+        @elements = merge_array_members(elements, other.elements)
         self
       end
 
       def ==(other)
         other.instance_of?(self.class) &&
           match_members?(properties, other.properties, false) &&
-          match_members?(elements, other.elements, true) &&
-          match_members?(entries, other.entries, false)
+          match_members?(entries, other.entries, false) &&
+          match_members?(elements, other.elements, true)
       end
 
       def undefined_operator?(operator)
@@ -46,7 +46,7 @@ module RuPkl
       end
 
       def find_by_key(key)
-        find_element(key) || find_entry(key)
+        find_entry(key) || find_element(key)
       end
 
       private
@@ -73,12 +73,18 @@ module RuPkl
         add_hash_member((@properties ||= []), member, :name)
       end
 
+      def add_entry(member)
+        add_hash_member((@entries ||= []), member, :key)
+      end
+
       def add_element(member)
         add_array_member((@elements ||= []), member)
       end
 
-      def add_entry(member)
-        add_hash_member((@entries ||= []), member, :key)
+      def find_entry(key)
+        entries
+          &.find { _1.key == key }
+          &.then(&:value)
       end
 
       def find_element(index)
@@ -87,12 +93,6 @@ module RuPkl
 
         elements
           .find.with_index { |_, i| i == index.value }
-      end
-
-      def find_entry(key)
-        entries
-          &.find { _1.key == key }
-          &.then(&:value)
       end
     end
   end

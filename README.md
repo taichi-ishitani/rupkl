@@ -88,8 +88,8 @@ end
 RuPkl.load_file('sample.pkl')
 # =>
 # {:bird=>{:name=>"Common wood pigeon", :diet=>"Seeds", :taxonomy=>{:species=>"Columba palumbus"}},
-#  :exampleObjectWithJustIntElements=>{100, 42},
-#  :exampleObjectWithMixedElements=>{"Bird Breeder Conference", 2023, {100, 42}},
+#  :exampleObjectWithJustIntElements=>[100, 42],
+#  :exampleObjectWithMixedElements=>["Bird Breeder Conference", 2023, [100, 42]],
 #  :pigeonShelter=>
 #   {"bird"=>{:name=>"Common wood pigeon", :diet=>"Seeds", :taxonomy=>{:species=>"Columba palumbus"}},
 #    "address"=>"355 Bird St."},

@@ -160,12 +160,6 @@ module RuPkl
       end
     end
 
-    ObjectElement = Struct.new(:value) do
-      def to_matcher(context)
-        context.__send__(:expression_matcher, value)
-      end
-    end
-
     ObjectEntry = Struct.new(:key, :value, :objects) do
       def to_matcher(context)
         context.instance_exec(key, value, objects) do |k, v, o|
@@ -182,6 +176,12 @@ module RuPkl
       end
     end
 
+    ObjectElement = Struct.new(:value) do
+      def to_matcher(context)
+        context.__send__(:expression_matcher, value)
+      end
+    end
+
     UnresolvedObject = Struct.new(:members) do
       def property(name, value_or_objects)
         (self.members ||= []) <<
@@ -191,16 +191,16 @@ module RuPkl
           end
       end
 
-      def element(value)
-        (self.members ||= []) << ObjectElement.new(value)
-      end
-
       def entry(key, value_or_objects)
         (self.members ||= []) <<
           case value_or_objects
           when Array then ObjectEntry.new(key, nil, value_or_objects)
           else ObjectEntry.new(key, value_or_objects, nil)
           end
+      end
+
+      def element(value)
+        (self.members ||= []) << ObjectElement.new(value)
       end
 
       def to_matcher(context)
@@ -231,12 +231,12 @@ module RuPkl
         (self.properties ||= []) << ObjectProperty.new(name, value, nil)
       end
 
-      def element(value)
-        (self.elements ||= []) << ObjectElement.new(value)
-      end
-
       def entry(key, value)
         (self.entries ||= []) << ObjectEntry.new(key, value, nil)
+      end
+
+      def element(value)
+        (self.elements ||= []) << ObjectElement.new(value)
       end
 
       def to_matcher(context)
@@ -244,8 +244,8 @@ module RuPkl
           be_instance_of(Node::Dynamic)
             .and have_attributes(
               properties: o.create_matcher(context, o.properties),
-              elements: o.create_matcher(context, o.elements),
-              entries: o.create_matcher(context, o.entries)
+              entries: o.create_matcher(context, o.entries),
+              elements: o.create_matcher(context, o.elements)
             )
         end
       end
@@ -269,22 +269,23 @@ module RuPkl
 
     alias_method :be_dynamic, :dynamic
 
-    def match_pkl_object(properties: nil, elements: nil, entries: nil)
+    def match_pkl_object(properties: nil, entries: nil, elements: nil)
       properties_matcher =
         properties
           .then { _1 && match(_1) || be_empty }
-      elements_matcher =
-        elements
-          .then { _1 && match(_1)  || be_empty }
       entries_matcher =
         entries
           .then { _1 && match(_1)  || be_empty }
+      elements_matcher =
+        elements
+          .then { _1 && match(_1)  || be_empty }
+
 
       be_instance_of(RuPkl::PklObject)
         .and have_attributes(
           properties: properties_matcher,
-          elements: elements_matcher,
-          entries: entries_matcher
+          entries: entries_matcher,
+          elements: elements_matcher
         )
     end
 

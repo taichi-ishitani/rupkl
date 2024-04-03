@@ -15,7 +15,7 @@ module RuPkl
       end
 
       rule(:object_member) do
-        object_property | object_element | object_entry
+        object_property | object_entry | object_element
       end
 
       rule(:object_property) do
@@ -28,10 +28,6 @@ module RuPkl
         ).as(:object_property)
       end
 
-      rule(:object_element) do
-        expression
-      end
-
       rule(:object_entry) do
         (
           bracketed(expression.as(:key), '[', ']') >> ws? >>
@@ -40,6 +36,10 @@ module RuPkl
               (object >> (ws? >> object).repeat).as(:objects)
             )
         ).as(:object_entry)
+      end
+
+      rule(:object_element) do
+        expression
       end
     end
 
