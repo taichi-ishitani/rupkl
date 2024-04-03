@@ -1,45 +1,123 @@
+[![Gem Version](https://badge.fury.io/rb/rupkl.svg)](https://badge.fury.io/rb/rupkl)
 [![CI](https://github.com/taichi-ishitani/rupkl/actions/workflows/ci.yml/badge.svg)](https://github.com/taichi-ishitani/rupkl/actions/workflows/ci.yml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/ee9795f03af99994d139/maintainability)](https://codeclimate.com/github/taichi-ishitani/rupkl/maintainability)
 [![codecov](https://codecov.io/github/taichi-ishitani/rupkl/graph/badge.svg?token=CrcaXQ9FjI)](https://codecov.io/github/taichi-ishitani/rupkl)
 
 # RuPkl
 
-
-
-TODO: Delete this and the text below, and describe your gem
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/rupkl`. To experiment with that code, run `bin/console` for an interactive prompt.
+A [Pkl](https://pkl-lang.org) parser for Ruby.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+    $ bundle add rupkl
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+    $ gem install rupkl
 
 ## Usage
 
-TODO: Write usage instructions here
+You can use the methods below to load a Pkl code into a Ruby structure:
 
-## Development
+* `RuPkl.load`
+    * Load the given Pkl code into a Ruby structure
+* `RuPkl.load_file`
+    * Load a Pkl code read from the given file path into a Ruby structure
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+```ruby
+require 'rupkl'
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+pkl = <<~'PKL'
+  // From:
+  // https://pkl-lang.org/main/current/language-tutorial/01_basic_config.html
+  name = "Pkl: Configure your Systems in New Ways"
+  attendants = 100
+  isInteractive = true
+  amountLearned = 13.37
+PKL
+
+RuPkl.load(pkl)
+# =>
+# {:name=>"Pkl:Configure your Systems in New Ways",
+#  :attendants=>100,
+#  :isInteractive=>true,
+#  :amountLearned=>13.37}
+
+File.open('sample.pkl', 'w') do |f|
+  f.write(<<~'PKL')
+    // From:
+    // https://pkl-lang.org/main/current/language-tutorial/01_basic_config.html
+    bird {
+      name = "Common wood pigeon"
+      diet = "Seeds"
+      taxonomy {
+        species = "Columba palumbus"
+      }
+    }
+
+    exampleObjectWithJustIntElements {
+      100
+      42
+    }
+
+    exampleObjectWithMixedElements {
+      "Bird Breeder Conference"
+      (2000 + 23)
+      exampleObjectWithJustIntElements
+    }
+
+    pigeonShelter {
+      ["bird"] {
+        name = "Common wood pigeon"
+        diet = "Seeds"
+        taxonomy {
+          species = "Columba palumbus"
+        }
+      }
+      ["address"] = "355 Bird St."
+    }
+
+    birdCount {
+      [pigeonShelter] = 42
+    }
+  PKL
+end
+
+RuPkl.load_file('sample.pkl')
+# =>
+# {:bird=>{:name=>"Common wood pigeon", :diet=>"Seeds", :taxonomy=>{:species=>"Columba palumbus"}},
+#  :exampleObjectWithJustIntElements=>{100, 42},
+#  :exampleObjectWithMixedElements=>{"Bird Breeder Conference", 2023, {100, 42}},
+#  :pigeonShelter=>
+#   {"bird"=>{:name=>"Common wood pigeon", :diet=>"Seeds", :taxonomy=>{:species=>"Columba palumbus"}},
+#    "address"=>"355 Bird St."},
+#  :birdCount=>
+#   {{"bird"=>{:name=>"Common wood pigeon", :diet=>"Seeds", :taxonomy=>{:species=>"Columba palumbus"}},
+#     "address"=>"355 Bird St."}=>42}}
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rupkl. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/rupkl/blob/master/CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome on GitHub at https://github.com/taichi-ishitani/rupkl.
 
-## License
+* [Issue Tracker](https://github.com/taichi-ishitani/rupkl/issues/new/choose)
+* [Discussion](https://github.com/taichi-ishitani/rupkl/discussions/new/choose)
+* [Pull Request](https://github.com/taichi-ishitani/rupkl/pulls)
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+## Notice
+
+Pkl code snippets used for RSpec examples are originaly from:
+
+* https://pkl-lang.org/main/current/language-tutorial/index.html
+* https://github.com/apple/pkl
+
+## Copyright & License
+
+Copyright &copy; 2024 Taichi Ishitani.
+RuPkl is licensed under the terms of the [MIT License](https://opensource.org/licenses/MIT), see [LICENSE](LICENSE) for further details.
 
 ## Code of Conduct
 
-Everyone interacting in the Rupkl project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/rupkl/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the RuPkl project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/taichi-ishitani/rupkl/blob/master/CODE_OF_CONDUCT.md).
