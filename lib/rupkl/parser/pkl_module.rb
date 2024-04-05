@@ -26,7 +26,7 @@ module RuPkl
 
       rule(pkl_module: { items: subtree(:items) }) do
         Array(items)
-          .then { Node::ObjectBody.new(_1, _1.first.position)}
+          .then { Node::ObjectBody.new(_1, _1.first.position) }
           .then { Node::PklModule.new(_1, _1.position) }
       end
     end
