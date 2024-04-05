@@ -97,6 +97,40 @@ module RuPkl
         .and have_attributes(operator: operator, l_operand: l_matcher, r_operand: r_matcher)
     end
 
+    class AmendExpression
+      def amending(expression)
+        @amending = expression
+      end
+
+      def body
+        b = ObjectBody.new
+        yield(b) if block_given?
+        (@bodies ||= []) << b
+      end
+
+      def to_matcher(context)
+        amending_matcher =
+          context.__send__(:expression_matcher, @amending)
+        bodies_matcher =
+          @bodies
+            .map { _1.to_matcher(context) }
+            .then { context.__send__(:match, _1) }
+
+        context.instance_eval do
+          be_instance_of(Node::AmendExpression)
+            .and have_attributes(
+              amending: amending_matcher, bodies: bodies_matcher
+            )
+        end
+      end
+    end
+
+    def amend_expression
+      e = AmendExpression.new
+      yield(e)
+      e.to_matcher(self)
+    end
+
     PklClassProperty = Struct.new(:name, :value) do
       def to_matcher(context)
         context.instance_exec(name, value) do |n, v|

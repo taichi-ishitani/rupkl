@@ -82,6 +82,39 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'amend expression' do
+    it 'should be parsed by expression parser' do
+      pkl = <<~'PKL'
+        (pigeon) {
+          name = "Parrot"
+        }
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          amend_expression do |e|
+            e.amending member_ref(:pigeon)
+            e.body { |b| b.property :name, 'Parrot' }
+          end
+        )
+
+      pkl = <<~'PKL'
+        (pigeon) {
+          name = "Dodo"
+        } {
+          extinct = true
+        }
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          amend_expression do |e|
+            e.amending member_ref(:pigeon)
+            e.body { |b| b.property :name, 'Dodo' }
+            e.body { |b| b.property :extinct, true }
+          end
+        )
+    end
+  end
+
   describe 'operation' do
     describe 'subscript operation' do
       it 'should be parsed by expression parser' do

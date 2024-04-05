@@ -14,11 +14,18 @@ module RuPkl
         ].inject(:|)
       end
 
+      rule(:amend_expression) do
+        (
+          primary.as(:amending) >>
+            (ws? >> object_body).repeat(1).as(:bodies)
+        ).as(:amend_expression) | primary
+      end
+
       rule(:qualified_member_ref) do
         (
-          primary.as(:receiver) >>
+          amend_expression.as(:receiver) >>
             (ws? >> str('.') >> ws? >> id).repeat(1).as(:member)
-        ).as(:qualified_member_ref) | primary
+        ).as(:qualified_member_ref) | amend_expression
       end
 
       rule(:subscript_operation) do
@@ -92,6 +99,13 @@ module RuPkl
         member.inject(receiver) do |r, m|
           Node::MemberReference.new(r, m, r.position)
         end
+      end
+
+      rule(
+        amend_expression:
+          { amending: simple(:a), bodies: subtree(:b) }
+      ) do
+        Node::AmendExpression.new(a, Array(b), a.position)
       end
 
       rule(
