@@ -23,22 +23,28 @@ RSpec.describe RuPkl::Parser do
       expect(parser).to parse(pkl).as(pkl_module)
 
       pkl = 'name="Pkl: Configure your Systems in New Ways"'
-      expect(parser).to parse(pkl).as(pkl_module do |m|
-        m.property :name, 'Pkl: Configure your Systems in New Ways'
-      end)
+      expect(parser).to parse(pkl).as(
+        pkl_module do |m|
+          m.property :name, 'Pkl: Configure your Systems in New Ways'
+        end
+      )
 
       pkl = 'name="Pkl: Configure your Systems in New Ways";attendants=100'
-      expect(parser).to parse(pkl).as(pkl_module do |m|
-        m.property :name, 'Pkl: Configure your Systems in New Ways'
-        m.property :attendants, 100
-      end)
+      expect(parser).to parse(pkl).as(
+        pkl_module do |m|
+          m.property :name, 'Pkl: Configure your Systems in New Ways'
+          m.property :attendants, 100
+        end
+      )
 
       pkl = 'name="Pkl: Configure your Systems in New Ways";attendants=100;isInteractive=true'
-      expect(parser).to parse(pkl).as(pkl_module do |m|
-        m.property :name, 'Pkl: Configure your Systems in New Ways'
-        m.property :attendants, 100
-        m.property :isInteractive, true
-      end)
+      expect(parser).to parse(pkl).as(
+        pkl_module do |m|
+          m.property :name, 'Pkl: Configure your Systems in New Ways'
+          m.property :attendants, 100
+          m.property :isInteractive, true
+        end
+      )
 
       pkl = <<~'PKL'
 
@@ -47,11 +53,13 @@ RSpec.describe RuPkl::Parser do
         isInteractive = true
 
       PKL
-      expect(parser).to parse(pkl).as(pkl_module do |m|
-        m.property :name, 'Pkl: Configure your Systems in New Ways'
-        m.property :attendants, 100
-        m.property :isInteractive, true
-      end)
+      expect(parser).to parse(pkl).as(
+        pkl_module do |m|
+          m.property :name, 'Pkl: Configure your Systems in New Ways'
+          m.property :attendants, 100
+          m.property :isInteractive, true
+        end
+      )
 
       pkl = <<~'PKL'
         mixedObject {
@@ -67,24 +75,28 @@ RSpec.describe RuPkl::Parser do
           }
         }
       PKL
-      expect(parser).to parse(pkl).as(pkl_module do |m|
-        m.property :mixedObject, [
-          unresolved_object do |o1|
-            o1.property :name, 'Pigeon'
-            o1.property :lifespan, 8
-            o1.element 'wing'
-            o1.element 'claw'
-            o1.entry 'wing', 'Not related to the _element_ "wing"'
-            o1.element 42
-            o1.property :extinct, false
-            o1.entry false, [
-              unresolved_object do |o2|
-                o2.property :description, 'Construed object example'
+      expect(parser).to parse(pkl).as(
+        pkl_module do |m|
+          m.property :mixedObject, (
+            unresolved_object do |o1|
+              o1.body do |b1|
+                b1.property :name, 'Pigeon'
+                b1.property :lifespan, 8
+                b1.element 'wing'
+                b1.element 'claw'
+                b1.entry 'wing', 'Not related to the _element_ "wing"'
+                b1.element 42
+                b1.property :extinct, false
+                b1.entry false, (
+                  unresolved_object do |o2|
+                    o2.body { |b2| b2.property :description, 'Construed object example' }
+                  end
+                )
               end
-            ]
-          end
-        ]
-      end)
+            end
+          )
+        end
+      )
     end
   end
 end

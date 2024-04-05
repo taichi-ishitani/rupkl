@@ -11,6 +11,10 @@ module RuPkl
       attr_reader :value
       attr_reader :position
 
+      def evaluate_lazily(_scopes)
+        self
+      end
+
       def to_ruby(scopes)
         evaluate(scopes).value
       end

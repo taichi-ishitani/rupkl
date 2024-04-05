@@ -7,22 +7,15 @@ module RuPkl
         (
           id.as(:name) >> ws? >>
           (
-            (str('=').ignore >> ws? >> expression.as(:value)) |
-            (object >> (ws? >> object).repeat).as(:objects)
-          )
+            (str('=').ignore >> ws? >> expression) | object
+          ).as(:value)
         ).as(:class_property)
       end
     end
 
     define_transform do
       rule(class_property: { name: simple(:n), value: simple(:v) }) do
-        Node::PklClassProperty.new(n, v, nil, n.position)
-      end
-    end
-
-    define_transform do
-      rule(class_property: { name: simple(:n), objects: subtree(:o) }) do
-        Node::PklClassProperty.new(n, nil, Array(o), n.position)
+        Node::ObjectProperty.new(n, v, n.position)
       end
     end
   end

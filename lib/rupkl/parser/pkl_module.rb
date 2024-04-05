@@ -20,12 +20,14 @@ module RuPkl
 
     define_transform do
       rule(pkl_module: simple(:_)) do
-        Node::PklModule.new(nil, sof_position)
+        body = Node::ObjectBody.new(nil, sof_position)
+        Node::PklModule.new(body, sof_position)
       end
 
       rule(pkl_module: { items: subtree(:items) }) do
         Array(items)
-          .then { Node::PklModule.new(_1, _1.first.position) }
+          .then { Node::ObjectBody.new(_1, _1.first.position)}
+          .then { Node::PklModule.new(_1, _1.position) }
       end
     end
   end

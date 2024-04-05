@@ -46,10 +46,77 @@ RSpec.describe RuPkl::Node::Dynamic do
         }
       }
     PKL
+    strings << <<~'PKL'
+      {
+        foo_0 = 0
+        foo_1 = foo_0 + 1
+        bar {
+          bar_0 = foo_1 + 1
+          bar_1 = bar_0 + 1
+        }
+      }
+    PKL
   end
 
   def parse(string)
     parser.parse(string.chomp, root: :object)
+  end
+
+  describe '#evaluate' do
+    it 'should return a Dynamic object containing members eagerly evaluated' do
+      node = parse(pkl_strings[0])
+      expect(node.evaluate(nil)).to be_dynamic
+
+      node = parse(pkl_strings[1])
+      expect(node.evaluate(nil))
+        .to (be_dynamic { |o| o.element 0; o.element 1; o.element 2 })
+
+      node = parse(pkl_strings[2])
+      expect(node.evaluate(nil))
+        .to (be_dynamic { |o| o.property :foo, 0; o.property :bar, 1; o.property :baz, 2 })
+
+      node = parse(pkl_strings[3])
+      expect(node.evaluate(nil))
+        .to (be_dynamic { |o| o.entry 'foo', 0; o.entry 'bar', 1; o.entry 'baz', 2 })
+
+      node = parse(pkl_strings[4])
+      expect(node.evaluate(nil)).to (
+        be_dynamic do |o1|
+          o1.property :name, 'Pigeon'
+          o1.property :lifespan, 8
+          o1.element 'wing'
+          o1.element 'claw'
+          o1.entry 'wing', "Not related to \nthe _element_ \"wing\""
+          o1.element 42
+          o1.property :extinct, false
+          o1.entry false, (
+            dynamic { |o2| o2.property :description, 'Construed object example' }
+          )
+        end
+      )
+
+      node = parse(pkl_strings[5])
+      expect(node.evaluate(nil)).to (
+        be_dynamic do |o1|
+          o1.property :foo, (
+            dynamic do |o2|
+              o2.property :bar, 3; o2.entry 'baz', 5; o2.element 1; o2.element 4
+            end
+          )
+        end
+      )
+      node = parse(pkl_strings[6])
+      expect(node.evaluate(nil)).to (
+        be_dynamic do |o1|
+          o1.property :foo_0, 0; o1.property :foo_1, 1
+          o1.property :bar, (
+            dynamic do |o2|
+              o2.property :bar_0, 2; o2.property :bar_1, 3
+            end
+          )
+        end
+      )
+    end
   end
 
   describe '#to_ruby' do
@@ -94,6 +161,17 @@ RSpec.describe RuPkl::Node::Dynamic do
               properties: { bar: 3 },
               elements: [1, 4],
               entries: { 'baz' => 5 }
+            )
+          }
+        )
+
+      node = parse(pkl_strings[6])
+      expect(node.to_ruby(nil))
+        .to match_pkl_object(
+          properties: {
+            foo_0: 0, foo_1: 1,
+            bar: match_pkl_object(
+              properties: { bar_0: 2, bar_1: 3 }
             )
           }
         )

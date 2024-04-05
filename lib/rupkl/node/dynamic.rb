@@ -5,33 +5,23 @@ module RuPkl
     class Dynamic
       include StructCommon
 
-      def initialize(members, scopes, position)
+      def initialize(body, position)
+        @body = body
         @position = position
-        add_members(members, scopes)
       end
 
-      attr_reader :properties
-      attr_reader :entries
-      attr_reader :elements
       attr_reader :position
 
-      def evaluate(_scopes)
-        self
+      def properties
+        @body.properties
       end
 
-      def to_ruby(_scopes)
-        create_pkl_object(nil, properties, entries, elements)
+      def entries
+        @body.entries
       end
 
-      def to_pkl_string(_scopes)
-        to_pkl_string_object(*properties, *entries, *elements)
-      end
-
-      def merge!(other)
-        @properties = merge_hash_members(properties, other.properties, :name)
-        @entries = merge_hash_members(entries, other.entries, :key)
-        @elements = merge_array_members(elements, other.elements)
-        self
+      def elements
+        @body.elements
       end
 
       def ==(other)
@@ -50,36 +40,6 @@ module RuPkl
       end
 
       private
-
-      def add_members(members, scopes)
-        return unless members
-
-        push_scope(scopes) do |s|
-          members.each { |m| add_member(m, s) }
-        end
-      end
-
-      def add_member(member, scopes)
-        member.evaluate(scopes).then do |m|
-          case member
-          when ObjectProperty then add_property(m)
-          when ObjectEntry then add_entry(m)
-          else add_element(m)
-          end
-        end
-      end
-
-      def add_property(member)
-        add_hash_member((@properties ||= []), member, :name)
-      end
-
-      def add_entry(member)
-        add_hash_member((@entries ||= []), member, :key)
-      end
-
-      def add_element(member)
-        add_array_member((@elements ||= []), member)
-      end
 
       def find_entry(key)
         entries

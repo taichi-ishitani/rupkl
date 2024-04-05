@@ -23,6 +23,10 @@ module RuPkl
         member_node.evaluate(scopes).value
       end
 
+      def evaluate_lazily(_scopes)
+        self
+      end
+
       def to_string(scopes)
         evaluate(scopes).to_string(nil)
       end

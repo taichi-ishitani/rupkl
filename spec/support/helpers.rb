@@ -97,81 +97,35 @@ module RuPkl
         .and have_attributes(operator: operator, l_operand: l_matcher, r_operand: r_matcher)
     end
 
-    PklClassProperty = Struct.new(:name, :value, :objects) do
+    PklClassProperty = Struct.new(:name, :value) do
       def to_matcher(context)
-        context.instance_exec(name, value, objects) do |n, v, o|
+        context.instance_exec(name, value) do |n, v|
           value_matcher =
             (v || v == false) && expression_matcher(v) || be_nil
-          object_matcher =
-            o&.map { expression_matcher(_1) }&.then { match(_1) } || be_nil
           be_instance_of(Node::PklClassProperty)
-            .and have_attributes(name: identifer(n), value: value_matcher, objects: object_matcher)
+            .and have_attributes(name: identifer(n), value: value_matcher)
         end
       end
     end
 
-    PklModule = Struct.new(:properties) do
-      def property(name, value_or_objects)
-        (self.properties ||= []) <<
-          case value_or_objects
-          when Array then PklClassProperty.new(name, nil, value_or_objects)
-          else PklClassProperty.new(name, value_or_objects, nil)
-          end
-      end
-
+    ObjectProperty = Struct.new(:name, :value) do
       def to_matcher(context)
-        context.instance_exec(self) do |m|
-          be_instance_of(Node::PklModule)
-            .and have_attributes(
-              properties: m.properties_matcher(self)
-            )
-        end
-      end
-
-      def properties_matcher(context)
-        if self.properties.nil?
-          context.__send__(:be_nil)
-        else
-          self.properties
-            .map { _1.to_matcher(context) }
-            .then { |m| context.__send__(:match, m) }
-        end
-      end
-    end
-
-    def pkl_module
-      m = PklModule.new
-      yield(m) if block_given?
-      m.to_matcher(self)
-    end
-
-    alias_method :be_pkl_module, :pkl_module
-
-    ObjectProperty = Struct.new(:name, :value, :objects) do
-      def to_matcher(context)
-        context.instance_exec(name, value, objects) do |n, v, o|
+        context.instance_exec(name, value) do |n, v|
           value_matcher =
             (v || v == false) && expression_matcher(v) || be_nil
-          object_matcher =
-            o&.map { expression_matcher(_1) }&.then { match(_1) } || be_nil
           be_instance_of(Node::ObjectProperty)
-            .and have_attributes(name: identifer(n), value: value_matcher, objects: object_matcher)
+            .and have_attributes(name: identifer(n), value: value_matcher)
         end
       end
     end
 
-    ObjectEntry = Struct.new(:key, :value, :objects) do
+    ObjectEntry = Struct.new(:key, :value) do
       def to_matcher(context)
-        context.instance_exec(key, value, objects) do |k, v, o|
+        context.instance_exec(key, value) do |k, v|
           value_matcher =
             (v || v == false) && expression_matcher(v) || be_nil
-          object_matcher =
-            o&.map { expression_matcher(_1) }&.then { match(_1) } || be_nil
           be_instance_of(Node::ObjectEntry)
-            .and have_attributes(
-              key: expression_matcher(k),
-              value: value_matcher, objects: object_matcher
-            )
+            .and have_attributes(key: expression_matcher(k), value: value_matcher)
         end
       end
     end
@@ -182,40 +136,66 @@ module RuPkl
       end
     end
 
-    UnresolvedObject = Struct.new(:members) do
-      def property(name, value_or_objects)
-        (self.members ||= []) <<
-          case value_or_objects
-          when Array then ObjectProperty.new(name, nil, value_or_objects)
-          else ObjectProperty.new(name, value_or_objects, nil)
-          end
+    ObjectBody = Struct.new(:properties, :entries, :elements) do
+      def property(name, value)
+        (self.properties ||= []) << ObjectProperty.new(name, value)
       end
 
-      def entry(key, value_or_objects)
-        (self.members ||= []) <<
-          case value_or_objects
-          when Array then ObjectEntry.new(key, nil, value_or_objects)
-          else ObjectEntry.new(key, value_or_objects, nil)
-          end
+      def entry(key, value)
+        (self.entries ||= []) << ObjectEntry.new(key, value)
       end
 
       def element(value)
-        (self.members ||= []) << ObjectElement.new(value)
+        (self.elements ||= []) << ObjectElement.new(value)
       end
 
       def to_matcher(context)
-        members_matcher =
-          if members
-            members
+        properties_matcher = create_members_matcher(context, properties)
+        entries_matcher = create_members_matcher(context, entries)
+        elements_matcher = create_members_matcher(context, elements)
+
+        context.instance_eval do
+          be_instance_of(Node::ObjectBody)
+            .and have_attributes(
+              properties: properties_matcher, entries: entries_matcher,
+              elements: elements_matcher
+            )
+        end
+      end
+
+      private
+
+      def create_members_matcher(context, members)
+        if members
+          members
+            .map { _1.to_matcher(context) }
+            .then { context.__send__(:match, _1) }
+        else
+          context.__send__(:be_nil)
+        end
+      end
+    end
+
+    UnresolvedObject = Struct.new(:bodies) do
+      def body
+        b = ObjectBody.new
+        yield(b) if block_given?
+        (self.bodies ||= []) << b
+      end
+
+      def to_matcher(context)
+        bodies_matcher =
+          if bodies
+            bodies
               .map { _1.to_matcher(context) }
-              .then { _1 && context.__send__(:match, _1) }
+              .then { context.__send__(:match, _1) }
           else
             context.__send__(:be_nil)
           end
 
-        context.instance_exec(self) do |o|
+        context.instance_eval do
           be_instance_of(Node::UnresolvedObject)
-            .and have_attributes(members: members_matcher)
+            .and have_attributes(bodies: bodies_matcher)
         end
       end
     end
@@ -228,11 +208,11 @@ module RuPkl
 
     Dynamic = Struct.new(:properties, :elements, :entries) do
       def property(name, value)
-        (self.properties ||= []) << ObjectProperty.new(name, value, nil)
+        (self.properties ||= []) << ObjectProperty.new(name, value)
       end
 
       def entry(key, value)
-        (self.entries ||= []) << ObjectEntry.new(key, value, nil)
+        (self.entries ||= []) << ObjectEntry.new(key, value)
       end
 
       def element(value)
@@ -268,6 +248,39 @@ module RuPkl
     end
 
     alias_method :be_dynamic, :dynamic
+
+    PklModule = Struct.new(:properties) do
+      def property(name, value)
+        (self.properties ||= []) << ObjectProperty.new(name, value)
+      end
+
+      def to_matcher(context)
+        context.instance_exec(self) do |m|
+          be_instance_of(Node::PklModule)
+            .and have_attributes(
+              properties: m.properties_matcher(self)
+            )
+        end
+      end
+
+      def properties_matcher(context)
+        if self.properties.nil?
+          context.__send__(:be_nil)
+        else
+          self.properties
+            .map { _1.to_matcher(context) }
+            .then { |m| context.__send__(:match, m) }
+        end
+      end
+    end
+
+    def pkl_module
+      m = PklModule.new
+      yield(m) if block_given?
+      m.to_matcher(self)
+    end
+
+    alias_method :be_pkl_module, :pkl_module
 
     def match_pkl_object(properties: nil, entries: nil, elements: nil)
       properties_matcher =

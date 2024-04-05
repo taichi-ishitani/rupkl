@@ -3,8 +3,26 @@
 module RuPkl
   module Node
     module StructCommon
-      def to_string(_scopes)
-        "new #{self.class.basename} #{to_pkl_string(nil)}"
+      def evaluate(scopes)
+        push_scope(scopes) do |s|
+          self.class.new(@body.evaluate(s), position)
+        end
+      end
+
+      def to_ruby(scopes)
+        push_scope(scopes) do |s|
+          create_pkl_object(s)
+        end
+      end
+
+      def to_pkl_string(scopes)
+        push_scope(scopes) do |s|
+          to_pkl_string_object(s)
+        end
+      end
+
+      def to_string(scopes)
+        "new #{self.class.basename} #{to_pkl_string(scopes)}"
       end
 
       def coerce(_operator, r_operand)
@@ -17,24 +35,6 @@ module RuPkl
         yield([*scopes, self])
       end
 
-      def add_hash_member(members, member, accessor)
-        duplicate_member?(members, member, accessor) &&
-          begin
-            message = 'duplicate definition of member'
-            raise EvaluationError.new(message, member.position)
-          end
-        members << member
-      end
-
-      def duplicate_member?(members, member, accessor)
-        members
-          .any? { _1.__send__(accessor) == member.__send__(accessor) }
-      end
-
-      def add_array_member(members, member)
-        members << member
-      end
-
       def match_members?(lhs, rhs, match_order)
         if !match_order && [lhs, rhs].all?(Array)
           lhs.size == rhs.size &&
@@ -44,56 +44,30 @@ module RuPkl
         end
       end
 
-      def merge_hash_members(lhs, rhs, accessor)
-        return nil unless lhs || rhs
-        return rhs unless lhs
-
-        rhs&.each do |r|
-          if (index = find_index(lhs, r, accessor))
-            lhs[index] = r
-          else
-            lhs << r
-          end
-        end
-
-        lhs
-      end
-
-      def find_index(lhs, rhs, accessor)
-        lhs.find_index { _1.__send__(accessor) == rhs.__send__(accessor) }
-      end
-
-      def merge_array_members(lhs, rhs)
-        return nil unless lhs || rhs
-        return rhs unless lhs
-        return lhs unless rhs
-
-        lhs.concat(rhs)
-      end
-
-      def create_pkl_object(scopes, properties, entries, elements)
+      def create_pkl_object(scopes)
         RuPkl::PklObject.new(
-          to_ruby_hash_members(scopes, properties),
-          to_ruby_hash_members(scopes, entries),
-          to_ruby_array_members(scopes, elements)
+          to_ruby_hash(scopes, @body.properties),
+          to_ruby_hash(scopes, @body.entries),
+          to_ruby_array(scopes, @body.elements)
         )
       end
 
-      def to_ruby_hash_members(scopes, members)
+      def to_ruby_hash(scopes, members)
         members
           &.to_h { _1.to_ruby(scopes) }
       end
 
-      def to_ruby_array_members(scopes, members)
+      def to_ruby_array(scopes, members)
         members
           &.map { _1.to_ruby(scopes) }
       end
 
-      def to_pkl_string_object(*members)
+      def to_pkl_string_object(scopes)
+        members = @body.members
         return '{}' if members.empty?
 
         members
-          .map { _1.to_pkl_string(nil) }
+          .map { _1.to_pkl_string(scopes) }
           .join('; ')
           .then { "{ #{_1} }" }
       end

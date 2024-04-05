@@ -5,42 +5,15 @@ module RuPkl
     class PklModule
       include StructCommon
 
-      def initialize(items, position)
+      def initialize(body, position)
+        @body = body
         @position = position
-        items&.each do |item|
-          case item
-          when PklClassProperty then add_property(item)
-          end
-        end
       end
 
-      attr_reader :properties
       attr_reader :position
 
-      def evaluate(scopes)
-        push_scope(scopes) do |s|
-          self.class.new(evaluate_properties(s), position)
-        end
-      end
-
-      def to_ruby(scopes)
-        push_scope(scopes) do |s|
-          create_pkl_object(s, properties, nil, nil)
-        end
-      end
-
-      private
-
-      def add_property(property)
-        (@properties ||= []) << property
-      end
-
-      def evaluate_properties(scopes)
-        properties&.each_with_object([]) do |property, result|
-          property
-            .evaluate(scopes)
-            .then { add_hash_member(result, _1, :name) }
-        end
+      def properties
+        @body&.properties
       end
     end
   end

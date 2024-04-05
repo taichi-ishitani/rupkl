@@ -3,6 +3,10 @@
 module RuPkl
   module Node
     module OperationCommon
+      def evaluate_lazily(_scopes)
+        self
+      end
+
       def to_ruby(scopes)
         evaluate(scopes).to_ruby(nil)
       end

@@ -4,14 +4,15 @@ module RuPkl
   class Parser
     define_parser do
       rule(:object) do
-        bracketed(
-          object_members.as(:members).maybe,
-          str('{').as(:start), '}'
-        ).as(:object)
+        (object_body >> (ws? >> object_body).repeat).as(:bodies).as(:object)
       end
 
-      rule(:object_members) do
-        object_member >> (ws >> object_member).repeat
+      rule(:object_body) do
+        members = object_member >> (ws >> object_member).repeat
+        bracketed(
+          members.as(:members).maybe,
+          str('{').as(:body_begin), '}'
+        ).as(:object_body)
       end
 
       rule(:object_member) do
@@ -22,9 +23,8 @@ module RuPkl
         (
           id.as(:name) >> ws? >>
             (
-              (str('=').ignore >> ws? >> expression.as(:value)) |
-              (object >> (ws? >> object).repeat).as(:objects)
-            )
+              (str('=').ignore >> ws? >> expression) | object
+            ).as(:value)
         ).as(:object_property)
       end
 
@@ -32,9 +32,8 @@ module RuPkl
         (
           bracketed(expression.as(:key), '[', ']') >> ws? >>
             (
-              (str('=').ignore >> ws? >> expression.as(:value)) |
-              (object >> (ws? >> object).repeat).as(:objects)
-            )
+              (str('=').ignore >> ws? >> expression) | object
+            ).as(:value)
         ).as(:object_entry)
       end
 
@@ -44,28 +43,25 @@ module RuPkl
     end
 
     define_transform do
-      rule(object: { start: simple(:s) }) do
-        Node::UnresolvedObject.new(nil, node_position(s))
+      rule(object: { bodies: subtree(:b) }) do
+        bodies = Array(b)
+        Node::UnresolvedObject.new(bodies, bodies.first.position)
       end
 
-      rule(object: { start: simple(:s), members: subtree(:m) }) do
-        Node::UnresolvedObject.new(Array(m), node_position(s))
+      rule(object_body: { body_begin: simple(:b) }) do
+        Node::ObjectBody.new(nil, node_position(b))
+      end
+
+      rule(object_body: { body_begin: simple(:b), members: subtree(:m) }) do
+        Node::ObjectBody.new(Array(m), node_position(b))
       end
 
       rule(object_property: { name: simple(:n), value: simple(:v) }) do
-        Node::ObjectProperty.new(n, v, nil, n.position)
-      end
-
-      rule(object_property: { name: simple(:n), objects: subtree(:o) }) do
-        Node::ObjectProperty.new(n, nil, Array(o), n.position)
+        Node::ObjectProperty.new(n, v, n.position)
       end
 
       rule(object_entry: { key: simple(:k), value: simple(:v) }) do
-        Node::ObjectEntry.new(k, v, nil, k.position)
-      end
-
-      rule(object_entry: { key: simple(:k), objects: subtree(:o) }) do
-        Node::ObjectEntry.new(k, nil, Array(o), k.position)
+        Node::ObjectEntry.new(k, v, k.position)
       end
     end
   end

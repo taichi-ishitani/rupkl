@@ -64,5 +64,8 @@ Style/RaiseArgs:
 Style/SymbolArray:
   EnforcedStyle: brackets
 
+Style/TrailingUnderscoreVariable:
+  Enabled: false
+
 Style/WordArray:
   EnforcedStyle: brackets
