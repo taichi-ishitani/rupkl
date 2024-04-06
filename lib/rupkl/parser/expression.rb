@@ -7,25 +7,29 @@ module RuPkl
         id.as(:unqualified_member_ref)
       end
 
-      rule(:primary) do
-        [
-          float_literal, integer_literal, boolean_literal, string_literal,
-          unqualified_member_ref, bracketed(expression)
-        ].inject(:|)
+      rule(:parenthesized_expression) do
+        bracketed(expression)
       end
 
       rule(:amend_expression) do
         (
-          primary.as(:amending) >>
+          parenthesized_expression.as(:amending) >>
             (ws? >> object_body).repeat(1).as(:bodies)
-        ).as(:amend_expression) | primary
+        ).as(:amend_expression)
+      end
+
+      rule(:primary) do
+        [
+          float_literal, integer_literal, boolean_literal, string_literal,
+          unqualified_member_ref, amend_expression, bracketed(expression)
+        ].inject(:|)
       end
 
       rule(:qualified_member_ref) do
         (
-          amend_expression.as(:receiver) >>
+          primary.as(:receiver) >>
             (ws? >> str('.') >> ws? >> id).repeat(1).as(:member)
-        ).as(:qualified_member_ref) | amend_expression
+        ).as(:qualified_member_ref) | primary
       end
 
       rule(:subscript_operation) do
