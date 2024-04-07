@@ -3,9 +3,17 @@
 module RuPkl
   module Node
     module StructCommon
+      attr_reader :body
+
       def evaluate(scopes)
         push_scope(scopes) do |s|
           self.class.new(@body.evaluate(s), position)
+        end
+      end
+
+      def evaluate_lazily(scopes)
+        push_scope(scopes) do |s|
+          self.class.new(@body.evaluate_lazily(s), position)
         end
       end
 

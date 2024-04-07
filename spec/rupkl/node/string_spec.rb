@@ -68,13 +68,14 @@ RSpec.describe RuPkl::Node::String do
         node = parser.parse(<<~'PKL', root: :pkl_module)
           foo { foo = 1 ["foo"] = 2 1 + 2 }
           bar { foo }
-          baz = "\(foo) \(bar)"
+          baz = "\(foo) \(bar) \((foo){ 4 })"
         PKL
         node.evaluate(nil).then do |n|
           expect(n.properties[-1].value)
             .to be_evaluated_string(
               'new Dynamic { foo = 1; ["foo"] = 2; 3 } ' \
-              'new Dynamic { { foo = 1; ["foo"] = 2; 3 } }'
+              'new Dynamic { { foo = 1; ["foo"] = 2; 3 } } ' \
+              'new Dynamic { foo = 1; ["foo"] = 2; 3; 4 }'
             )
         end
       end

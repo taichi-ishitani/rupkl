@@ -18,8 +18,13 @@ module RuPkl
         self.class.new(name, v, position)
       end
 
-      def evaluate_lazily(_scopes)
-        self
+      def evaluate_lazily(scopes)
+        if value.respond_to?(:bodies)
+          v = value.evaluate_lazily(scopes)
+          self.class.new(name, v, position)
+        else
+          self
+        end
       end
 
       def to_ruby(scopes)
@@ -59,7 +64,13 @@ module RuPkl
 
       def evaluate_lazily(scopes)
         k = key.evaluate(scopes)
-        self.class.new(k, value, position)
+        v =
+          if value.respond_to?(:bodies)
+            value.evaluate_lazily(scopes)
+          else
+            value
+          end
+        self.class.new(k, v, position)
       end
 
       def to_ruby(scopes)
@@ -110,10 +121,12 @@ module RuPkl
           .then { self.class.new(_1, position, check_duplication: true) }
       end
 
-      def merge!(other)
-        @properties = merge_properties(other)
-        @entries = merge_entries(other)
-        @elements = merge_elements(other)
+      def merge(*others)
+        self.class.new(members, position).merge!(*others)
+      end
+
+      def merge!(*others)
+        others.each { do_merge(_1) }
         self
       end
 
@@ -148,21 +161,16 @@ module RuPkl
         members << member
       end
 
-      def merge_properties(other)
-        merge_hash_members(properties, other.properties, :name)
-      end
-
-      def merge_entries(other)
-        other_entries, _ = split_entries(other.entries)
-        merge_hash_members(entries, other_entries, :key)
-      end
-
-      def merge_elements(other)
-        _, other_entries = split_entries(other.entries)
-        merge_array_members(elements, other.elements, other_entries, :key)
+      def do_merge(rhs)
+        rhs_entries, rhs_amend = split_entries(rhs.entries)
+        @properties = merge_hash_members(@properties, rhs.properties, :name)
+        @entries = merge_hash_members(@entries, rhs_entries, :key)
+        @elements = merge_array_members(@elements, rhs.elements, rhs_amend, :key)
       end
 
       def split_entries(entries)
+        return [nil, nil] unless entries
+
         elements_size = elements&.size || 0
         grouped_entries =
           entries
@@ -179,7 +187,7 @@ module RuPkl
 
         rhs&.each do |r|
           if (index = find_member_index(lhs, r, accessor))
-            lhs[index] = r
+            lhs[index] = merge_hash_value(lhs[index], r, accessor)
           else
             lhs << r
           end
@@ -192,16 +200,30 @@ module RuPkl
         lhs.find_index { _1.__send__(accessor) == rhs.__send__(accessor) }
       end
 
+      def merge_hash_value(lhs, rhs, accessor)
+        new_value = merge_value(lhs.value, rhs.value)
+        lhs.class.new(lhs.__send__(accessor), new_value, lhs.position)
+      end
+
       def merge_array_members(lhs_array, rhs_array, rhs_hash, accessor)
         return nil unless lhs_array || rhs_array
         return rhs_array unless lhs_array
 
         rhs_hash&.each do |r|
           index = r.__send__(accessor).value
-          lhs_array[index] = r.value
+          lhs_array[index] = merge_value(lhs_array[index], r.value)
         end
 
         lhs_array.concat(rhs_array)
+      end
+
+      def merge_value(lhs, rhs)
+        if [lhs, rhs].all? { _1.respond_to?(:body) }
+          body = lhs.body.merge(rhs.body)
+          lhs.class.new(body, lhs.position)
+        else
+          rhs
+        end
       end
     end
 
@@ -215,12 +237,11 @@ module RuPkl
       attr_reader :position
 
       def evaluate(scopes)
-        evaluate_lazily(scopes).evaluate(scopes)
+        do_evaluate(scopes, __method__)
       end
 
       def evaluate_lazily(scopes)
-        bodies = evaluate_bodies(scopes)
-        Dynamic.new(bodies, position)
+        do_evaluate(scopes, __method__)
       end
 
       def to_ruby(scopes)
@@ -237,10 +258,14 @@ module RuPkl
 
       private
 
-      def evaluate_bodies(scopes)
-        bodies
-          .map { _1.evaluate_lazily(scopes) }
-          .inject { |r, b| r.merge!(b) }
+      def do_evaluate(scopes, evaluator)
+        Dynamic.new(bodies.first, position)
+          .__send__(evaluator, scopes)
+          .tap do |o|
+            bodies[1..].each do |b|
+              o.body.merge!(b.__send__(evaluator, [*scopes, o]))
+            end
+          end
       end
     end
   end

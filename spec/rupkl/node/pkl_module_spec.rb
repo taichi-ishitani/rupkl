@@ -62,6 +62,25 @@ RSpec.describe RuPkl::Node::PklModule do
       }
       relatedToSnowOwl = birds[2]
     PKL
+    strings << <<~'PKL'
+      bird {
+        name = "Pigeon"
+        diet = "Seeds"
+        taxonomy {
+          kingdom = "Animalia"
+          clade = "Dinosauria"
+          order = "Columbiformes"
+        }
+      }
+
+      parrot = (bird) {
+        name = "Parrot"
+        diet = "Berries"
+        taxonomy {
+          order = "Psittaciformes"
+        }
+      }
+    PKL
   end
 
   describe '#evaluate' do
@@ -138,6 +157,36 @@ RSpec.describe RuPkl::Node::PklModule do
           end
         )
         m.property :relatedToSnowOwl, evaluated_string('Barn owl')
+      end)
+
+      node = parser.parse(pkl_strings[6], root: :pkl_module)
+      expect(node.evaluate(nil)).to (be_pkl_module do |m|
+        m.property :bird, (
+          dynamic do |o1|
+            o1.property :name, 'Pigeon'
+            o1.property :diet, 'Seeds'
+            o1.property :taxonomy, (
+              dynamic do |o2|
+                o2.property :kingdom, 'Animalia'
+                o2.property :clade, 'Dinosauria'
+                o2.property :order, 'Columbiformes'
+              end
+            )
+          end
+        )
+        m.property :parrot, (
+          dynamic do |o1|
+            o1.property :name, 'Parrot'
+            o1.property :diet, 'Berries'
+            o1.property :taxonomy, (
+              dynamic do |o2|
+                o2.property :kingdom, 'Animalia'
+                o2.property :clade, 'Dinosauria'
+                o2.property :order, 'Psittaciformes'
+              end
+            )
+          end
+        )
       end)
     end
 
@@ -219,6 +268,35 @@ RSpec.describe RuPkl::Node::PklModule do
             relatedToSnowOwl: 'Barn owl'
           }
         )
+
+      node = parser.parse(pkl_strings[6], root: :pkl_module)
+      expect(node.to_ruby(nil))
+          .to match_pkl_object(
+            properties: {
+              bird: match_pkl_object(
+                properties: {
+                  name: 'Pigeon', diet: 'Seeds',
+                  taxonomy: match_pkl_object(
+                    properties: {
+                      kingdom: 'Animalia', clade: 'Dinosauria',
+                      order: 'Columbiformes'
+                    }
+                  )
+                }
+              ),
+              parrot: match_pkl_object(
+                properties: {
+                  name: 'Parrot', diet: 'Berries',
+                  taxonomy: match_pkl_object(
+                    properties: {
+                      kingdom: 'Animalia', clade: 'Dinosauria',
+                      order: 'Psittaciformes'
+                    }
+                  )
+                }
+              )
+            }
+          )
     end
   end
 end

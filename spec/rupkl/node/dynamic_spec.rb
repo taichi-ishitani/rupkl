@@ -35,6 +35,26 @@ RSpec.describe RuPkl::Node::Dynamic do
     PKL
     strings << <<~'PKL'
       {
+        bird {
+          name = "Pigeon"
+          diet = "Seeds"
+          taxonomy {
+            kingdom = "Animalia"
+            clade = "Dinosauria"
+            order = "Columbiformes"
+          }
+        }
+        parrot = (bird) {
+          name = "Parrot"
+          diet = "Berries"
+          taxonomy {
+            order = "Psittaciformes"
+          }
+        }
+      }
+    PKL
+    strings << <<~'PKL'
+      {
         foo {
           bar = 0
           1
@@ -98,6 +118,38 @@ RSpec.describe RuPkl::Node::Dynamic do
       node = parse(pkl_strings[5])
       expect(node.evaluate(nil)).to (
         be_dynamic do |o1|
+          o1.property :bird, (
+            dynamic do |o2|
+              o2.property :name, 'Pigeon'
+              o2.property :diet, 'Seeds'
+              o2.property :taxonomy, (
+                dynamic do |o3|
+                  o3.property :kingdom, 'Animalia'
+                  o3.property :clade, 'Dinosauria'
+                  o3.property :order, 'Columbiformes'
+                end
+              )
+            end
+          )
+          o1.property :parrot, (
+            dynamic do |o2|
+              o2.property :name, 'Parrot'
+              o2.property :diet, 'Berries'
+              o2.property :taxonomy, (
+                dynamic do |o3|
+                  o3.property :kingdom, 'Animalia'
+                  o3.property :clade, 'Dinosauria'
+                  o3.property :order, 'Psittaciformes'
+                end
+              )
+            end
+          )
+        end
+      )
+
+      node = parse(pkl_strings[6])
+      expect(node.evaluate(nil)).to (
+        be_dynamic do |o1|
           o1.property :foo, (
             dynamic do |o2|
               o2.property :bar, 3; o2.entry 'baz', 5; o2.element 1; o2.element 4
@@ -105,7 +157,7 @@ RSpec.describe RuPkl::Node::Dynamic do
           )
         end
       )
-      node = parse(pkl_strings[6])
+      node = parse(pkl_strings[7])
       expect(node.evaluate(nil)).to (
         be_dynamic do |o1|
           o1.property :foo_0, 0; o1.property :foo_1, 1
@@ -157,6 +209,35 @@ RSpec.describe RuPkl::Node::Dynamic do
       expect(node.to_ruby(nil))
         .to match_pkl_object(
           properties: {
+            bird: match_pkl_object(
+              properties: {
+                name: 'Pigeon', diet: 'Seeds',
+                taxonomy: match_pkl_object(
+                  properties: {
+                    kingdom: 'Animalia', clade: 'Dinosauria',
+                    order: 'Columbiformes'
+                  }
+                )
+              }
+            ),
+            parrot: match_pkl_object(
+              properties: {
+                name: 'Parrot', diet: 'Berries',
+                taxonomy: match_pkl_object(
+                  properties: {
+                    kingdom: 'Animalia', clade: 'Dinosauria',
+                    order: 'Psittaciformes'
+                  }
+                )
+              }
+            )
+          }
+        )
+
+      node = parse(pkl_strings[6])
+      expect(node.to_ruby(nil))
+        .to match_pkl_object(
+          properties: {
             foo: match_pkl_object(
               properties: { bar: 3 },
               elements: [1, 4],
@@ -165,7 +246,7 @@ RSpec.describe RuPkl::Node::Dynamic do
           }
         )
 
-      node = parse(pkl_strings[6])
+      node = parse(pkl_strings[7])
       expect(node.to_ruby(nil))
         .to match_pkl_object(
           properties: {
@@ -200,6 +281,30 @@ RSpec.describe RuPkl::Node::Dynamic do
                '[false] { description = "Construed object example" }; ' \
                '"wing"; "claw"; 42 ' \
                '}'
+
+      node = parse(pkl_strings[5])
+      expect(node.to_string(nil))
+        .to eq 'new Dynamic { ' \
+               'bird { '\
+               'name = "Pigeon"; diet = "Seeds"; ' \
+               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Columbiformes" } }; ' \
+               'parrot { '\
+               'name = "Parrot"; diet = "Berries"; ' \
+               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Psittaciformes" } } ' \
+               '}'
+
+      node = parse(pkl_strings[6])
+      expect(node.to_string(nil))
+        .to eq 'new Dynamic { ' \
+               'foo { bar = 3; ["baz"] = 5; 1; 4 } ' \
+               '}'
+
+      node = parse(pkl_strings[7])
+      expect(node.to_string(nil))
+        .to eq 'new Dynamic { ' \
+               'foo_0 = 0; foo_1 = 1; ' \
+               'bar { bar_0 = 2; bar_1 = 3 } ' \
+               '}'
     end
   end
 
@@ -224,6 +329,30 @@ RSpec.describe RuPkl::Node::Dynamic do
                '["wing"] = "Not related to \nthe _element_ \"wing\""; ' \
                '[false] { description = "Construed object example" }; ' \
                '"wing"; "claw"; 42 ' \
+               '}'
+
+      node = parse(pkl_strings[5])
+      expect(node.to_pkl_string(nil))
+        .to eq '{ ' \
+               'bird { '\
+               'name = "Pigeon"; diet = "Seeds"; ' \
+               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Columbiformes" } }; ' \
+               'parrot { '\
+               'name = "Parrot"; diet = "Berries"; ' \
+               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Psittaciformes" } } ' \
+               '}'
+
+      node = parse(pkl_strings[6])
+      expect(node.to_pkl_string(nil))
+        .to eq '{ ' \
+               'foo { bar = 3; ["baz"] = 5; 1; 4 } ' \
+               '}'
+
+      node = parse(pkl_strings[7])
+      expect(node.to_pkl_string(nil))
+        .to eq '{ ' \
+               'foo_0 = 0; foo_1 = 1; ' \
+               'bar { bar_0 = 2; bar_1 = 3 } ' \
                '}'
     end
   end

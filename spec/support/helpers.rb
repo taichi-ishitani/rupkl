@@ -98,8 +98,8 @@ module RuPkl
     end
 
     class AmendExpression
-      def amending(expression)
-        @amending = expression
+      def target(expression)
+        @target = expression
       end
 
       def body
@@ -109,8 +109,8 @@ module RuPkl
       end
 
       def to_matcher(context)
-        amending_matcher =
-          context.__send__(:expression_matcher, @amending)
+        target_matcher =
+          context.__send__(:expression_matcher, @target)
         bodies_matcher =
           @bodies
             .map { _1.to_matcher(context) }
@@ -119,7 +119,7 @@ module RuPkl
         context.instance_eval do
           be_instance_of(Node::AmendExpression)
             .and have_attributes(
-              amending: amending_matcher, bodies: bodies_matcher
+              target: target_matcher, bodies: bodies_matcher
             )
         end
       end

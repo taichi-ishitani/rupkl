@@ -14,17 +14,11 @@ module RuPkl
       attr_reader :position
 
       def evaluate(scopes)
-        member_node =
-          if receiver
-            find_member([receiver.evaluate(scopes)])
-          else
-            find_member(scopes)
-          end
-        member_node.evaluate(scopes).value
+        resolve_reference(scopes).evaluate(scopes).value
       end
 
-      def evaluate_lazily(_scopes)
-        self
+      def evaluate_lazily(scopes)
+        resolve_reference(scopes).evaluate_lazily(scopes).value
       end
 
       def to_string(scopes)
@@ -37,13 +31,36 @@ module RuPkl
 
       private
 
+      def resolve_reference(scopes)
+        if receiver
+          find_member([receiver.evaluate(scopes)])
+        else
+          find_member(scopes)
+        end
+      end
+
       def find_member(scopes)
-        scopes.reverse_each do |scope|
-          node = scope&.properties&.find { _1.name.id == member.id }
-          return node if node
+        if @scope_index
+          get_member_node(scopes[@scope_index])
+        else
+          search_member(scopes)
+        end
+      end
+
+      def search_member(scopes)
+        scopes.reverse_each.with_index do |scope, i|
+          node = get_member_node(scope)
+          if node
+            @scope_index = scopes.size - i - 1
+            return node
+          end
         end
 
         raise EvaluationError.new("cannot find property '#{member.id}'", position)
+      end
+
+      def get_member_node(scope)
+        scope&.properties&.find { _1.name == member }
       end
     end
   end

@@ -40,6 +40,7 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
     strings << <<~'PKL'
       {
         foo {
+        }{
           bar = 1
           2
           ["baz"] = 1 + 2
@@ -188,21 +189,26 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
             o1.element 42
             o1.property :extinct, false
             o1.entry false, (
-              unresolved_object do |o2|
-                o2.body { |b| b.property :description, 'Construed object example' }
+              dynamic do |o2|
+                o2.property :description, 'Construed object example'
               end
             )
           end
         )
 
         node = parse(pkl_strings[5])
+        n = node.evaluate_lazily(nil)
         expect(node.evaluate_lazily(nil)).to (
           be_dynamic do |o1|
             o1.property :foo, (
-              unresolved_object do |o2|
-                o2.body { |b| b.property :bar, 1; b.element 2; b.entry 'baz', b_op(:+, 1, 2) }
-                o2.body { |b| b.property :bar, 3; b.element 4; b.entry 'baz', b_op(:+, 3, 4) }
-                o2.body { |b| b.property :qux, 5; b.element 6; b.entry 'qux', b_op(:+, 5, 6) }
+              dynamic do |o2|
+                o2.property :bar, 3
+                o2.property :qux, 5
+                o2.entry 'baz', b_op(:+, 3, 4)
+                o2.entry 'qux', b_op(:+, 5, 6)
+                o2.element 2
+                o2.element 4
+                o2.element 6
               end
             )
           end

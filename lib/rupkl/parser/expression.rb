@@ -13,7 +13,7 @@ module RuPkl
 
       rule(:amend_expression) do
         (
-          parenthesized_expression.as(:amending) >>
+          parenthesized_expression.as(:target) >>
             (ws? >> object_body).repeat(1).as(:bodies)
         ).as(:amend_expression)
       end
@@ -107,9 +107,9 @@ module RuPkl
 
       rule(
         amend_expression:
-          { amending: simple(:a), bodies: subtree(:b) }
+          { target: simple(:t), bodies: subtree(:b) }
       ) do
-        Node::AmendExpression.new(a, Array(b), a.position)
+        Node::AmendExpression.new(t, Array(b), t.position)
       end
 
       rule(

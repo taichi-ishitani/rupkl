@@ -92,7 +92,7 @@ RSpec.describe RuPkl::Parser do
       expect(parser)
         .to parse(pkl).as(
           amend_expression do |e|
-            e.amending member_ref(:pigeon)
+            e.target member_ref(:pigeon)
             e.body { |b| b.property :name, 'Parrot' }
           end
         )
@@ -107,7 +107,7 @@ RSpec.describe RuPkl::Parser do
       expect(parser)
         .to parse(pkl).as(
           amend_expression do |e|
-            e.amending member_ref(:pigeon)
+            e.target member_ref(:pigeon)
             e.body { |b| b.property :name, 'Dodo' }
             e.body { |b| b.property :extinct, true }
           end
