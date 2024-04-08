@@ -5,13 +5,6 @@ module RuPkl
     class PklModule
       include StructCommon
 
-      def initialize(body, position)
-        @body = body
-        @position = position
-      end
-
-      attr_reader :position
-
       def properties
         @body&.properties
       end

@@ -3,15 +3,16 @@
 module RuPkl
   module Node
     class ObjectProperty
+      include NodeCommon
+
       def initialize(name, value, position)
+        super
         @name = name
         @value = value
-        @position = position
       end
 
       attr_reader :name
       attr_reader :value
-      attr_reader :position
 
       def evaluate(scopes)
         v = value.evaluate(scopes)
@@ -46,15 +47,16 @@ module RuPkl
     end
 
     class ObjectEntry
+      include NodeCommon
+
       def initialize(key, value, position)
+        super
         @key = key
         @value = value
-        @position = position
       end
 
       attr_reader :key
       attr_reader :value
-      attr_reader :position
 
       def evaluate(scopes)
         k = key.evaluate(scopes)
@@ -95,15 +97,16 @@ module RuPkl
     end
 
     class ObjectBody
+      include NodeCommon
+
       def initialize(members, position, check_duplication: false)
-        @position = position
+        super(position)
         members&.each { add_member(_1, check_duplication) }
       end
 
       attr_reader :properties
       attr_reader :entries
       attr_reader :elements
-      attr_reader :position
 
       def members
         [*properties, *entries, *elements]
@@ -133,6 +136,7 @@ module RuPkl
       private
 
       def add_member(member, check_duplication)
+        add_child(member)
         case member
         when ObjectProperty
           add_hash_member((@properties ||= []), member, :name, check_duplication)
@@ -228,13 +232,14 @@ module RuPkl
     end
 
     class UnresolvedObject
+      include NodeCommon
+
       def initialize(bodies, position)
+        super(*bodies, position)
         @bodies = bodies
-        @position = position
       end
 
       attr_reader :bodies
-      attr_reader :position
 
       def evaluate(scopes)
         do_evaluate(scopes, __method__)
@@ -242,18 +247,6 @@ module RuPkl
 
       def evaluate_lazily(scopes)
         do_evaluate(scopes, __method__)
-      end
-
-      def to_ruby(scopes)
-        evaluate(scopes).to_ruby(nil)
-      end
-
-      def to_string(scopes)
-        evaluate(scopes).to_string(nil)
-      end
-
-      def to_pkl_string(scopes)
-        evaluate(scopes).to_pkl_string(nil)
       end
 
       private

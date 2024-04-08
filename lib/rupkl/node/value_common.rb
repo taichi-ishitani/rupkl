@@ -3,13 +3,18 @@
 module RuPkl
   module Node
     module ValueCommon
+      include NodeCommon
+
       def initialize(value, position)
+        super(position)
         @value = value
-        @position = position
       end
 
       attr_reader :value
-      attr_reader :position
+
+      def evaluate(_scopes)
+        self
+      end
 
       def evaluate_lazily(_scopes)
         self

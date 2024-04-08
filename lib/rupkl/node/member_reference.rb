@@ -3,15 +3,16 @@
 module RuPkl
   module Node
     class MemberReference
+      include NodeCommon
+
       def initialize(receiver, member, position)
+        super
         @receiver = receiver
         @member = member
-        @position = position
       end
 
       attr_reader :receiver
       attr_reader :member
-      attr_reader :position
 
       def evaluate(scopes)
         resolve_reference(scopes).evaluate(scopes).value
@@ -19,14 +20,6 @@ module RuPkl
 
       def evaluate_lazily(scopes)
         resolve_reference(scopes).evaluate_lazily(scopes).value
-      end
-
-      def to_string(scopes)
-        evaluate(scopes).to_string(nil)
-      end
-
-      def to_pkl_string(scopes)
-        evaluate(scopes).to_pkl_string(nil)
       end
 
       private

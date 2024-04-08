@@ -5,10 +5,6 @@ module RuPkl
     class Number
       include ValueCommon
 
-      def evaluate(_scopes)
-        self
-      end
-
       def undefined_operator?(operator)
         [:[], :!, :'&&', :'||'].include?(operator)
       end

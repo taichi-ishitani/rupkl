@@ -3,20 +3,10 @@
 module RuPkl
   module Node
     module OperationCommon
+      include NodeCommon
+
       def evaluate_lazily(_scopes)
         self
-      end
-
-      def to_ruby(scopes)
-        evaluate(scopes).to_ruby(nil)
-      end
-
-      def to_string(scopes)
-        evaluate(scopes).to_string(nil)
-      end
-
-      def to_pkl_string(scopes)
-        evaluate(scopes).to_pkl_string(nil)
       end
 
       private
@@ -131,14 +121,13 @@ module RuPkl
       include OperationCommon
 
       def initialize(receiver, key, position)
+        super
         @receiver = receiver
         @key = key
-        @position = position
       end
 
       attr_reader :receiver
       attr_reader :key
-      attr_reader :position
 
       def operator
         :[]
@@ -153,14 +142,13 @@ module RuPkl
       include OperationCommon
 
       def initialize(operator, operand, position)
+        super(operand, position)
         @operator = operator
         @operand = operand
-        @position = position
       end
 
       attr_reader :operator
       attr_reader :operand
-      attr_reader :position
 
       def evaluate(scopes)
         u_op(scopes)
@@ -171,10 +159,10 @@ module RuPkl
       include OperationCommon
 
       def initialize(operator, l_operand, r_operand, position)
+        super(l_operand, r_operand, position)
         @operator = operator
         @l_operand = l_operand
         @r_operand = r_operand
-        @position = position
       end
 
       attr_reader :operator

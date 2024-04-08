@@ -3,6 +3,13 @@
 module RuPkl
   module Node
     module StructCommon
+      include NodeCommon
+
+      def initialize(body, position)
+        super
+        @body = body
+      end
+
       attr_reader :body
 
       def evaluate(scopes)

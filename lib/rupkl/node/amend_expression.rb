@@ -3,15 +3,16 @@
 module RuPkl
   module Node
     class AmendExpression
+      include NodeCommon
+
       def initialize(target, bodies, position)
+        super(target, *bodies, position)
         @target = target
         @bodies = bodies
-        @position = position
       end
 
       attr_reader :target
       attr_reader :bodies
-      attr_reader :position
 
       def evaluate(scopes)
         evaluate_lazily(scopes).evaluate(scopes)
@@ -25,14 +26,6 @@ module RuPkl
             raise EvaluationError.new(message, position)
           end
         t.class.new(do_amend(scopes, t), position)
-      end
-
-      def to_ruby(scopes)
-        evaluate(scopes).to_ruby(nil)
-      end
-
-      def to_string(scopes)
-        evaluate(scopes).to_string(nil)
       end
 
       private

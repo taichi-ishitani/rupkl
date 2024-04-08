@@ -5,10 +5,6 @@ module RuPkl
     class Boolean
       include ValueCommon
 
-      def evaluate(_scopes)
-        self
-      end
-
       def undefined_operator?(operator)
         [:!, :==, :'!=', :'&&', :'||'].none?(operator)
       end

@@ -3,17 +3,18 @@
 module RuPkl
   module Node
     class Identifier
+      include NodeCommon
+
       def initialize(id, position)
+        super(position)
         @id = id
-        @position = position
       end
+
+      attr_reader :id
 
       def ==(other)
         other.instance_of?(self.class) && id == other.id
       end
-
-      attr_reader :id
-      attr_reader :position
     end
   end
 end
