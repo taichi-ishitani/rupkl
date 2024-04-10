@@ -45,7 +45,7 @@ module RuPkl
     define_transform do
       rule(object: { bodies: subtree(:b) }) do
         bodies = Array(b)
-        Node::UnresolvedObject.new(bodies, bodies.first.position)
+        Node::UnresolvedObject.new(nil, bodies, bodies.first.position)
       end
 
       rule(object_body: { body_begin: simple(:b) }) do

@@ -11,6 +11,22 @@ module RuPkl
         bracketed(expression)
       end
 
+      rule(:declared_type) do
+        id.as(:type).as(:declared_type)
+      end
+
+      rule(:type) do
+        declared_type
+      end
+
+      rule(:new_expression) do
+        (
+          kw_new.as(:kw_new) >>
+            (ws? >> type.as(:type)).maybe >>
+            (ws? >> object_body).repeat(1).as(:bodies)
+        ).as(:new_expression)
+      end
+
       rule(:amend_expression) do
         (
           parenthesized_expression.as(:target) >>
@@ -21,7 +37,8 @@ module RuPkl
       rule(:primary) do
         [
           float_literal, integer_literal, boolean_literal, string_literal,
-          unqualified_member_ref, amend_expression, bracketed(expression)
+          new_expression, amend_expression, unqualified_member_ref,
+          parenthesized_expression
         ].inject(:|)
       end
 
@@ -103,6 +120,27 @@ module RuPkl
         member.inject(receiver) do |r, m|
           Node::MemberReference.new(r, m, r.position)
         end
+      end
+
+      rule(
+        declared_type:
+          { type: simple(:t) }
+      ) do
+        Node::DeclaredType.new(Array(t), t.position)
+      end
+
+      rule(
+        new_expression:
+          { kw_new: simple(:n), bodies: subtree(:b) }
+      ) do
+        Node::UnresolvedObject.new(nil, b, node_position(n))
+      end
+
+      rule(
+        new_expression:
+          { kw_new: simple(:n), type: simple(:t), bodies: subtree(:b) }
+      ) do
+        Node::UnresolvedObject.new(t, b, node_position(n))
       end
 
       rule(

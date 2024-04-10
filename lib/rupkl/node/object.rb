@@ -234,11 +234,13 @@ module RuPkl
     class UnresolvedObject
       include NodeCommon
 
-      def initialize(bodies, position)
-        super(*bodies, position)
+      def initialize(type, bodies, position)
+        super(type, *bodies, position)
+        @type = type
         @bodies = bodies
       end
 
+      attr_reader :type
       attr_reader :bodies
 
       def evaluate(scopes)

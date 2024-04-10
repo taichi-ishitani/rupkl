@@ -210,17 +210,32 @@ module RuPkl
       end
     end
 
-    UnresolvedObject = Struct.new(:bodies) do
+    def declared_type(type)
+      type_matcher =
+        Array(type)
+          .map { identifer(_1) }
+          .then { match(_1) }
+      be_instance_of(Node::DeclaredType)
+        .and have_attributes(type: type_matcher)
+    end
+
+    class UnresolvedObject
+      def type(t = nil)
+        @type = t if t
+        @type
+      end
+
       def body
         b = ObjectBody.new
         yield(b) if block_given?
-        (self.bodies ||= []) << b
+        (@bodies ||= []) << b
       end
 
       def to_matcher(context)
+        type_matcher = @type || context.__send__(:be_nil)
         bodies_matcher =
-          if bodies
-            bodies
+          if @bodies
+            @bodies
               .map { _1.to_matcher(context) }
               .then { context.__send__(:match, _1) }
           else
@@ -229,7 +244,7 @@ module RuPkl
 
         context.instance_eval do
           be_instance_of(Node::UnresolvedObject)
-            .and have_attributes(bodies: bodies_matcher)
+            .and have_attributes(type: type_matcher, bodies: bodies_matcher)
         end
       end
     end

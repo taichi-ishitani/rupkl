@@ -82,6 +82,85 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'new expression' do
+    it 'should be parsed by expression parser' do
+      pkl = <<~'PKL'
+        new {}
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          unresolved_object { |o| o.body }
+        )
+
+      pkl = <<~'PKL'
+        new {
+          foo = 1; bar = 2
+        }
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          unresolved_object do |o|
+            o.body { |b| b.property :foo, 1; b.property :bar, 2 }
+          end
+        )
+
+      pkl = <<~'PKL'
+        new {
+          foo = 1; bar = 2
+        } {
+          baz = 3
+        }
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          unresolved_object do |o|
+            o.body { |b| b.property :foo, 1; b.property :bar, 2 }
+            o.body { |b| b.property :baz, 3 }
+          end
+        )
+
+      pkl = <<~'PKL'
+        new Dynamic {}
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          unresolved_object do |o|
+            o.type declared_type(:Dynamic)
+            o.body
+          end
+        )
+
+      pkl = <<~'PKL'
+        new Dynamic {
+          foo = 1; bar = 2
+        }
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          unresolved_object do |o|
+            o.type declared_type(:Dynamic)
+            o.body { |b| b.property :foo, 1; b.property :bar, 2 }
+          end
+        )
+
+      pkl = <<~'PKL'
+        new Dynamic {
+          foo = 1; bar = 2
+        } {
+          baz = 3
+        }
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          unresolved_object do |o|
+            o.type declared_type(:Dynamic)
+            o.body { |b| b.property :foo, 1; b.property :bar, 2 }
+            o.body { |b| b.property :baz, 3 }
+          end
+        )
+    end
+  end
+
   describe 'amend expression' do
     it 'should be parsed by expression parser' do
       pkl = <<~'PKL'
