@@ -15,14 +15,29 @@ module RuPkl
       attr_reader :member
 
       def evaluate(scopes)
-        resolve_reference(scopes).evaluate(scopes).value
+        do_evaluate do
+          resolve_reference(scopes).evaluate(scopes)
+        end
       end
 
       def evaluate_lazily(scopes)
-        resolve_reference(scopes).evaluate_lazily(scopes).value
+        do_evaluate do
+          resolve_reference(scopes).evaluate_lazily(scopes)
+        end
       end
 
       private
+
+      def do_evaluate
+        @evaluating &&
+          (raise EvaluationError.new('circular reference is detected', position))
+
+        @evaluating = true
+        result = yield
+        @evaluating = false
+
+        result
+      end
 
       def resolve_reference(scopes)
         if receiver
@@ -53,7 +68,10 @@ module RuPkl
       end
 
       def get_member_node(scope)
-        scope&.properties&.find { _1.name == member }
+        scope
+          &.properties
+          &.find { _1.name == member }
+          &.value
       end
     end
   end

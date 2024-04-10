@@ -140,5 +140,40 @@ RSpec.describe RuPkl::Node::MemberReference do
           .to raise_evaluation_error 'cannot find property \'qux_0\''
       end
     end
+
+    context 'when the given member refers itself' do
+      it 'should raise EvaluationError' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo = foo
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'circular reference is detected'
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo = bar
+          bar = foo
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'circular reference is detected'
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo {
+            bar = foo.bar
+          }
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'circular reference is detected'
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          foo {
+            bar {
+              baz = foo.bar.baz
+            }
+          }
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'circular reference is detected'
+      end
+    end
   end
 end
