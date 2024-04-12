@@ -367,9 +367,9 @@ RSpec.describe RuPkl::Node::Dynamic do
           bar_2 = foo[0]
         PKL
         node.evaluate(nil).then do |n|
-          expect(n.properties[-3].value).to be_integer(2)
-          expect(n.properties[-2].value).to be_integer(1)
-          expect(n.properties[-1].value).to be_integer(0)
+          expect(n.properties[-3].value).to be_int(2)
+          expect(n.properties[-2].value).to be_int(1)
+          expect(n.properties[-1].value).to be_int(0)
         end
       end
     end
@@ -392,11 +392,11 @@ RSpec.describe RuPkl::Node::Dynamic do
           baz_4 = bar[foo]
         PKL
         node.evaluate(nil).then do |n|
-          expect(n.properties[-5].value).to be_integer(4)
-          expect(n.properties[-4].value).to be_integer(3)
-          expect(n.properties[-3].value).to be_integer(2)
-          expect(n.properties[-2].value).to be_integer(1)
-          expect(n.properties[-1].value).to be_integer(0)
+          expect(n.properties[-5].value).to be_int(4)
+          expect(n.properties[-4].value).to be_int(3)
+          expect(n.properties[-3].value).to be_int(2)
+          expect(n.properties[-2].value).to be_int(1)
+          expect(n.properties[-1].value).to be_int(0)
         end
       end
     end
@@ -699,7 +699,7 @@ RSpec.describe RuPkl::Node::Dynamic do
             bar = foo #{op} 1
           PKL
           expect { node.evaluate(nil) }
-            .to raise_evaluation_error "invalid operand type Integer is given for operator '#{op}'"
+            .to raise_evaluation_error "invalid operand type Int is given for operator '#{op}'"
 
           node = parser.parse(<<~PKL, root: :pkl_module)
             foo {}

@@ -2,11 +2,18 @@
 
 module RuPkl
   module Node
-    class PklModule
+    class PklModule < Any
       include StructCommon
+
+      abstract_class
+      klass_name :Module
 
       def properties
         @body&.properties
+      end
+
+      def classes
+        @body&.classes
       end
     end
   end

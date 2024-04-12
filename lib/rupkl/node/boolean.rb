@@ -2,8 +2,10 @@
 
 module RuPkl
   module Node
-    class Boolean
+    class Boolean < Any
       include ValueCommon
+
+      uninstantiable_class
 
       def undefined_operator?(operator)
         [:!, :==, :'!=', :'&&', :'||'].none?(operator)

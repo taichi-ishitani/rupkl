@@ -22,7 +22,7 @@ module RuPkl
     end
 
     #
-    # Integer literal
+    # Int literal
     #
     define_parser do
       rule(:bin_literal) do
@@ -41,18 +41,18 @@ module RuPkl
         str('0x') >> match('[\h]') >> match('[_\h]').repeat
       end
 
-      rule(:integer_literal) do
+      rule(:int_literal) do
         (
           bin_literal | oct_literal | hex_literal | dec_literal
-        ).as(:integer_literal)
+        ).as(:int_literal)
       end
     end
 
     define_transform do
-      rule(integer_literal: simple(:v)) do
+      rule(int_literal: simple(:v)) do
         base = { 'b' => 2, 'o' => 8, 'x' => 16 }.fetch(v.to_s[1], 10)
         value = v.to_s.tr('_', '').to_i(base)
-        Node::Integer.new(value, node_position(v))
+        Node::Int.new(value, node_position(v))
       end
     end
 

@@ -109,10 +109,10 @@ module RuPkl
 
       def create_op_result(result)
         case result
-        when ::Integer then Integer.new(result, position)
+        when ::Integer then Int.new(result, position)
         when ::Float then Float.new(result, position)
         when ::String then String.new(result, nil, position)
-        when ::TrueClass, ::FalseClass then Boolean.new(result, position)
+        when true, false then Boolean.new(result, position)
         end
       end
     end

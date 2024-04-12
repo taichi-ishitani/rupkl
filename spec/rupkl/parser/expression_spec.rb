@@ -27,10 +27,10 @@ RSpec.describe RuPkl::Parser do
     end
 
     specify 'a integer literal should be treated as an expression' do
-      expect(parser).to parse('42').as(integer_literal(42))
-      expect(parser).to parse('0x42').as(integer_literal(0x42))
-      expect(parser).to parse('0b101101').as(integer_literal(0b101101))
-      expect(parser).to parse('0o01234567').as(integer_literal(0o01234567))
+      expect(parser).to parse('42').as(int_literal(42))
+      expect(parser).to parse('0x42').as(int_literal(0x42))
+      expect(parser).to parse('0b101101').as(int_literal(0b101101))
+      expect(parser).to parse('0o01234567').as(int_literal(0o01234567))
     end
 
     specify 'a float literal should be treated as an expression' do

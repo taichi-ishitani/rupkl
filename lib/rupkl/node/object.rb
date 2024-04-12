@@ -107,6 +107,7 @@ module RuPkl
       attr_reader :properties
       attr_reader :entries
       attr_reader :elements
+      attr_reader :classes
 
       def members
         [*properties, *entries, *elements]
@@ -179,7 +180,7 @@ module RuPkl
         grouped_entries =
           entries
             .group_by do |e|
-              e.key.instance_of?(Node::Integer) &&
+              e.key.instance_of?(Node::Int) &&
                 e.key.value < elements_size
             end
         [grouped_entries[false], grouped_entries[true]]
@@ -254,13 +255,13 @@ module RuPkl
       private
 
       def do_evaluate(scopes, evaluator)
-        Dynamic.new(bodies.first, position)
-          .__send__(evaluator, scopes)
-          .tap do |o|
-            bodies[1..].each do |b|
-              o.body.merge!(b.__send__(evaluator, [*scopes, o]))
-            end
-          end
+        (type || default_type)
+          .create(scopes, bodies, position, evaluator)
+      end
+
+      def default_type
+        id = Identifier.new(:Dynamic, position)
+        DeclaredType.new([id], position)
       end
     end
   end

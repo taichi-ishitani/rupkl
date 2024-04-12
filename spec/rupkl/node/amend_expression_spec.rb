@@ -259,7 +259,7 @@ RSpec.describe RuPkl::Node::AmendExpression do
           bar = (foo) {}
         PKL
         expect { parse(pkl) }
-          .to raise_evaluation_error 'cannot amend the target type Integer'
+          .to raise_evaluation_error 'cannot amend the target type Int'
 
         pkl = <<~'PKL'
           foo = 0.0

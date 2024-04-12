@@ -8,11 +8,11 @@ module RuPkl
 
     alias_method :be_boolean, :boolean_literal
 
-    def integer_literal(value)
-      be_instance_of(Node::Integer).and have_attributes(value: value)
+    def int_literal(value)
+      be_instance_of(Node::Int).and have_attributes(value: value)
     end
 
-    alias_method :be_integer, :integer_literal
+    alias_method :be_int, :int_literal
 
     def float_literal(value)
       be_instance_of(Node::Float).and have_attributes(value: value)
@@ -21,7 +21,7 @@ module RuPkl
     alias_method :be_float, :float_literal
 
     def be_number(number)
-      number.is_a?(Float) && be_float(number) || be_integer(number)
+      number.is_a?(Float) && be_float(number) || be_int(number)
     end
 
     def string_literal(*portions)
@@ -71,7 +71,7 @@ module RuPkl
     def expression_matcher(expression)
       case expression
       when TrueClass, FalseClass then boolean_literal(expression)
-      when Integer then integer_literal(expression)
+      when Integer then int_literal(expression)
       when Float then float_literal(expression)
       when String then string_literal(expression).or(evaluated_string(expression))
       else expression

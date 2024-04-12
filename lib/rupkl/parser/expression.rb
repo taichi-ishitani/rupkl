@@ -11,14 +11,6 @@ module RuPkl
         bracketed(expression)
       end
 
-      rule(:declared_type) do
-        id.as(:type).as(:declared_type)
-      end
-
-      rule(:type) do
-        declared_type
-      end
-
       rule(:new_expression) do
         (
           kw_new.as(:kw_new) >>
@@ -36,7 +28,7 @@ module RuPkl
 
       rule(:primary) do
         [
-          float_literal, integer_literal, boolean_literal, string_literal,
+          float_literal, int_literal, boolean_literal, string_literal,
           new_expression, amend_expression, unqualified_member_ref,
           parenthesized_expression
         ].inject(:|)
@@ -120,13 +112,6 @@ module RuPkl
         member.inject(receiver) do |r, m|
           Node::MemberReference.new(r, m, r.position)
         end
-      end
-
-      rule(
-        declared_type:
-          { type: simple(:t) }
-      ) do
-        Node::DeclaredType.new(Array(t), t.position)
       end
 
       rule(

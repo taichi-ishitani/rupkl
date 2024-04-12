@@ -2,7 +2,7 @@
 
 module RuPkl
   module Node
-    class Dynamic
+    class Dynamic < Any
       include StructCommon
 
       def properties

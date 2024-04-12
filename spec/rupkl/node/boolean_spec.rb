@@ -175,7 +175,7 @@ RSpec.describe RuPkl::Node::Boolean do
 
             node = parser.parse("true#{op}1", root: :expression)
             expect { node.evaluate(nil) }
-              .to raise_evaluation_error "invalid operand type Integer is given for operator '#{op}'"
+              .to raise_evaluation_error "invalid operand type Int is given for operator '#{op}'"
 
             node = parser.parse("true#{op}1.0", root: :expression)
             expect { node.evaluate(nil) }
@@ -189,7 +189,7 @@ RSpec.describe RuPkl::Node::Boolean do
 
             node = parser.parse("false#{op}1", root: :expression)
             expect { node.evaluate(nil) }
-              .to raise_evaluation_error "invalid operand type Integer is given for operator '#{op}'"
+              .to raise_evaluation_error "invalid operand type Int is given for operator '#{op}'"
 
             node = parser.parse("false#{op}1.0", root: :expression)
             expect { node.evaluate(nil) }

@@ -15,7 +15,7 @@ RSpec.describe RuPkl::Node::Number do
 
   describe '#evaluate' do
     it 'should return itself' do
-      node = parser.parse(int_value.to_s, root: :integer_literal)
+      node = parser.parse(int_value.to_s, root: :int_literal)
       expect(node.evaluate(nil)).to be node
 
       node = parser.parse(float_value.to_s, root: :float_literal)
@@ -25,7 +25,7 @@ RSpec.describe RuPkl::Node::Number do
 
   describe '#to_ruby' do
     it 'should return its value' do
-      node = parser.parse(int_value.to_s, root: :integer_literal)
+      node = parser.parse(int_value.to_s, root: :int_literal)
       expect(node.to_ruby(nil)).to eq int_value
 
       node = parser.parse(float_value.to_s, root: :float_literal)
@@ -35,7 +35,7 @@ RSpec.describe RuPkl::Node::Number do
 
   describe '#to_string/#to_pkl_string' do
     it 'should return a string representing its value' do
-      node = parser.parse(int_value.to_s, root: :integer_literal)
+      node = parser.parse(int_value.to_s, root: :int_literal)
       expect(node.to_string(nil)).to eq int_value.to_s
       expect(node.to_pkl_string(nil)).to eq int_value.to_s
 
@@ -49,7 +49,7 @@ RSpec.describe RuPkl::Node::Number do
     specify 'subscript operation is not defined' do
       node = parser.parse("#{int_value}[0]", root: :expression)
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'[]\' is not defined for Integer type'
+        .to raise_evaluation_error 'operator \'[]\' is not defined for Int type'
 
       node = parser.parse("#{float_value}[0]", root: :expression)
       expect { node.evaluate(nil) }
@@ -61,7 +61,7 @@ RSpec.describe RuPkl::Node::Number do
     context 'when the given operator is defined' do
       it 'should execute the given operation' do
         node = parser.parse('-1', root: :expression)
-        expect(node.evaluate(nil)).to be_integer(-1)
+        expect(node.evaluate(nil)).to be_int(-1)
 
         node = parser.parse('-1.0', root: :expression)
         expect(node.evaluate(nil)).to be_float(-1.0)
@@ -72,7 +72,7 @@ RSpec.describe RuPkl::Node::Number do
       it 'should raise EvaluatedError' do
         node = parser.parse('!1', root: :expression)
         expect { node.evaluate(nil) }
-          .to raise_evaluation_error 'operator \'!\' is not defined for Integer type'
+          .to raise_evaluation_error 'operator \'!\' is not defined for Int type'
 
         node = parser.parse('!1.0', root: :expression)
         expect { node.evaluate(nil) }
@@ -174,10 +174,10 @@ RSpec.describe RuPkl::Node::Number do
           expect(node.evaluate(nil)).to be_float(4.0/3.0)
         end
 
-        # integer division
+        # int division
         ['4~/3', '4.0~/3.0', '4~/3.0', '4.0~/3'].each do |pkl|
           node = parser.parse(pkl, root: :expression)
-          expect(node.evaluate(nil)).to be_integer(1)
+          expect(node.evaluate(nil)).to be_int(1)
         end
 
         # remainder
@@ -198,7 +198,7 @@ RSpec.describe RuPkl::Node::Number do
       it 'should raise EvaluationError' do
         node = parser.parse('1||true', root: :expression)
         expect { node.evaluate(nil) }
-          .to raise_evaluation_error 'operator \'||\' is not defined for Integer type'
+          .to raise_evaluation_error 'operator \'||\' is not defined for Int type'
 
         node = parser.parse('1.0||true', root: :expression)
         expect { node.evaluate(nil) }
@@ -206,7 +206,7 @@ RSpec.describe RuPkl::Node::Number do
 
         node = parser.parse('1&&true', root: :expression)
         expect { node.evaluate(nil) }
-          .to raise_evaluation_error 'operator \'&&\' is not defined for Integer type'
+          .to raise_evaluation_error 'operator \'&&\' is not defined for Int type'
 
         node = parser.parse('1.0&&true', root: :expression)
         expect { node.evaluate(nil) }

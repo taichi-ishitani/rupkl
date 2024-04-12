@@ -2,8 +2,10 @@
 
 module RuPkl
   module Node
-    class String
+    class String < Any
       include ValueCommon
+
+      uninstantiable_class
 
       def initialize(value, portions, position)
         super(value, position)
@@ -28,7 +30,7 @@ module RuPkl
       end
 
       def invalid_key_operand?(key)
-        !key.is_a?(Integer)
+        !key.is_a?(Int)
       end
 
       def find_by_key(key)

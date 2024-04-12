@@ -35,49 +35,49 @@ RSpec.describe RuPkl::Parser do
 
   describe 'integer literal' do
     def parse(string)
-      parse_string(string, :integer_literal)
+      parse_string(string, :int_literal)
     end
 
-    it 'should be parsed by integer_literal parser' do
+    it 'should be parsed by int_literal parser' do
       # decimal literal
-      expect(parser).to parse('0').as(integer_literal(0))
-      expect(parser).to parse('42').as(integer_literal(42))
-      expect(parser).to parse('00').as(integer_literal(0))
-      expect(parser).to parse('00042').as(integer_literal(42))
-      expect(parser).to parse('123456789123456789').as(integer_literal(123456789123456789))
-      expect(parser).to parse('9223372036854775807').as(integer_literal(9223372036854775807))
-      expect(parser).to parse('1_000').as(integer_literal(1000))
-      expect(parser).to parse('1_000__000').as(integer_literal(1000000))
-      expect(parser).to parse('1___').as(integer_literal(1))
-      expect(parser).to parse('1___1').as(integer_literal(11))
-      expect(parser).to parse('1__000_0').as(integer_literal(10000))
+      expect(parser).to parse('0').as(int_literal(0))
+      expect(parser).to parse('42').as(int_literal(42))
+      expect(parser).to parse('00').as(int_literal(0))
+      expect(parser).to parse('00042').as(int_literal(42))
+      expect(parser).to parse('123456789123456789').as(int_literal(123456789123456789))
+      expect(parser).to parse('9223372036854775807').as(int_literal(9223372036854775807))
+      expect(parser).to parse('1_000').as(int_literal(1000))
+      expect(parser).to parse('1_000__000').as(int_literal(1000000))
+      expect(parser).to parse('1___').as(int_literal(1))
+      expect(parser).to parse('1___1').as(int_literal(11))
+      expect(parser).to parse('1__000_0').as(int_literal(10000))
 
       # hex literal
-      expect(parser).to parse('0x42').as(integer_literal(0x42))
-      expect(parser).to parse('0x123456789abcdef').as(integer_literal(0x123456789abcdef))
-      expect(parser).to parse('0x123456789ABCDEF').as(integer_literal(0x123456789ABCDEF))
-      expect(parser).to parse('0x123456789aBcDeF').as(integer_literal(0x123456789aBcDeF))
-      expect(parser).to parse('0x000123456789abcdef').as(integer_literal(0x000123456789abcdef))
-      expect(parser).to parse('0x000123456789abcdef').as(integer_literal(0x000123456789abcdef))
-      expect(parser).to parse('0x42_ab_AB_de_12').as(integer_literal(0x42abABde12))
-      expect(parser).to parse('0x41__').as(integer_literal(0x41))
-      expect(parser).to parse('0x59__9').as(integer_literal(0x599))
+      expect(parser).to parse('0x42').as(int_literal(0x42))
+      expect(parser).to parse('0x123456789abcdef').as(int_literal(0x123456789abcdef))
+      expect(parser).to parse('0x123456789ABCDEF').as(int_literal(0x123456789ABCDEF))
+      expect(parser).to parse('0x123456789aBcDeF').as(int_literal(0x123456789aBcDeF))
+      expect(parser).to parse('0x000123456789abcdef').as(int_literal(0x000123456789abcdef))
+      expect(parser).to parse('0x000123456789abcdef').as(int_literal(0x000123456789abcdef))
+      expect(parser).to parse('0x42_ab_AB_de_12').as(int_literal(0x42abABde12))
+      expect(parser).to parse('0x41__').as(int_literal(0x41))
+      expect(parser).to parse('0x59__9').as(int_literal(0x599))
 
       # binary literal
-      expect(parser).to parse('0b101101').as(integer_literal(0b101101))
-      expect(parser).to parse('0b000101101').as(integer_literal(0b000101101))
-      expect(parser).to parse('0b1011_0110').as(integer_literal(0b10110110))
-      expect(parser).to parse('0b01__10').as(integer_literal(0b0110))
-      expect(parser).to parse('0b1____0').as(integer_literal(0b10))
+      expect(parser).to parse('0b101101').as(int_literal(0b101101))
+      expect(parser).to parse('0b000101101').as(int_literal(0b000101101))
+      expect(parser).to parse('0b1011_0110').as(int_literal(0b10110110))
+      expect(parser).to parse('0b01__10').as(int_literal(0b0110))
+      expect(parser).to parse('0b1____0').as(int_literal(0b10))
 
       # octal literal
-      expect(parser).to parse('0o01234567').as(integer_literal(0o01234567))
-      expect(parser).to parse('0o76543210').as(integer_literal(0o76543210))
-      expect(parser).to parse('0o1234_5670').as(integer_literal(0o12345670))
-      expect(parser).to parse('0o45__67').as(integer_literal(0o4567))
-      expect(parser).to parse('0o7____0').as(integer_literal(0o70))
-      expect(parser).to parse('0o644').as(integer_literal(0o644))
-      expect(parser).to parse('0o755').as(integer_literal(0o755))
+      expect(parser).to parse('0o01234567').as(int_literal(0o01234567))
+      expect(parser).to parse('0o76543210').as(int_literal(0o76543210))
+      expect(parser).to parse('0o1234_5670').as(int_literal(0o12345670))
+      expect(parser).to parse('0o45__67').as(int_literal(0o4567))
+      expect(parser).to parse('0o7____0').as(int_literal(0o70))
+      expect(parser).to parse('0o644').as(int_literal(0o644))
+      expect(parser).to parse('0o755').as(int_literal(0o755))
     end
 
     it 'should not parse literals having underscores at head' do
@@ -177,7 +177,7 @@ RSpec.describe RuPkl::Parser do
           ))
 
         expect(parser).to parse('"\(42)"')
-          .as(ss_literal(integer_literal(42)))
+          .as(ss_literal(int_literal(42)))
 
         expect(parser).to parse('"\(40 + 2)"')
           .as(ss_literal(b_op(:+, 40, 2)))

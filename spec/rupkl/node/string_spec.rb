@@ -263,7 +263,7 @@ RSpec.describe RuPkl::Node::String do
 
           node = parser.parse("\"foo\"#{op}1", root: :expression)
           expect { node.evaluate(nil) }
-            .to raise_evaluation_error "invalid operand type Integer is given for operator '#{op}'"
+            .to raise_evaluation_error "invalid operand type Int is given for operator '#{op}'"
 
           node = parser.parse("\"foo\"#{op}1.0", root: :expression)
           expect { node.evaluate(nil) }

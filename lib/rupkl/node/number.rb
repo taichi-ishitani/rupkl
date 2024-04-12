@@ -2,7 +2,7 @@
 
 module RuPkl
   module Node
-    class Number
+    class Number < Any
       include ValueCommon
 
       def undefined_operator?(operator)
@@ -27,10 +27,12 @@ module RuPkl
       end
     end
 
-    class Integer < Number
+    class Int < Number
+      uninstantiable_class
     end
 
     class Float < Number
+      uninstantiable_class
     end
   end
 end
