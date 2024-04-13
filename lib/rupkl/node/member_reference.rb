@@ -68,6 +68,8 @@ module RuPkl
       end
 
       def get_member_node(scope)
+        return unless scope.respond_to?(:properties)
+
         scope
           &.properties
           &.find { _1.name == member }

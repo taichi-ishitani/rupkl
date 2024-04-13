@@ -15,6 +15,12 @@ module RuPkl
       def classes
         @body&.classes
       end
+
+      private
+
+      def properties_not_allowed?
+        false
+      end
     end
   end
 end

@@ -298,6 +298,36 @@ module RuPkl
 
     alias_method :be_dynamic, :dynamic
 
+    Mapping = Struct.new(:entries) do
+      def []=(key, value)
+        (self.entries ||= []) << ObjectEntry.new(key, value)
+      end
+
+      def to_matcher(context)
+        entries_matcher =
+          if self.entries
+            self
+              .entries
+              .map { _1.to_matcher(context) }
+              .then { context.__send__(:match, _1) }
+          else
+            context.__send__(:be_nil)
+          end
+        context.instance_eval do
+          be_instance_of(Node::Mapping)
+            .and have_attributes(entries: entries_matcher)
+        end
+      end
+    end
+
+    def mapping
+      m = Mapping.new
+      yield(m) if block_given?
+      m.to_matcher(self)
+    end
+
+    alias_method :be_mapping, :mapping
+
     PklModule = Struct.new(:properties) do
       def property(name, value)
         (self.properties ||= []) << ObjectProperty.new(name, value)

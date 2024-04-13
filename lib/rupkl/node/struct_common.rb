@@ -8,6 +8,7 @@ module RuPkl
       def initialize(body, position)
         super
         @body = body
+        body && check_members
       end
 
       attr_reader :body
@@ -31,13 +32,15 @@ module RuPkl
       end
 
       def to_pkl_string(scopes)
-        push_scope(scopes) do |s|
-          to_pkl_string_object(s)
-        end
+        to_string(scopes)
       end
 
       def to_string(scopes)
-        "new #{self.class.basename} #{to_pkl_string(scopes)}"
+        "new #{self.class.basename} #{to_pkl_string_object(scopes)}"
+      end
+
+      def undefined_operator?(operator)
+        [:[], :==, :'!='].none?(operator)
       end
 
       def coerce(_operator, r_operand)
@@ -45,6 +48,31 @@ module RuPkl
       end
 
       private
+
+      def check_members
+        message =
+          if properties_not_allowed?
+            "'#{self.class.basename}' cannot have a property"
+          elsif entries_not_allowed?
+            "'#{self.class.basename}' cannot have an entry"
+          elsif elements_not_allowed?
+            "'#{self.class.basename}' cannot have an element"
+          end
+        message &&
+          (raise EvaluationError.new(message, position))
+      end
+
+      def properties_not_allowed?
+        body.properties
+      end
+
+      def entries_not_allowed?
+        body.entries
+      end
+
+      def elements_not_allowed?
+        body.elements
+      end
 
       def push_scope(scopes)
         yield([*scopes, self])
@@ -81,10 +109,26 @@ module RuPkl
         members = @body.members
         return '{}' if members.empty?
 
-        members
-          .map { _1.to_pkl_string(scopes) }
-          .join('; ')
-          .then { "{ #{_1} }" }
+        push_scope(scopes) do |s|
+          members
+            .map { _1.to_pkl_string(s) }
+            .join('; ')
+            .then { "{ #{_1} }" }
+        end
+      end
+
+      def find_entry(key)
+        entries
+          &.find { _1.key == key }
+          &.then(&:value)
+      end
+
+      def find_element(index)
+        return nil unless elements
+        return nil unless index.value.is_a?(::Integer)
+
+        elements
+          .find.with_index { |_, i| i == index.value }
       end
     end
   end

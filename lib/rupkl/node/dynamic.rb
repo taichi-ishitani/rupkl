@@ -6,15 +6,19 @@ module RuPkl
       include StructCommon
 
       def properties
-        @body.properties
+        @body&.properties
       end
 
       def entries
-        @body.entries
+        @body&.entries
       end
 
       def elements
-        @body.elements
+        @body&.elements
+      end
+
+      def to_pkl_string(scopes)
+        to_pkl_string_object(scopes)
       end
 
       def ==(other)
@@ -24,28 +28,22 @@ module RuPkl
           match_members?(elements, other.elements, true)
       end
 
-      def undefined_operator?(operator)
-        [:[], :==, :'!='].none?(operator)
-      end
-
       def find_by_key(key)
         find_entry(key) || find_element(key)
       end
 
       private
 
-      def find_entry(key)
-        entries
-          &.find { _1.key == key }
-          &.then(&:value)
+      def properties_not_allowed?
+        false
       end
 
-      def find_element(index)
-        return nil unless elements
-        return nil unless index.value.is_a?(::Integer)
+      def entries_not_allowed?
+        false
+      end
 
-        elements
-          .find.with_index { |_, i| i == index.value }
+      def elements_not_allowed?
+        false
       end
     end
   end

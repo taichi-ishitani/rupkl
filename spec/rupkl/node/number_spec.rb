@@ -90,13 +90,21 @@ RSpec.describe RuPkl::Node::Number do
           expect(node.evaluate(nil)).to be_boolean(true)
         end
 
-        ['2==3', '2.0==3.0', '2==3.0', '2.0==3'].each do |pkl|
+        [
+          '2==3', '2.0==3.0', '2==3.0', '2.0==3',
+          '2==true', '2=="foo"', '2==new Dynamic{}', '2==new Mapping{}',
+          '2.0==true', '2.0=="foo"', '2.0==new Dynamic{}', '2.0==new Mapping{}'
+        ].each do |pkl|
           node = parser.parse(pkl, root: :expression)
           expect(node.evaluate(nil)).to be_boolean(false)
         end
 
         # inequality
-        ['2!=3', '2.0!=3.0', '2!=3.0', '2.0!=3'].each do |pkl|
+        [
+          '2!=3', '2.0!=3.0', '2!=3.0', '2.0!=3',
+          '2!=true', '2!="foo"', '2!=new Dynamic{}', '2!=new Mapping{}',
+          '2.0!=true', '2.0!="foo"', '2.0!=new Dynamic{}', '2.0!=new Mapping{}'
+        ].each do |pkl|
           node = parser.parse(pkl, root: :expression)
           expect(node.evaluate(nil)).to be_boolean(true)
         end
@@ -217,7 +225,7 @@ RSpec.describe RuPkl::Node::Number do
     context 'when the given operand is invalid' do
       it 'should raise EvaluationError' do
         [
-          '==', '!=', '>', '<', '>=', '<=',
+          '>', '<', '>=', '<=',
           '+', '-', '*', '/', '~/', '%', '**'
         ].each do |op|
           node = parser.parse("1#{op}true", root: :expression)

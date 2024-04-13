@@ -82,13 +82,21 @@ RSpec.describe RuPkl::Node::Boolean do
           expect(node.evaluate(nil)).to be_boolean(true)
         end
 
-        ['true==false', 'false==true'].each do |pkl|
+        [
+          'true==false', 'false==true',
+          'true==1', 'true==1.0', 'true=="foo"', 'true==new Dynamic{}', 'true==new Mapping{}',
+          'true==1', 'false==1.0', 'false=="foo"', 'false==new Dynamic{}', 'false==new Mapping{}'
+        ].each do |pkl|
           node = parser.parse(pkl, root: :expression)
           expect(node.evaluate(nil)).to be_boolean(false)
         end
 
         # inequality
-        ['true!=false', 'false!=true'].each do |pkl|
+        [
+          'true!=false', 'false!=true',
+          'true!=1', 'true!=1.0', 'true!="foo"', 'true!=new Dynamic{}', 'true!=new Mapping{}',
+          'true!=1', 'false!=1.0', 'false!="foo"', 'false!=new Dynamic{}', 'false!=new Mapping{}'
+        ].each do |pkl|
           node = parser.parse(pkl, root: :expression)
           expect(node.evaluate(nil)).to be_boolean(true)
         end
@@ -167,7 +175,7 @@ RSpec.describe RuPkl::Node::Boolean do
 
     context 'when the given operand is invalid' do
       it 'should raise EvaluationError' do
-        ['==', '!=', '&&', '||'].each do |op|
+        ['&&', '||'].each do |op|
           if op != '||'
             node = parser.parse("true#{op}\"foo\"", root: :expression)
             expect { node.evaluate(nil) }

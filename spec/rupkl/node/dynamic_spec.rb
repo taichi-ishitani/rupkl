@@ -618,6 +618,26 @@ RSpec.describe RuPkl::Node::Dynamic do
           a { [foo] = 1 }
           b { [bar] = 1 }
         PKL
+        strings << <<~'PKL'
+          a {}
+          b = true
+        PKL
+        strings << <<~'PKL'
+          a {}
+          b = 1
+        PKL
+        strings << <<~'PKL'
+          a {}
+          b = 1.0
+        PKL
+        strings << <<~'PKL'
+          a {}
+          b = "foo"
+        PKL
+        strings << <<~'PKL'
+          a {}
+          b = new Mapping {}
+        PKL
       end
 
       it 'should execlute the given operation' do
@@ -625,16 +645,10 @@ RSpec.describe RuPkl::Node::Dynamic do
           node = parser.parse(<<~PKL, root: :pkl_module)
             #{pkl}
             c = a == b
+            d = a != b
           PKL
           node.evaluate(nil).then do |n|
-            expect(n.properties[-1].value).to be_boolean(true)
-          end
-
-          node = parser.parse(<<~PKL, root: :pkl_module)
-            #{pkl}
-            c = a != b
-          PKL
-          node.evaluate(nil).then do |n|
+            expect(n.properties[-2].value).to be_boolean(true)
             expect(n.properties[-1].value).to be_boolean(false)
           end
         end
@@ -642,18 +656,12 @@ RSpec.describe RuPkl::Node::Dynamic do
         pkl_unmatch_strings.each do |pkl|
           node = parser.parse(<<~PKL, root: :pkl_module)
             #{pkl}
-            c = a == b
-          PKL
-          node.evaluate(nil).then do |n|
-            expect(n.properties[-1].value).to be_boolean(false)
-          end
-
-          node = parser.parse(<<~PKL, root: :pkl_module)
-            #{pkl}
             c = a != b
+            d = a == b
           PKL
           node.evaluate(nil).then do |n|
-            expect(n.properties[-1].value).to be_boolean(true)
+            expect(n.properties[-2].value).to be_boolean(true)
+            expect(n.properties[-1].value).to be_boolean(false)
           end
         end
       end
@@ -673,40 +681,6 @@ RSpec.describe RuPkl::Node::Dynamic do
           PKL
           expect { node.evaluate(nil) }
             .to raise_evaluation_error "operator '#{op}' is not defined for Dynamic type"
-        end
-      end
-    end
-
-    context 'when the given operand is invalid' do
-      it 'should raise EvaluationError' do
-        ['==', '!='].each do |op|
-          node = parser.parse(<<~PKL, root: :pkl_module)
-            foo {}
-            bar = foo #{op} true
-          PKL
-          expect { node.evaluate(nil) }
-            .to raise_evaluation_error "invalid operand type Boolean is given for operator '#{op}'"
-
-          node = parser.parse(<<~PKL, root: :pkl_module)
-            foo {}
-            bar = foo #{op} "foo"
-          PKL
-          expect { node.evaluate(nil) }
-            .to raise_evaluation_error "invalid operand type String is given for operator '#{op}'"
-
-          node = parser.parse(<<~PKL, root: :pkl_module)
-            foo {}
-            bar = foo #{op} 1
-          PKL
-          expect { node.evaluate(nil) }
-            .to raise_evaluation_error "invalid operand type Int is given for operator '#{op}'"
-
-          node = parser.parse(<<~PKL, root: :pkl_module)
-            foo {}
-            bar = foo #{op} 1.0
-          PKL
-          expect { node.evaluate(nil) }
-            .to raise_evaluation_error "invalid operand type Float is given for operator '#{op}'"
         end
       end
     end

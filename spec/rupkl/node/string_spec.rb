@@ -229,12 +229,51 @@ RSpec.describe RuPkl::Node::String do
   describe 'binary operation' do
     context 'when defined operator and valid operand are given' do
       it 'should execlute the given operation' do
+        # equality
         node = parser.parse('"foo"=="foo"', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(true)
 
         node = parser.parse('"foo"=="bar"', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(false)
 
+        node = parser.parse('"foo"==1', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('"foo"==1.0', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('"foo"==true', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('"foo"==new Dynamic{}', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('"foo"==new Mapping{}', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        # inequality
+        node = parser.parse('"foo"!="foo"', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('"foo"!="bar"', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('"foo"!=1', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('"foo"!=1.0', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('"foo"!=true', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('"foo"!=new Dynamic{}', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('"foo"!=new Mapping{}', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        # add
         node = parser.parse('"foo"+"bar"', root: :expression)
         expect(node.evaluate(nil)).to be_evaluated_string('foobar')
       end
@@ -256,7 +295,7 @@ RSpec.describe RuPkl::Node::String do
 
     context 'when the given operand is invalid' do
       it 'should raise EvaluationError' do
-        ['==', '!='].each do |op|
+        ['+'].each do |op|
           node = parser.parse("\"foo\"#{op}true", root: :expression)
           expect { node.evaluate(nil) }
             .to raise_evaluation_error "invalid operand type Boolean is given for operator '#{op}'"

@@ -45,6 +45,7 @@ module RuPkl
 
         r = r_operand.evaluate(scopes)
         check_r_operand(l, r)
+          .then { return _1 if _1 }
 
         l, r = l.coerce(operator, r)
         create_op_result(l.__send__(ruby_op, r))
@@ -81,13 +82,16 @@ module RuPkl
       end
 
       def check_r_operand(l_operand, r_operand)
-        invalid_r_operand?(l_operand, r_operand) &&
-          begin
-            message =
-              "invalid operand type #{r_operand.class.basename} is given " \
-              "for operator '#{operator}'"
-            raise EvaluationError.new(message, position)
-          end
+        return unless invalid_r_operand?(l_operand, r_operand)
+
+        if [:==, :'!='].include?(operator)
+          create_op_result(operator != :==)
+        else
+          message =
+            "invalid operand type #{r_operand.class.basename} is given " \
+            "for operator '#{operator}'"
+          raise EvaluationError.new(message, position)
+        end
       end
 
       def invalid_r_operand?(l_operand, r_operand)

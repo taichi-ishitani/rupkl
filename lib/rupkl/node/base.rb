@@ -28,6 +28,7 @@ module RuPkl
       add_builtin_class Float
       add_builtin_class String
       add_builtin_class Dynamic
+      add_builtin_class Mapping
       add_builtin_class PklModule
     end
   end
