@@ -64,10 +64,24 @@ RSpec.describe RuPkl::Node::Mapping do
     expect { node.evaluate(nil) }
       .to raise_evaluation_error "'Mapping' cannot have a property"
 
+    node = parse(<<~'PKL', root: :pkl_module)
+      foo = new Mapping {}
+      bar = (foo) { bar = 1 }
+    PKL
+    expect { node.evaluate(nil) }
+      .to raise_evaluation_error "'Mapping' cannot have a property"
+
     node = parse(<<~'PKL')
       new Mapping {
         1 2 3
       }
+    PKL
+    expect { node.evaluate(nil) }
+      .to raise_evaluation_error "'Mapping' cannot have an element"
+
+    node = parse(<<~'PKL', root: :pkl_module)
+      foo = new Mapping {}
+      bar = (foo) { 1 2 3 }
     PKL
     expect { node.evaluate(nil) }
       .to raise_evaluation_error "'Mapping' cannot have an element"
@@ -270,7 +284,7 @@ RSpec.describe RuPkl::Node::Mapping do
 
   describe 'subscript operation' do
     context 'when the given key matches an entry key' do
-      it 'should return the specified value' do
+      it 'should return the specified entry' do
         node = parse(<<~'PKL', root: :pkl_module)
           foo = new Dynamic { 1 2 3 }
           bar = new Mapping {
@@ -296,7 +310,7 @@ RSpec.describe RuPkl::Node::Mapping do
       end
     end
 
-    context 'when no entries are found' do
+    context 'when no entrie is found' do
       it 'should raise EvaluationError' do
         node = parse(<<~'PKL', root: :pkl_module)
           foo {
@@ -479,6 +493,10 @@ RSpec.describe RuPkl::Node::Mapping do
         strings << <<~'PKL'
           a = new Mapping {}
           b = new Dynamic {}
+        PKL
+        strings << <<~'PKL'
+          a = new Mapping {}
+          b = new Listing {}
         PKL
       end
 

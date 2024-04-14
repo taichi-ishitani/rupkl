@@ -328,6 +328,36 @@ module RuPkl
 
     alias_method :be_mapping, :mapping
 
+    Listing = Struct.new(:elements) do
+      def <<(value)
+        (self.elements ||= []) << ObjectElement.new(value)
+      end
+
+      def to_matcher(context)
+        elements_matcher =
+          if self.elements
+            self
+              .elements
+              .map { _1.to_matcher(context) }
+              .then { context.__send__(:match, _1) }
+          else
+            context.__send__(:be_nil)
+          end
+        context.instance_eval do
+          be_instance_of(Node::Listing)
+            .and have_attributes(elements: elements_matcher)
+        end
+      end
+    end
+
+    def listing
+      l = Listing.new
+      yield(l) if block_given?
+      l.to_matcher(self)
+    end
+
+    alias_method :be_listing, :listing
+
     PklModule = Struct.new(:properties) do
       def property(name, value)
         (self.properties ||= []) << ObjectProperty.new(name, value)

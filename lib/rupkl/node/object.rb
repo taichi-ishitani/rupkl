@@ -34,8 +34,8 @@ module RuPkl
 
       def to_pkl_string(scopes)
         v = value.to_pkl_string(scopes)
-        if v.start_with?('{')
-          "#{name.id} #{v}"
+        if v.start_with?('new Dynamic')
+          "#{name.id}#{v.delete_prefix('new Dynamic')}"
         else
           "#{name.id} = #{v}"
         end
@@ -84,8 +84,8 @@ module RuPkl
       def to_pkl_string(scopes)
         k = key.to_pkl_string(scopes)
         v = value.to_pkl_string(scopes)
-        if v.start_with?('{')
-          "[#{k}] #{v}"
+        if v.start_with?('new Dynamic')
+          "[#{k}]#{v.delete_prefix('new Dynamic')}"
         else
           "[#{k}] = #{v}"
         end
@@ -219,7 +219,8 @@ module RuPkl
           lhs_array[index] = merge_value(lhs_array[index], r.value)
         end
 
-        lhs_array.concat(rhs_array)
+        rhs_array && lhs_array.concat(rhs_array)
+        lhs_array
       end
 
       def merge_value(lhs, rhs)

@@ -102,8 +102,10 @@ RSpec.describe RuPkl::Node::Number do
         # inequality
         [
           '2!=3', '2.0!=3.0', '2!=3.0', '2.0!=3',
-          '2!=true', '2!="foo"', '2!=new Dynamic{}', '2!=new Mapping{}',
-          '2.0!=true', '2.0!="foo"', '2.0!=new Dynamic{}', '2.0!=new Mapping{}'
+          '2!=true', '2!="foo"',
+          '2!=new Dynamic{}', '2!=new Mapping{}', '2!= new Listing{}',
+          '2.0!=true', '2.0!="foo"',
+          '2.0!=new Dynamic{}', '2.0!=new Mapping{}', '2.0!=new Listing{}'
         ].each do |pkl|
           node = parser.parse(pkl, root: :expression)
           expect(node.evaluate(nil)).to be_boolean(true)

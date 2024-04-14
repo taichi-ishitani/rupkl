@@ -16,7 +16,7 @@ module RuPkl
       end
 
       rule(:object_member) do
-        object_property | object_entry | object_element
+        object_element | object_property | object_entry
       end
 
       rule(:object_property) do
@@ -38,7 +38,7 @@ module RuPkl
       end
 
       rule(:object_element) do
-        expression
+        expression >> (ws? >> match('[={]')).absent?
       end
     end
 

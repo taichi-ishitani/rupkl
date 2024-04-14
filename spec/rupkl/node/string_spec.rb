@@ -74,7 +74,7 @@ RSpec.describe RuPkl::Node::String do
           expect(n.properties[-1].value)
             .to be_evaluated_string(
               'new Dynamic { foo = 1; ["foo"] = 2; 3 } ' \
-              'new Dynamic { { foo = 1; ["foo"] = 2; 3 } } ' \
+              'new Dynamic { new Dynamic { foo = 1; ["foo"] = 2; 3 } } ' \
               'new Dynamic { foo = 1; ["foo"] = 2; 3; 4 }'
             )
         end
@@ -271,6 +271,9 @@ RSpec.describe RuPkl::Node::String do
         expect(node.evaluate(nil)).to be_boolean(true)
 
         node = parser.parse('"foo"!=new Mapping{}', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('"foo"!=new Listing{}', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(true)
 
         # add

@@ -259,101 +259,68 @@ RSpec.describe RuPkl::Node::Dynamic do
     end
   end
 
-  describe '#to_string' do
+  describe '#to_string/#to_pkl_string' do
     it 'should return a string repasenting itself' do
       node = parse(pkl_strings[0])
-      expect(node.to_string(nil)).to eq 'new Dynamic {}'
+      s = 'new Dynamic {}'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
 
       node = parse(pkl_strings[1])
-      expect(node.to_string(nil)).to eq 'new Dynamic { 0; 1; 2 }'
+      s = 'new Dynamic { 0; 1; 2 }'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
 
       node = parse(pkl_strings[2])
-      expect(node.to_string(nil)).to eq 'new Dynamic { foo = 0; bar = 1; baz = 2 }'
+      s = 'new Dynamic { foo = 0; bar = 1; baz = 2 }'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
 
       node = parse(pkl_strings[3])
-      expect(node.to_string(nil)).to eq 'new Dynamic { ["foo"] = 0; ["bar"] = 1; ["baz"] = 2 }'
+      s = 'new Dynamic { ["foo"] = 0; ["bar"] = 1; ["baz"] = 2 }'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
 
       node = parse(pkl_strings[4])
-      expect(node.to_string(nil))
-        .to eq 'new Dynamic { ' \
-               'name = "Pigeon"; lifespan = 8; extinct = false; ' \
-               '["wing"] = "Not related to \nthe _element_ \"wing\""; ' \
-               '[false] { description = "Construed object example" }; ' \
-               '"wing"; "claw"; 42 ' \
-               '}'
+      s =
+        'new Dynamic { ' \
+        'name = "Pigeon"; lifespan = 8; extinct = false; ' \
+        '["wing"] = "Not related to \nthe _element_ \"wing\""; ' \
+        '[false] { description = "Construed object example" }; ' \
+        '"wing"; "claw"; 42 ' \
+        '}'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
 
       node = parse(pkl_strings[5])
-      expect(node.to_string(nil))
-        .to eq 'new Dynamic { ' \
-               'bird { '\
-               'name = "Pigeon"; diet = "Seeds"; ' \
-               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Columbiformes" } }; ' \
-               'parrot { '\
-               'name = "Parrot"; diet = "Berries"; ' \
-               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Psittaciformes" } } ' \
-               '}'
+      s =
+        'new Dynamic { ' \
+        'bird { '\
+        'name = "Pigeon"; diet = "Seeds"; ' \
+        'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Columbiformes" } }; ' \
+        'parrot { '\
+        'name = "Parrot"; diet = "Berries"; ' \
+        'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Psittaciformes" } } ' \
+        '}'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
 
       node = parse(pkl_strings[6])
-      expect(node.to_string(nil))
-        .to eq 'new Dynamic { ' \
-               'foo { bar = 3; ["baz"] = 5; 1; 4 } ' \
-               '}'
+      s =
+        'new Dynamic { ' \
+        'foo { bar = 3; ["baz"] = 5; 1; 4 } ' \
+        '}'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
 
       node = parse(pkl_strings[7])
-      expect(node.to_string(nil))
-        .to eq 'new Dynamic { ' \
-               'foo_0 = 0; foo_1 = 1; ' \
-               'bar { bar_0 = 2; bar_1 = 3 } ' \
-               '}'
-    end
-  end
-
-  describe '#to_pkl_string' do
-    it 'should return a Pkl string repasenting its body' do
-      node = parse(pkl_strings[0])
-      expect(node.to_pkl_string(nil)).to eq '{}'
-
-      node = parse(pkl_strings[1])
-      expect(node.to_pkl_string(nil)).to eq '{ 0; 1; 2 }'
-
-      node = parse(pkl_strings[2])
-      expect(node.to_pkl_string(nil)).to eq '{ foo = 0; bar = 1; baz = 2 }'
-
-      node = parse(pkl_strings[3])
-      expect(node.to_pkl_string(nil)).to eq '{ ["foo"] = 0; ["bar"] = 1; ["baz"] = 2 }'
-
-      node = parse(pkl_strings[4])
-      expect(node.to_pkl_string(nil))
-        .to eq '{ ' \
-               'name = "Pigeon"; lifespan = 8; extinct = false; ' \
-               '["wing"] = "Not related to \nthe _element_ \"wing\""; ' \
-               '[false] { description = "Construed object example" }; ' \
-               '"wing"; "claw"; 42 ' \
-               '}'
-
-      node = parse(pkl_strings[5])
-      expect(node.to_pkl_string(nil))
-        .to eq '{ ' \
-               'bird { '\
-               'name = "Pigeon"; diet = "Seeds"; ' \
-               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Columbiformes" } }; ' \
-               'parrot { '\
-               'name = "Parrot"; diet = "Berries"; ' \
-               'taxonomy { kingdom = "Animalia"; clade = "Dinosauria"; order = "Psittaciformes" } } ' \
-               '}'
-
-      node = parse(pkl_strings[6])
-      expect(node.to_pkl_string(nil))
-        .to eq '{ ' \
-               'foo { bar = 3; ["baz"] = 5; 1; 4 } ' \
-               '}'
-
-      node = parse(pkl_strings[7])
-      expect(node.to_pkl_string(nil))
-        .to eq '{ ' \
-               'foo_0 = 0; foo_1 = 1; ' \
-               'bar { bar_0 = 2; bar_1 = 3 } ' \
-               '}'
+      s =
+        'new Dynamic { ' \
+        'foo_0 = 0; foo_1 = 1; ' \
+        'bar { bar_0 = 2; bar_1 = 3 } ' \
+        '}'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
     end
   end
 
@@ -637,6 +604,10 @@ RSpec.describe RuPkl::Node::Dynamic do
         strings << <<~'PKL'
           a {}
           b = new Mapping {}
+        PKL
+        strings << <<~'PKL'
+          a {}
+          b = new Listing {}
         PKL
       end
 

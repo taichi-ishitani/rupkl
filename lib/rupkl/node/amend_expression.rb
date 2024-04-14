@@ -33,7 +33,7 @@ module RuPkl
       def do_amend(scopes, target)
         bodies
           .map { _1.evaluate_lazily(scopes) }
-          .then { target.body.merge(*_1) }
+          .then { target.body.merge!(*_1) }
       end
     end
   end

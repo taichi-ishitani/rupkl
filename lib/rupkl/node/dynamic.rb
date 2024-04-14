@@ -17,10 +17,6 @@ module RuPkl
         @body&.elements
       end
 
-      def to_pkl_string(scopes)
-        to_pkl_string_object(scopes)
-      end
-
       def ==(other)
         other.instance_of?(self.class) &&
           match_members?(properties, other.properties, false) &&

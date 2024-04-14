@@ -25,6 +25,16 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
           new Dynamic {}
         PKL
         expect(node.evaluate(nil)).to be_dynamic
+
+        node = parse(<<~'PKL', root: :expression)
+          new Mapping {}
+        PKL
+        expect(node.evaluate(nil)).to be_mapping
+
+        node = parse(<<~'PKL', root: :expression)
+          new Listing {}
+        PKL
+        expect(node.evaluate(nil)).to be_listing
       end
     end
 
