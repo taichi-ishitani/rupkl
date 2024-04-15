@@ -41,7 +41,7 @@ module RuPkl
 
       def resolve_reference(scopes)
         if receiver
-          find_member([receiver.evaluate(scopes)])
+          find_member([receiver.evaluate_lazily(scopes)])
         else
           find_member(scopes)
         end

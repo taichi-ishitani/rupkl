@@ -57,6 +57,10 @@ module RuPkl
       be_instance_of(Node::Identifier).and have_attributes(id: id.to_sym)
     end
 
+    def this_expression
+      be_instance_of(Node::This)
+    end
+
     def member_ref(receiver_or_member, member = nil)
       receiver_matcher, memer_matcher =
         if member
@@ -74,6 +78,7 @@ module RuPkl
       when Integer then int_literal(expression)
       when Float then float_literal(expression)
       when String then string_literal(expression).or(evaluated_string(expression))
+      when :this then this_expression
       else expression
       end
     end

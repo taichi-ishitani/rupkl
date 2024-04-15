@@ -11,6 +11,10 @@ module RuPkl
         bracketed(expression)
       end
 
+      rule(:this_expression) do
+        kw_this.as(:this_expression)
+      end
+
       rule(:new_expression) do
         (
           kw_new.as(:kw_new) >>
@@ -29,8 +33,8 @@ module RuPkl
       rule(:primary) do
         [
           float_literal, int_literal, boolean_literal, string_literal,
-          new_expression, amend_expression, unqualified_member_ref,
-          parenthesized_expression
+          this_expression, new_expression, amend_expression,
+          unqualified_member_ref, parenthesized_expression
         ].inject(:|)
       end
 
@@ -112,6 +116,10 @@ module RuPkl
         member.inject(receiver) do |r, m|
           Node::MemberReference.new(r, m, r.position)
         end
+      end
+
+      rule(this_expression: simple(:this)) do
+        Node::This.new(node_position(this))
       end
 
       rule(

@@ -246,19 +246,15 @@ module RuPkl
       attr_reader :bodies
 
       def evaluate(scopes)
-        do_evaluate(scopes, __method__)
+        evaluate_lazily(scopes).evaluate(scopes)
       end
 
       def evaluate_lazily(scopes)
-        do_evaluate(scopes, __method__)
+        (type || default_type)
+          .create(scopes, bodies, position, :evaluate_lazily)
       end
 
       private
-
-      def do_evaluate(scopes, evaluator)
-        (type || default_type)
-          .create(scopes, bodies, position, evaluator)
-      end
 
       def default_type
         id = Identifier.new(:Dynamic, position)

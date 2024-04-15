@@ -15,7 +15,7 @@ module RuPkl
       end
 
       def find_by_key(key)
-        find_entry(key) || find_element(key)
+        find_entry(key)
       end
 
       private

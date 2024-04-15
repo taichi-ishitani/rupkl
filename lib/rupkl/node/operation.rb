@@ -18,11 +18,13 @@ module RuPkl
         k = key.evaluate(scopes)
         check_key_operand(r, k)
 
-        r.find_by_key(k) ||
+        (v = r.find_by_key(k)) ||
           begin
             message = "cannot find key '#{k.to_pkl_string(scopes)}'"
             raise EvaluationError.new(message, position)
           end
+
+        v.evaluate(scopes)
       end
 
       def u_op(scopes)

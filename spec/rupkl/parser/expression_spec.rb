@@ -59,6 +59,13 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'this expression' do
+    it 'should be parsed by expression parser' do
+      expect(parser)
+        .to parse('this').as(this_expression)
+    end
+  end
+
   describe 'member reference' do
     it 'should be parsed by expression parser' do
       expect(parser)
