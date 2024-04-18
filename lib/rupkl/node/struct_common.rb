@@ -14,19 +14,18 @@ module RuPkl
       attr_reader :body
 
       def evaluate(scopes)
-        push_scope(scopes) { |s| @body.evaluate(s) }
+        push_scope(scopes, 1) { |s| @body.evaluate(s) }
         self
       end
 
       def evaluate_lazily(scopes)
-        push_scope(scopes) { |s| @body.evaluate_lazily(s) }
+        push_scope(scopes, 1) { |s| @body.evaluate_lazily(s) }
         self
       end
 
       def to_ruby(scopes)
-        push_scope(scopes) do |s|
-          create_pkl_object(s)
-        end
+        push_scope(scopes, 1) { |s| create_pkl_object(s) }
+          .then { _1 || PklObject::SELF }
       end
 
       def to_pkl_string(scopes)
@@ -34,7 +33,8 @@ module RuPkl
       end
 
       def to_string(scopes)
-        "new #{self.class.basename} #{to_pkl_string_object(scopes)}"
+        push_scope(scopes, 2) { |s| to_string_object(s) }
+          .then { _1 || '?' }
       end
 
       def copy
@@ -81,8 +81,23 @@ module RuPkl
         body.elements
       end
 
-      def push_scope(scopes)
+      def push_scope(scopes, self_reference_limit)
+        return if reach_self_reference_limit?(scopes, self_reference_limit)
+
         yield([*scopes, self])
+      end
+
+      def reach_self_reference_limit?(scopes, limit)
+        return false if scopes.nil?
+
+        depth = self_reference_depth(scopes)
+        depth >= 1 && depth >= limit
+      end
+
+      def self_reference_depth(scopes)
+        scopes
+          .reverse_each
+          .count { _1.equal?(self) }
       end
 
       def match_members?(lhs, rhs, match_order)
@@ -112,16 +127,18 @@ module RuPkl
           &.map { _1.to_ruby(scopes) }
       end
 
-      def to_pkl_string_object(scopes)
+      def to_string_object(scopes)
+        "new #{self.class.basename} #{to_string_members(scopes)}"
+      end
+
+      def to_string_members(scopes)
         members = @body.members
         return '{}' if members.empty?
 
-        push_scope(scopes) do |s|
-          members
-            .map { _1.to_pkl_string(s) }
-            .join('; ')
-            .then { "{ #{_1} }" }
-        end
+        members
+          .map { _1.to_pkl_string(scopes) }
+          .join('; ')
+          .then { "{ #{_1} }" }
       end
 
       def find_entry(key)

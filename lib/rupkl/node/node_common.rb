@@ -13,15 +13,15 @@ module RuPkl
       attr_reader :position
 
       def to_ruby(scopes)
-        evaluate(scopes).to_ruby(nil)
+        evaluate(scopes).to_ruby(scopes)
       end
 
       def to_string(scopes)
-        evaluate(scopes).to_string(nil)
+        evaluate(scopes).to_string(scopes)
       end
 
       def to_pkl_string(scopes)
-        evaluate(scopes).to_pkl_string(nil)
+        evaluate(scopes).to_pkl_string(scopes)
       end
 
       def copy

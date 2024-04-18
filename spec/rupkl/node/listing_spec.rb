@@ -57,6 +57,9 @@ RSpec.describe RuPkl::Node::Listing do
         }
       }
     PKL
+    strings << <<~'PKL'
+      new Listing { 0 1 this }
+    PKL
   end
 
   def parse(string, root: :expression)
@@ -148,6 +151,13 @@ RSpec.describe RuPkl::Node::Listing do
           end
         )
       end
+
+      node = parse(pkl_strings[6])
+      node.evaluate(nil).then do |n|
+        expect(n).to (
+          be_listing { |l| l << 0; l << 1; l << equal(n) }
+        )
+      end
     end
   end
 
@@ -202,6 +212,13 @@ RSpec.describe RuPkl::Node::Listing do
             l1 << (dynamic { |d2| d2.property :name, 'Albatross'; d2.property :diet, 'Fish' })
             l1 << (dynamic { |d2| d2.property :name, 'Barn owl'; d2.property :diet, 'Mice' })
           end
+        )
+      end
+
+      node = parse(pkl_strings[6])
+      node.evaluate_lazily(nil).then do |n|
+        expect(n).to (
+          be_listing { |l| l << 0; l << 1; l << equal(n) }
         )
       end
     end
@@ -267,6 +284,13 @@ RSpec.describe RuPkl::Node::Listing do
           )
         }
       )
+
+      node = parse(pkl_strings[6])
+      node.to_ruby(nil).then do |o|
+        expect(o).to match_pkl_object(
+          elements: [0, 1, equal(o)]
+        )
+      end
     end
   end
 
@@ -322,6 +346,11 @@ RSpec.describe RuPkl::Node::Listing do
           '} ',
         '}'
       ].join
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
+
+      node = parse(pkl_strings[6])
+      s = 'new Listing { 0; 1; new Listing { 0; 1; ? } }'
       expect(node.to_string(nil)).to eq s
       expect(node.to_pkl_string(nil)).to eq s
     end

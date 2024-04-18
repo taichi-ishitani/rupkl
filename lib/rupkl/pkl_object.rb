@@ -4,10 +4,12 @@ module RuPkl
   class PklObject
     include Enumerable
 
+    SELF = Object.new.freeze
+
     def initialize(properties, entries, elements)
-      @properties = properties
-      @entries = entries
-      @elements = elements
+      @properties = replace_self_hash(properties)
+      @entries = replace_self_hash(entries)
+      @elements = replace_self_array(elements)
       define_property_accessors
     end
 
@@ -86,10 +88,20 @@ module RuPkl
 
     private
 
-    def define_property_accessors
-      return unless @properties
+    def replace_self_hash(hash)
+      hash&.each do |(key, value)|
+        hash[key] = self if value.equal?(SELF)
+      end
+    end
 
-      properties.each_key do |name|
+    def replace_self_array(array)
+      array&.each_with_index do |value, i|
+        array[i] = self if value.equal?(SELF)
+      end
+    end
+
+    def define_property_accessors
+      @properties&.each_key do |name|
         singleton_class.class_eval(<<~M, __FILE__, __LINE__ + 1)
           # def foo
           #   properties[__method__]

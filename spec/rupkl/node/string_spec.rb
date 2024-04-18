@@ -78,6 +78,16 @@ RSpec.describe RuPkl::Node::String do
               'new Dynamic { foo = 1; ["foo"] = 2; 3; 4 }'
             )
         end
+
+        node = parser.parse(<<~'PKL'.chomp, root: :object)
+          { foo = 0; bar = 1; baz = "\(this)" }
+        PKL
+        node.evaluate(nil).then do |n|
+          expect(n.properties[-1].value)
+            .to be_evaluated_string(
+              'new Dynamic { foo = 0; bar = 1; baz = "?" }'
+            )
+        end
       end
     end
   end
