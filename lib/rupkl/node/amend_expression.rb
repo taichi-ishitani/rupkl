@@ -25,15 +25,19 @@ module RuPkl
             message = "cannot amend the target type #{t.class.basename}"
             raise EvaluationError.new(message, position)
           end
-        t.class.new(do_amend(scopes, t), position)
+        do_amend(scopes, t.copy)
+      end
+
+      def copy
+        self.class.new(target.copy, bodies.map(&:copy), position)
       end
 
       private
 
       def do_amend(scopes, target)
-        bodies
-          .map { _1.evaluate_lazily(scopes) }
-          .then { target.body.merge!(*_1) }
+        bodies.each { _1.evaluate_lazily(scopes) }
+        target.merge!(*bodies)
+        target
       end
     end
   end

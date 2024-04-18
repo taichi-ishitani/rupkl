@@ -48,7 +48,7 @@ module RuPkl
     end
 
     def evaluated_string(string)
-      be_instance_of(Node::String).and have_attributes(value: string, portions: be_nil)
+      be_instance_of(Node::String).and have_attributes(value: string)
     end
 
     alias_method :be_evaluated_string, :evaluated_string
@@ -171,7 +171,12 @@ module RuPkl
 
     ObjectElement = Struct.new(:value) do
       def to_matcher(context)
-        context.__send__(:expression_matcher, value)
+        context.instance_exec(value) do |v|
+          value_matcher =
+            (v || v == false) && expression_matcher(v) || be_nil
+          be_instance_of(Node::ObjectElement)
+            .and have_attributes(value: value_matcher)
+        end
       end
     end
 

@@ -14,15 +14,13 @@ module RuPkl
       attr_reader :body
 
       def evaluate(scopes)
-        push_scope(scopes) do |s|
-          self.class.new(@body.evaluate(s), position)
-        end
+        push_scope(scopes) { |s| @body.evaluate(s) }
+        self
       end
 
       def evaluate_lazily(scopes)
-        push_scope(scopes) do |s|
-          self.class.new(@body.evaluate_lazily(s), position)
-        end
+        push_scope(scopes) { |s| @body.evaluate_lazily(s) }
+        self
       end
 
       def to_ruby(scopes)
@@ -37,6 +35,15 @@ module RuPkl
 
       def to_string(scopes)
         "new #{self.class.basename} #{to_pkl_string_object(scopes)}"
+      end
+
+      def copy
+        self.class.new(@body&.copy, position)
+      end
+
+      def merge!(*bodies)
+        @body&.merge!(*bodies)
+        check_members
       end
 
       def undefined_operator?(operator)
@@ -129,6 +136,7 @@ module RuPkl
 
         elements
           .find.with_index { |_, i| i == index.value }
+          &.then(&:value)
       end
     end
   end

@@ -38,7 +38,9 @@ module RuPkl
       end
 
       rule(:object_element) do
-        expression >> (ws? >> match('[={]')).absent?
+        (
+          expression >> (ws? >> match('[={]')).absent?
+        ).as(:object_element)
       end
     end
 
@@ -62,6 +64,10 @@ module RuPkl
 
       rule(object_entry: { key: simple(:k), value: simple(:v) }) do
         Node::ObjectEntry.new(k, v, k.position)
+      end
+
+      rule(object_element: simple(:e)) do
+        Node::ObjectElement.new(e, e.position)
       end
     end
   end

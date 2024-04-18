@@ -24,6 +24,10 @@ module RuPkl
         evaluate(scopes).to_pkl_string(nil)
       end
 
+      def copy
+        self
+      end
+
       private
 
       def add_child(child)

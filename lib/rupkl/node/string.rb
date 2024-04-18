@@ -15,14 +15,18 @@ module RuPkl
       attr_reader :portions
 
       def evaluate(scopes)
-        s = value || evaluate_portions(scopes) || ''
-        self.class.new(s, nil, position)
+        @value ||= (evaluate_portions(scopes) || '')
+        self
       end
 
       def to_pkl_string(scopes)
         super(scopes)
           .then { |s| escape(s) }
           .then { |s| "\"#{s}\"" }
+      end
+
+      def copy
+        self.class.new(nil, portions, position)
       end
 
       def undefined_operator?(operator)

@@ -76,6 +76,15 @@ RSpec.describe RuPkl::Node::Dynamic do
         }
       }
     PKL
+    strings << <<~'PKL'
+      {
+        foo = 1 + 2
+        bar {
+          foo = 2 + 3
+          [foo] = 3 + 4
+        }
+      }
+    PKL
   end
 
   def parse(string)
@@ -157,6 +166,7 @@ RSpec.describe RuPkl::Node::Dynamic do
           )
         end
       )
+
       node = parse(pkl_strings[7])
       expect(node.evaluate(nil)).to (
         be_dynamic do |o1|
@@ -164,6 +174,19 @@ RSpec.describe RuPkl::Node::Dynamic do
           o1.property :bar, (
             dynamic do |o2|
               o2.property :bar_0, 2; o2.property :bar_1, 3
+            end
+          )
+        end
+      )
+
+      node = parse(pkl_strings[8])
+      expect(node.evaluate(nil)).to (
+        be_dynamic do |o1|
+          o1.property :foo, 3
+          o1.property :bar, (
+            dynamic do |o2|
+              o2.property :foo, 5
+              o2.entry 3, 7
             end
           )
         end
@@ -256,6 +279,18 @@ RSpec.describe RuPkl::Node::Dynamic do
             )
           }
         )
+
+      node = parse(pkl_strings[8])
+      expect(node.to_ruby(nil))
+        .to match_pkl_object(
+          properties: {
+            foo: 3,
+            bar: match_pkl_object(
+              properties: { foo: 5 },
+              entries: { 3 => 7 }
+            )
+          }
+        )
     end
   end
 
@@ -318,6 +353,14 @@ RSpec.describe RuPkl::Node::Dynamic do
         'new Dynamic { ' \
         'foo_0 = 0; foo_1 = 1; ' \
         'bar { bar_0 = 2; bar_1 = 3 } ' \
+        '}'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
+
+      node = parse(pkl_strings[8])
+      s =
+        'new Dynamic { ' \
+        'foo = 3; bar { foo = 5; [3] = 7 } ' \
         '}'
       expect(node.to_string(nil)).to eq s
       expect(node.to_pkl_string(nil)).to eq s

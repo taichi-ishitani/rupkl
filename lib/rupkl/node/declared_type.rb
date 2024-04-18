@@ -46,11 +46,11 @@ module RuPkl
       end
 
       def create_object(klass, scopes, bodies, position, evaluator)
-        klass.new(bodies.first, position)
-          .__send__(evaluator, scopes)
+        klass.new(bodies.first.copy, position)
+          .tap { |o| o.__send__(evaluator, scopes) }
           .tap do |o|
             bodies[1..].each do |b|
-              o.body.merge!(b.__send__(evaluator, [*scopes, o]))
+              o.merge!(b.__send__(evaluator, [*scopes, o]))
             end
           end
       end
