@@ -86,6 +86,14 @@ module RuPkl
       end
     end
 
+    def pretty_print_cycle(pp)
+      if element_only?
+        pp.text('[...]')
+      else
+        pp.text('{...}')
+      end
+    end
+
     private
 
     def replace_self_hash(hash)

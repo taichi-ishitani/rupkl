@@ -22,6 +22,9 @@ RSpec.describe RuPkl::PklObject do
         }
       }
     PKL
+    o << RuPkl.load('foo { foo = 0; bar = 1; baz = this }')
+    o << RuPkl.load('foo = new Mapping { ["foo"] = 0; ["bar"] = 1; ["baz"] = this }')
+    o << RuPkl.load('foo = new Listing { 0; 1; this }')
   end
 
   it 'should have accessor methods for each property' do
@@ -322,6 +325,9 @@ RSpec.describe RuPkl::PklObject do
         "wing"=>"Not related to the _element_ \"wing\"",
         false=>{:description=>"Construed object example"}, "wing", "claw", 42}}
       S
+      expect(objects[6].to_s).to eq '{:foo=>{:foo=>0, :bar=>1, :baz=>{...}}}'
+      expect(objects[7].to_s).to eq '{:foo=>{"foo"=>0, "bar"=>1, "baz"=>{...}}}'
+      expect(objects[8].to_s).to eq '{:foo=>[0, 1, [...]]}'
     end
   end
 
@@ -352,6 +358,15 @@ RSpec.describe RuPkl::PklObject do
            "wing",
            "claw",
            42}}
+      OUT
+      expect { pp objects[6] }.to output(<<~'OUT').to_stdout
+        {:foo=>{:foo=>0, :bar=>1, :baz=>{...}}}
+      OUT
+      expect { pp objects[7] }.to output(<<~'OUT').to_stdout
+        {:foo=>{"foo"=>0, "bar"=>1, "baz"=>{...}}}
+      OUT
+      expect { pp objects[8] }.to output(<<~'OUT').to_stdout
+        {:foo=>[0, 1, [...]]}
       OUT
     end
   end
