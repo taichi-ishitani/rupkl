@@ -45,6 +45,10 @@ module RuPkl
             .map { _1.is_a?(String) && str(_1).ignore || _1 }
         bra_matcher >> ws? >> atom >> ws? >> cket_matcher
       end
+
+      def list(atom, delimiter = ',')
+        atom >> (ws? >> str(delimiter).ignore >> ws? >> atom).repeat
+      end
     end
   end
 end

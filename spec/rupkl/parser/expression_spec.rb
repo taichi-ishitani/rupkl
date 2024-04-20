@@ -66,6 +66,87 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'method call' do
+    it 'should be parsed by expression parser' do
+      expect(parser)
+        .to parse('foo()')
+        .as(method_call(:foo))
+      expect(parser)
+        .to parse('foo(1)')
+        .as(method_call(:foo, [1]))
+      expect(parser)
+        .to parse('foo(bar)')
+        .as(method_call(:foo, [member_ref(:bar)]))
+      expect(parser)
+        .to parse('foo(1, bar)')
+        .as(method_call(:foo, [1, member_ref(:bar)]))
+      expect(parser)
+        .to parse('foo(bar, 1)')
+        .as(method_call(:foo, [member_ref(:bar), 1]))
+      expect(parser)
+        .to parse('foo.bar()')
+        .as(method_call(member_ref(:foo), :bar))
+      expect(parser)
+        .to parse('foo.bar(1)')
+        .as(method_call(member_ref(:foo), :bar, [1]))
+      expect(parser)
+        .to parse('foo.bar(baz)')
+        .as(method_call(member_ref(:foo), :bar, [member_ref(:baz)]))
+      expect(parser)
+        .to parse('foo.bar(1, baz)')
+        .as(method_call(member_ref(:foo), :bar, [1, member_ref(:baz)]))
+      expect(parser)
+        .to parse('foo.bar(baz, 1)')
+        .as(method_call(member_ref(:foo), :bar, [member_ref(:baz), 1]))
+      expect(parser)
+        .to parse('foo.bar.baz()')
+        .as(method_call(member_ref(member_ref(:foo), :bar), :baz))
+      expect(parser)
+        .to parse('foo.bar.baz(1)')
+        .as(method_call(member_ref(member_ref(:foo), :bar), :baz, [1]))
+      expect(parser)
+        .to parse('foo.bar.baz(qux)')
+        .as(method_call(member_ref(member_ref(:foo), :bar), :baz, [member_ref(:qux)]))
+      expect(parser)
+        .to parse('foo.bar.baz(1, qux)')
+        .as(method_call(member_ref(member_ref(:foo), :bar), :baz, [1, member_ref(:qux)]))
+      expect(parser)
+        .to parse('foo.bar.baz(qux, 1)')
+        .as(method_call(member_ref(member_ref(:foo), :bar), :baz, [member_ref(:qux), 1]))
+      expect(parser)
+        .to parse('"foo".bar()')
+        .as(method_call("foo", :bar))
+      expect(parser)
+        .to parse('"foo".bar(1)')
+        .as(method_call("foo", :bar, [1]))
+      expect(parser)
+        .to parse('"foo".bar(baz)')
+        .as(method_call("foo", :bar, [member_ref(:baz)]))
+      expect(parser)
+        .to parse('"foo".bar(1, baz)')
+        .as(method_call("foo", :bar, [1, member_ref(:baz)]))
+      expect(parser)
+        .to parse('"foo".bar(baz, 1)')
+        .as(method_call("foo", :bar, [member_ref(:baz), 1]))
+    end
+
+    specify "newline or semicolon should not precede an argument list" do
+      expect(parser).not_to parse("foo\n()")
+      expect(parser).not_to parse("foo;()")
+      expect(parser).not_to parse("foo.bar\n()")
+      expect(parser).not_to parse("foo.bar;()")
+    end
+
+    specify 'trailing comma is not be not supported' do
+      expect(parser).not_to parse('foo(,)')
+      expect(parser).not_to parse('foo(1,)')
+      expect(parser).not_to parse('foo(1,2,)')
+      expect(parser).not_to parse('foo.bar(,)')
+      expect(parser).not_to parse('foo.bar(1,)')
+      expect(parser).not_to parse('foo.bar(1,2,)')
+    end
+  end
+
   describe 'member reference' do
     it 'should be parsed by expression parser' do
       expect(parser)

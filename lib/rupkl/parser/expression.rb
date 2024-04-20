@@ -3,8 +3,14 @@
 module RuPkl
   class Parser
     define_parser do
+      rule(:argument_list) do
+        bracketed(list(expression).maybe, '(', ')').as(:argument_list)
+      end
+
       rule(:unqualified_member_ref) do
-        id.as(:unqualified_member_ref)
+        (
+          id.as(:member) >> (pure_ws? >> argument_list.as(:arguments)).maybe
+        ).as(:member_ref)
       end
 
       rule(:parenthesized_expression) do
@@ -41,8 +47,9 @@ module RuPkl
       rule(:qualified_member_ref) do
         (
           primary.as(:receiver) >>
-            (ws? >> str('.') >> ws? >> id).repeat(1).as(:member)
-        ).as(:qualified_member_ref) | primary
+            (ws? >> str('.') >> ws? >> id).repeat(1).as(:member) >>
+            (pure_ws? >> argument_list.as(:arguments)).maybe
+        ).as(:member_ref) | primary
       end
 
       rule(:subscript_operation) do
@@ -105,17 +112,43 @@ module RuPkl
     end
 
     define_transform do
-      rule(unqualified_member_ref: simple(:member)) do
+      rule(argument_list: subtree(:arguments)) do
+        arguments == '' ? nil : Array(arguments)
+      end
+
+      rule(member_ref: { member: simple(:member) }) do
         Node::MemberReference.new(nil, member, member.position)
       end
 
       rule(
-        qualified_member_ref:
+        member_ref: {
+          member: simple(:name), arguments: subtree(:arguments)
+        }
+      ) do
+        Node::MethodCall.new(nil, name, arguments, name.position)
+      end
+
+      rule(
+        member_ref:
           { receiver: simple(:receiver), member: sequence(:member) }
       ) do
         member.inject(receiver) do |r, m|
           Node::MemberReference.new(r, m, r.position)
         end
+      end
+
+      rule(
+        member_ref:
+          {
+            receiver: simple(:receiver), member: sequence(:member),
+            arguments: subtree(:arguments)
+          }
+      ) do
+        r_node =
+          member[..-2].inject(receiver) do |r, m|
+            Node::MemberReference.new(r, m, r.position)
+          end
+        Node::MethodCall.new(r_node, member.last, arguments, r_node.position)
       end
 
       rule(this_expression: simple(:this)) do
