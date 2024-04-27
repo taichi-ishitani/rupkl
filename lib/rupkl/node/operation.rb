@@ -5,30 +5,30 @@ module RuPkl
     module OperationCommon
       include NodeCommon
 
-      def evaluate_lazily(_scopes)
+      def evaluate_lazily(_context)
         self
       end
 
       private
 
-      def s_op(scopes)
-        r = receiver.evaluate(scopes)
+      def s_op(context)
+        r = receiver.evaluate(context)
         check_operator(r)
 
-        k = key.evaluate(scopes)
+        k = key.evaluate(context)
         check_key_operand(r, k)
 
         (v = r.find_by_key(k)) ||
           begin
-            message = "cannot find key '#{k.to_pkl_string(scopes)}'"
+            message = "cannot find key '#{k.to_pkl_string(context)}'"
             raise EvaluationError.new(message, position)
           end
 
-        v.evaluate(scopes)
+        v.evaluate(context)
       end
 
-      def u_op(scopes)
-        o = operand.evaluate(scopes)
+      def u_op(context)
+        o = operand.evaluate(context)
         check_operator(o)
 
         result =
@@ -40,12 +40,12 @@ module RuPkl
         create_op_result(result)
       end
 
-      def b_op(scopes)
-        l = l_operand.evaluate(scopes)
+      def b_op(context)
+        l = l_operand.evaluate(context)
         check_operator(l)
         return l if short_circuit?(l)
 
-        r = r_operand.evaluate(scopes)
+        r = r_operand.evaluate(context)
         check_r_operand(l, r)
           .then { return _1 if _1 }
 
@@ -139,8 +139,8 @@ module RuPkl
         :[]
       end
 
-      def evaluate(scopes)
-        s_op(scopes)
+      def evaluate(context)
+        s_op(context)
       end
     end
 
@@ -156,8 +156,8 @@ module RuPkl
       attr_reader :operator
       attr_reader :operand
 
-      def evaluate(scopes)
-        u_op(scopes)
+      def evaluate(context)
+        u_op(context)
       end
     end
 
@@ -176,8 +176,8 @@ module RuPkl
       attr_reader :r_operand
       attr_reader :position
 
-      def evaluate(scopes)
-        b_op(scopes)
+      def evaluate(context)
+        b_op(context)
       end
     end
   end

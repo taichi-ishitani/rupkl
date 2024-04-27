@@ -15,7 +15,7 @@ module RuPkl
 
     define_transform do
       rule(class_property: { name: simple(:n), value: simple(:v) }) do
-        Node::ObjectProperty.new(n, v, n.position)
+        Node::ObjectProperty.new(nil, n, v, n.position)
       end
     end
   end

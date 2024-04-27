@@ -9,10 +9,18 @@ module RuPkl
         @value_evaluated || @value
       end
 
+      def scope
+        @scope || parent
+      end
+
       private
 
-      def evaluate_value(scopes, evaluator)
-        @value_evaluated = value.__send__(evaluator, scopes)
+      def push_scope(context, &block)
+        super(context, scope, &block)
+      end
+
+      def evaluate_value(evaluator, context)
+        @value_evaluated = value.__send__(evaluator, context)
         @value_evaluated
       end
 
@@ -26,30 +34,40 @@ module RuPkl
     end
 
     class ObjectProperty < ObjectMember
-      def initialize(name, value, position)
-        super
+      def initialize(scope, name, value, position)
+        super(name, value, position)
+        @scope = scope
         @name = name
         @value = value
       end
 
       attr_reader :name
 
-      def evaluate(scopes)
-        evaluate_value(scopes, :evaluate)
-        self
+      def evaluate(context)
+        push_scope(context) do |c|
+          evaluate_value(__method__, c)
+          self
+        end
       end
 
-      def evaluate_lazily(scopes)
-        evaluate_value(scopes, :evaluate_lazily)
-        self
+      def evaluate_lazily(context)
+        push_scope(context) do |c|
+          evaluate_value(__method__, c)
+          self
+        end
       end
 
-      def to_ruby(scopes)
-        [name.id, evaluate_value(scopes, :evaluate).to_ruby(scopes)]
+      def to_ruby(context)
+        push_scope(context) do |c|
+          [name.id, evaluate_value(:evaluate, c).to_ruby(c)]
+        end
       end
 
-      def to_pkl_string(scopes)
-        v = evaluate_value(scopes, :evaluate).to_pkl_string(scopes)
+      def to_pkl_string(context)
+        v = push_scope(context) do |c|
+          evaluate_value(:evaluate, c).to_pkl_string(c)
+        end
+
         if v.start_with?('new Dynamic')
           "#{name.id}#{v.delete_prefix('new Dynamic')}"
         else
@@ -62,13 +80,14 @@ module RuPkl
       end
 
       def copy
-        self.class.new(name, copy_value, position)
+        self.class.new(@scope&.copy, name, copy_value, position)
       end
     end
 
     class ObjectEntry < ObjectMember
-      def initialize(key, value, position)
-        super
+      def initialize(scope, key, value, position)
+        super(key, value, position)
+        @scope = scope
         @key = key
         @value = value
       end
@@ -77,27 +96,31 @@ module RuPkl
         @key_evaluated || @key
       end
 
-      def evaluate(scopes)
-        evaluate_key(scopes)
-        evaluate_value(scopes, :evaluate)
-        self
+      def evaluate(context)
+        push_scope(context) do |c|
+          evaluate_key(c)
+          evaluate_value(__method__, c)
+          self
+        end
       end
 
-      def evaluate_lazily(scopes)
-        evaluate_key(scopes)
-        evaluate_value(scopes, :evaluate_lazily)
-        self
+      def evaluate_lazily(context)
+        push_scope(context) do |c|
+          evaluate_key(c)
+          evaluate_value(__method__, c)
+          self
+        end
       end
 
-      def to_ruby(scopes)
-        k = evaluate_key(scopes).to_ruby(scopes)
-        v = evaluate_value(scopes, :evaluate).to_ruby(scopes)
+      def to_ruby(context)
+        k = evaluate_key(context).to_ruby(context)
+        v = evaluate_value(:evaluate, context).to_ruby(context)
         [k, v]
       end
 
-      def to_pkl_string(scopes)
-        k = evaluate_key(scopes).to_pkl_string(scopes)
-        v = evaluate_value(scopes, :evaluate).to_pkl_string(scopes)
+      def to_pkl_string(context)
+        k = evaluate_key(context).to_pkl_string(context)
+        v = evaluate_value(:evaluate, context).to_pkl_string(context)
         if v.start_with?('new Dynamic')
           "[#{k}]#{v.delete_prefix('new Dynamic')}"
         else
@@ -110,39 +133,44 @@ module RuPkl
       end
 
       def copy
-        self.class.new(key, copy_value, position)
+        self.class.new(@scope&.copy, key, copy_value, position)
       end
 
       private
 
-      def evaluate_key(scopes)
-        @key_evaluated ||= @key.evaluate(scopes[..-2])
+      def evaluate_key(context)
+        @key_evaluated ||= @key.evaluate(context.pop)
         @key_evaluated
       end
     end
 
     class ObjectElement < ObjectMember
-      def initialize(value, position)
-        super
+      def initialize(scope, value, position)
+        super(value, position)
+        @scope = scope
         @value = value
       end
 
-      def evaluate(scopes)
-        evaluate_value(scopes, :evaluate)
-        self
+      def evaluate(context)
+        push_scope(context) do |c|
+          evaluate_value(__method__, c)
+          self
+        end
       end
 
-      def evaluate_lazily(scopes)
-        evaluate_value(scopes, :evaluate_lazily)
-        self
+      def evaluate_lazily(context)
+        push_scope(context) do |c|
+          evaluate_value(__method__, c)
+          self
+        end
       end
 
-      def to_ruby(scopes)
-        evaluate_value(scopes, :evaluate).to_ruby(scopes)
+      def to_ruby(context)
+        evaluate_value(:evaluate, context).to_ruby(context)
       end
 
-      def to_pkl_string(scopes)
-        evaluate_value(scopes, :evaluate).to_pkl_string(scopes)
+      def to_pkl_string(context)
+        evaluate_value(:evaluate, context).to_pkl_string(context)
       end
 
       def ==(other)
@@ -150,7 +178,7 @@ module RuPkl
       end
 
       def copy
-        self.class.new(copy_value, position)
+        self.class.new(@scope&.copy, copy_value, position)
       end
     end
 
@@ -171,14 +199,14 @@ module RuPkl
         [*properties, *entries, *elements]
       end
 
-      def evaluate(scopes)
-        members.each { _1.evaluate(scopes) }
+      def evaluate(context)
+        members.each { _1.evaluate(context) }
         check_duplication
         self
       end
 
-      def evaluate_lazily(scopes)
-        members.each { _1.evaluate_lazily(scopes) }
+      def evaluate_lazily(context)
+        members.each { _1.evaluate_lazily(context) }
         check_duplication
         self
       end
@@ -239,11 +267,12 @@ module RuPkl
         elements_size = elements&.size || 0
         grouped_entries =
           entries
-            .group_by do |e|
-              e.key.instance_of?(Node::Int) &&
-                e.key.value < elements_size
-            end
+            .group_by { index_node?(_1.key, elements_size) }
         [grouped_entries[false], grouped_entries[true]]
+      end
+
+      def index_node?(node, elements_size)
+        node.instance_of?(Node::Int) && node.value < elements_size
       end
 
       def merge_hash_members(lhs, rhs, accessor)
@@ -292,7 +321,7 @@ module RuPkl
           lhs.value.merge!(rhs.value.body)
           lhs
         else
-          lhs.class.new(rhs.value, rhs.position)
+          lhs.class.new(rhs.scope, rhs.value, rhs.position)
         end
       end
     end
@@ -309,13 +338,13 @@ module RuPkl
       attr_reader :type
       attr_reader :bodies
 
-      def evaluate(scopes)
-        evaluate_lazily(scopes).evaluate(scopes)
+      def evaluate(context)
+        evaluate_lazily(context).evaluate(context)
       end
 
-      def evaluate_lazily(scopes)
+      def evaluate_lazily(context)
         (type || default_type)
-          .create(scopes, bodies, position, :evaluate_lazily)
+          .create(bodies, position, context)
       end
 
       def copy

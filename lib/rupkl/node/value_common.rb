@@ -12,24 +12,24 @@ module RuPkl
 
       attr_reader :value
 
-      def evaluate(_scopes)
+      def evaluate(_context)
         self
       end
 
-      def evaluate_lazily(_scopes)
+      def evaluate_lazily(_context)
         self
       end
 
-      def to_ruby(scopes)
-        evaluate(scopes).value
+      def to_ruby(context)
+        evaluate(context).value
       end
 
-      def to_string(scopes)
-        to_ruby(scopes).to_s
+      def to_string(context)
+        to_ruby(context).to_s
       end
 
-      def to_pkl_string(scopes)
-        to_string(scopes)
+      def to_pkl_string(context)
+        to_string(context)
       end
 
       def ==(other)

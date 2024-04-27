@@ -5,12 +5,12 @@ module RuPkl
     class This
       include NodeCommon
 
-      def evaluate(scopes)
-        evaluate_lazily(scopes)
+      def evaluate(context)
+        evaluate_lazily(context)
       end
 
-      def evaluate_lazily(scopes)
-        scopes.last
+      def evaluate_lazily(context)
+        context.objects.last
       end
     end
   end

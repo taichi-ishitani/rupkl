@@ -13,27 +13,27 @@ module RuPkl
 
       attr_reader :body
 
-      def evaluate(scopes)
-        push_scope(scopes, 1) { |s| @body.evaluate(s) }
+      def evaluate(context)
+        push_object(context, 1) { |c| @body&.evaluate(c) }
         self
       end
 
-      def evaluate_lazily(scopes)
-        push_scope(scopes, 1) { |s| @body.evaluate_lazily(s) }
+      def evaluate_lazily(context)
+        push_object(context, 1) { |c| @body&.evaluate_lazily(c) }
         self
       end
 
-      def to_ruby(scopes)
-        push_scope(scopes, 1) { |s| create_pkl_object(s) }
+      def to_ruby(context)
+        push_object(context, 1) { |c| create_pkl_object(c) }
           .then { _1 || PklObject::SELF }
       end
 
-      def to_pkl_string(scopes)
-        to_string(scopes)
+      def to_pkl_string(context)
+        to_string(context)
       end
 
-      def to_string(scopes)
-        push_scope(scopes, 2) { |s| to_string_object(s) }
+      def to_string(context)
+        push_object(context, 2) { |c| to_string_object(c) }
           .then { _1 || '?' }
       end
 
@@ -42,7 +42,9 @@ module RuPkl
       end
 
       def merge!(*bodies)
-        @body&.merge!(*bodies)
+        return unless @body
+
+        @body.merge!(*bodies)
         check_members
       end
 
@@ -81,21 +83,22 @@ module RuPkl
         body.elements
       end
 
-      def push_scope(scopes, self_reference_limit)
-        return if reach_self_reference_limit?(scopes, self_reference_limit)
+      def push_object(context, call_limit, &block)
+        return if reach_call_limit?(context, call_limit)
 
-        yield([*scopes, self])
+        super(context, self, &block)
       end
 
-      def reach_self_reference_limit?(scopes, limit)
-        return false if scopes.nil?
+      def reach_call_limit?(context, limit)
+        return false if context&.objects.nil?
 
-        depth = self_reference_depth(scopes)
+        depth = call_depth(context)
         depth >= 1 && depth >= limit
       end
 
-      def self_reference_depth(scopes)
-        scopes
+      def call_depth(context)
+        context
+          .objects
           .reverse_each
           .count { _1.equal?(self) }
       end
@@ -109,34 +112,32 @@ module RuPkl
         end
       end
 
-      def create_pkl_object(scopes)
+      def create_pkl_object(context)
         RuPkl::PklObject.new(
-          to_ruby_hash(scopes, @body.properties),
-          to_ruby_hash(scopes, @body.entries),
-          to_ruby_array(scopes, @body.elements)
+          to_ruby_hash(@body.properties, context),
+          to_ruby_hash(@body.entries, context),
+          to_ruby_array(@body.elements, context)
         )
       end
 
-      def to_ruby_hash(scopes, members)
-        members
-          &.to_h { _1.to_ruby(scopes) }
+      def to_ruby_hash(members, context)
+        members&.to_h { _1.to_ruby(context) }
       end
 
-      def to_ruby_array(scopes, members)
-        members
-          &.map { _1.to_ruby(scopes) }
+      def to_ruby_array(members, context)
+        members&.map { _1.to_ruby(context) }
       end
 
-      def to_string_object(scopes)
-        "new #{self.class.basename} #{to_string_members(scopes)}"
+      def to_string_object(context)
+        "new #{self.class.basename} #{to_string_members(context)}"
       end
 
-      def to_string_members(scopes)
+      def to_string_members(context)
         members = @body.members
         return '{}' if members.empty?
 
         members
-          .map { _1.to_pkl_string(scopes) }
+          .map { _1.to_pkl_string(context) }
           .join('; ')
           .then { "{ #{_1} }" }
       end

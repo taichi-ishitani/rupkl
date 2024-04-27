@@ -59,15 +59,15 @@ module RuPkl
       end
 
       rule(object_property: { name: simple(:n), value: simple(:v) }) do
-        Node::ObjectProperty.new(n, v, n.position)
+        Node::ObjectProperty.new(nil, n, v, n.position)
       end
 
       rule(object_entry: { key: simple(:k), value: simple(:v) }) do
-        Node::ObjectEntry.new(k, v, k.position)
+        Node::ObjectEntry.new(nil, k, v, k.position)
       end
 
       rule(object_element: simple(:e)) do
-        Node::ObjectElement.new(e, e.position)
+        Node::ObjectElement.new(nil, e, e.position)
       end
     end
   end

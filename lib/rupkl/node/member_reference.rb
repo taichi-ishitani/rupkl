@@ -14,15 +14,15 @@ module RuPkl
       attr_reader :receiver
       attr_reader :member
 
-      def evaluate(scopes)
+      def evaluate(context)
         do_evaluate do
-          resolve_reference(scopes).evaluate(scopes)
+          resolve_reference(context).evaluate(context)
         end
       end
 
-      def evaluate_lazily(scopes)
+      def evaluate_lazily(context)
         do_evaluate do
-          resolve_reference(scopes).evaluate_lazily(scopes)
+          resolve_reference(context).evaluate_lazily(context)
         end
       end
 
@@ -39,12 +39,14 @@ module RuPkl
         result
       end
 
-      def resolve_reference(scopes)
-        if receiver
-          find_member([receiver.evaluate_lazily(scopes)])
-        else
-          find_member(scopes)
-        end
+      def resolve_reference(context)
+        scopes =
+          if receiver
+            [receiver.evaluate_lazily(context)]
+          else
+            [*context.scopes].insert(-2, context.objects&.last)
+          end
+        find_member(scopes)
       end
 
       def find_member(scopes)
@@ -56,15 +58,22 @@ module RuPkl
       end
 
       def search_member(scopes)
-        scopes.reverse_each.with_index do |scope, i|
-          node = get_member_node(scope)
-          if node
-            @scope_index = scopes.size - i - 1
-            return node
-          end
+        node, index = search_member_from_scopes(scopes)
+        if node
+          @scope_index = index
+          return node
         end
 
         raise EvaluationError.new("cannot find property '#{member.id}'", position)
+      end
+
+      def search_member_from_scopes(scopes)
+        scopes.reverse_each.with_index do |scope, i|
+          node = get_member_node(scope)
+          return [node, scopes.size - i - 1] if node
+        end
+
+        nil
       end
 
       def get_member_node(scope)

@@ -14,13 +14,13 @@ module RuPkl
 
       attr_reader :portions
 
-      def evaluate(scopes)
-        @value ||= (evaluate_portions(scopes) || '')
+      def evaluate(context)
+        @value ||= (evaluate_portions(context) || '')
         self
       end
 
-      def to_pkl_string(scopes)
-        super(scopes)
+      def to_pkl_string(context)
+        super
           .then { |s| escape(s) }
           .then { |s| "\"#{s}\"" }
       end
@@ -46,15 +46,15 @@ module RuPkl
 
       private
 
-      def evaluate_portions(scopes)
+      def evaluate_portions(context)
         portions
-          &.map { evaluate_portion(scopes, _1) }
+          &.map { evaluate_portion(_1, context) }
           &.join
       end
 
-      def evaluate_portion(scopes, portion)
+      def evaluate_portion(portion, context)
         if portion.respond_to?(:to_string)
-          portion.to_string(scopes)
+          portion.to_string(context)
         else
           portion
         end

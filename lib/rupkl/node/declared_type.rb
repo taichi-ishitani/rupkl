@@ -12,16 +12,16 @@ module RuPkl
 
       attr_reader :type
 
-      def create(scopes, bodies, position, evaluator)
-        klass = find_class(scopes, type)
+      def create(bodies, position, context)
+        klass = find_class(type, context)
         check_class(klass)
-        create_object(klass, scopes, bodies, position, evaluator)
+        create_object(klass, bodies, position, context)
       end
 
       private
 
-      def find_class(scopes, type)
-        [Base.instance, *scopes].reverse_each do |scope|
+      def find_class(type, context)
+        [Base.instance, *context&.objects].reverse_each do |scope|
           next unless scope.respond_to?(:classes)
 
           klass = scope.classes&.fetch(type.last.id, nil)
@@ -45,12 +45,12 @@ module RuPkl
         raise EvaluationError.new(message, position)
       end
 
-      def create_object(klass, scopes, bodies, position, evaluator)
+      def create_object(klass, bodies, position, context)
         klass.new(bodies.first.copy, position)
-          .tap { |o| o.__send__(evaluator, scopes) }
+          .tap { |o| o.evaluate_lazily(context) }
           .tap do |o|
-            bodies[1..].each do |b|
-              o.merge!(b.__send__(evaluator, [*scopes, o]))
+            push_object(context, o) do |c|
+              o.merge!(*bodies[1..].each { |b| b.evaluate_lazily(c) })
             end
           end
       end
