@@ -12,6 +12,10 @@ module RuPkl
         @body&.properties
       end
 
+      def methods
+        @body&.methods
+      end
+
       def classes
         @body&.classes
       end

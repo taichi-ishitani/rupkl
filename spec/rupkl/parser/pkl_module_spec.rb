@@ -97,6 +97,21 @@ RSpec.describe RuPkl::Parser do
           )
         end
       )
+
+      pkl = <<~'PKL'
+        function foo() = a * b * c
+        function bar(a) = a * b * c
+        function baz(a, b) = a * b * c
+        function qux(a, b, c) = a * b * c
+      PKL
+      expect(parser).to parse(pkl).as(
+        pkl_module do |m|
+          m.method(:foo, body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+          m.method(:bar, params: [param(:a)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+          m.method(:baz, params: [param(:a), param(:b)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+          m.method(:qux, params: [param(:a), param(:b), param(:c)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+        end
+      )
     end
   end
 end

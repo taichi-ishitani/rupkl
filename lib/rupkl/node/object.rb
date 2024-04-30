@@ -193,6 +193,7 @@ module RuPkl
       attr_reader :properties
       attr_reader :entries
       attr_reader :elements
+      attr_reader :methods
       attr_reader :classes
 
       def members
@@ -225,14 +226,21 @@ module RuPkl
 
       def add_member(member)
         add_child(member)
-        case member
-        when ObjectProperty
-          (@properties ||= []) << member
-        when ObjectEntry
-          (@entries ||= []) << member
-        when ObjectElement
-          (@elements ||= []) << member
+
+        varialbe_name = member_variable_name(member)
+        unless instance_variable_defined?(varialbe_name)
+          instance_variable_set(varialbe_name, [])
         end
+        instance_variable_get(varialbe_name) << member
+      end
+
+      def member_variable_name(member)
+        {
+          ObjectProperty => :@properties,
+          ObjectEntry => :@entries,
+          ObjectElement => :@elements,
+          MethodDefinition => :@methods
+        }[member.class]
       end
 
       def check_duplication

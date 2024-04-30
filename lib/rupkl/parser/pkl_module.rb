@@ -14,7 +14,7 @@ module RuPkl
       end
 
       rule(:pkl_module_item) do
-        pkl_class_property
+        pkl_class_method | pkl_class_property
       end
     end
 

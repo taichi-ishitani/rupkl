@@ -11,11 +11,28 @@ module RuPkl
           ).as(:value)
         ).as(:class_property)
       end
+
+      rule(:pkl_class_method) do
+        (
+          method_header >> ws? >>
+          str('=').ignore >> ws? >> expression.as(:body)
+        ).as(:pkl_class_method)
+      end
     end
 
     define_transform do
       rule(class_property: { name: simple(:n), value: simple(:v) }) do
         Node::ObjectProperty.new(nil, n, v, n.position)
+      end
+
+      rule(
+        pkl_class_method:
+          {
+            kw_function: simple(:kw), name: simple(:name),
+            params: subtree(:params), body: simple(:body)
+          }
+      ) do
+        Node::MethodDefinition.new(name, params, body, node_position(kw))
       end
     end
   end

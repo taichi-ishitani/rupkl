@@ -121,9 +121,8 @@ module RuPkl
       end
 
       rule(
-        member_ref: {
-          member: simple(:name), arguments: subtree(:arguments)
-        }
+        member_ref:
+          { member: simple(:name), arguments: subtree(:arguments) }
       ) do
         Node::MethodCall.new(nil, name, arguments, name.position)
       end

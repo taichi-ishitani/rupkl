@@ -160,6 +160,25 @@ RSpec.describe RuPkl::Parser::Parser do
           end
         end
       )
+
+      pkl = <<~'PKL'
+        {
+          function foo() = a * b * c
+          function bar(a) = a * b * c
+          function baz(a, b) = a * b * c
+          function qux(a, b, c) = a * b * c
+        }
+      PKL
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o|
+          o.body do |b|
+            b.method(:foo, body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+            b.method(:bar, params: [param(:a)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+            b.method(:baz, params: [param(:a), param(:b)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+            b.method(:qux, params: [param(:a), param(:b), param(:c)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
+          end
+        end
+      )
     end
   end
 end

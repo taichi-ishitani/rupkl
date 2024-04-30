@@ -204,7 +204,49 @@ module RuPkl
       end
     end
 
-    ObjectBody = Struct.new(:properties, :entries, :elements) do
+    class MethodParam
+      def initialize(name)
+        @name = name
+      end
+
+      def to_matcher(context)
+        context.instance_exec(@name) do |name|
+          be_instance_of(Node::MethodParam)
+            .and have_attributes(name: identifer(name))
+        end
+      end
+    end
+
+    def param(name)
+      MethodParam.new(name)
+    end
+
+    class MethodDefinition
+      def initialize(name, params: nil, body: nil)
+        @name = name
+        @params = params
+        @params = params
+        @body = body
+      end
+
+      def to_matcher(context)
+        context.instance_exec(@name, @params, @body) do |name, params, body|
+          params_matcher =
+            if params
+              match(params.map { _1.to_matcher(self) })
+            else
+              be_nil
+            end
+          be_instance_of(Node::MethodDefinition)
+            .and have_attributes(
+              name: identifer(name), params: params_matcher,
+              body: expression_matcher(body)
+            )
+        end
+      end
+    end
+
+    ObjectBody = Struct.new(:properties, :entries, :elements, :methods) do
       def property(name, value)
         (self.properties ||= []) << ObjectProperty.new(name, value)
       end
@@ -217,16 +259,21 @@ module RuPkl
         (self.elements ||= []) << ObjectElement.new(value)
       end
 
+      def method(name, **kwargs)
+        (self.methods ||= []) << MethodDefinition.new(name, **kwargs)
+      end
+
       def to_matcher(context)
         properties_matcher = create_members_matcher(context, properties)
         entries_matcher = create_members_matcher(context, entries)
         elements_matcher = create_members_matcher(context, elements)
+        methods_matcher = create_members_matcher(context, methods)
 
         context.instance_eval do
           be_instance_of(Node::ObjectBody)
             .and have_attributes(
               properties: properties_matcher, entries: entries_matcher,
-              elements: elements_matcher
+              elements: elements_matcher, methods: methods_matcher
             )
         end
       end
@@ -234,12 +281,12 @@ module RuPkl
       private
 
       def create_members_matcher(context, members)
-        if members
-          members
-            .map { _1.to_matcher(context) }
-            .then { context.__send__(:match, _1) }
-        else
-          context.__send__(:be_nil)
+        context.instance_exec(members) do |m|
+          if m
+            match(m.map { _1.to_matcher(self) })
+          else
+            be_nil
+          end
         end
       end
     end
@@ -392,27 +439,35 @@ module RuPkl
 
     alias_method :be_listing, :listing
 
-    PklModule = Struct.new(:properties) do
+    PklModule = Struct.new(:properties, :methods) do
       def property(name, value)
         (self.properties ||= []) << ObjectProperty.new(name, value)
       end
 
-      def to_matcher(context)
-        context.instance_exec(self) do |m|
-          be_instance_of(Node::PklModule)
-            .and have_attributes(
-              properties: m.properties_matcher(self)
-            )
-        end
+      def method(name, **kwargs)
+        (self.methods ||= []) << MethodDefinition.new(name, **kwargs)
       end
 
-      def properties_matcher(context)
-        if self.properties.nil?
-          context.__send__(:be_nil)
-        else
-          self.properties
-            .map { _1.to_matcher(context) }
-            .then { |m| context.__send__(:match, m) }
+      def to_matcher(context)
+        context.instance_exec(self) do |m|
+          properties_matcher =
+            if m.properties
+              match(m.properties.map { _1.to_matcher(self) })
+            else
+              be_nil
+            end
+          methods_matcher =
+            if m.methods
+              match(m.methods.map { _1.to_matcher(self) })
+            else
+              be_nil
+            end
+
+          be_instance_of(Node::PklModule)
+            .and have_attributes(
+              properties: properties_matcher,
+              methods: methods_matcher
+            )
         end
       end
     end

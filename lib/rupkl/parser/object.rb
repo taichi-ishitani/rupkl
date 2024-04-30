@@ -16,7 +16,10 @@ module RuPkl
       end
 
       rule(:object_member) do
-        object_element | object_property | object_entry
+        [
+          object_method, object_element,
+          object_property, object_entry
+        ].inject(:|)
       end
 
       rule(:object_property) do
@@ -41,6 +44,13 @@ module RuPkl
         (
           expression >> (ws? >> match('[={]')).absent?
         ).as(:object_element)
+      end
+
+      rule(:object_method) do
+        (
+          method_header >> ws? >>
+          str('=').ignore >> ws? >> expression.as(:body)
+        ).as(:object_method)
       end
     end
 
@@ -68,6 +78,16 @@ module RuPkl
 
       rule(object_element: simple(:e)) do
         Node::ObjectElement.new(nil, e, e.position)
+      end
+
+      rule(
+        object_method:
+          {
+            kw_function: simple(:kw), name: simple(:name),
+            params: subtree(:params), body: simple(:body)
+          }
+      ) do
+        Node::MethodDefinition.new(name, params, body, node_position(kw))
       end
     end
   end
