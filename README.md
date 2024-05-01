@@ -116,7 +116,7 @@ Pkl code snippets used for RSpec examples are originaly from:
 ## Copyright & License
 
 Copyright &copy; 2024 Taichi Ishitani.
-RuPkl is licensed under the terms of the [MIT License](https://opensource.org/licenses/MIT), see [LICENSE](LICENSE) for further details.
+RuPkl is licensed under the terms of the [MIT License](https://opensource.org/licenses/MIT), see [LICENSE.txt](LICENSE.txt) for further details.
 
 ## Code of Conduct
 
