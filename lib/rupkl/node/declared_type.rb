@@ -5,28 +5,29 @@ module RuPkl
     class DeclaredType
       include NodeCommon
 
-      def initialize(type, position)
-        super(*type, position)
+      def initialize(parent, type, position)
+        super(parent, *type, position)
         @type = type
       end
 
       attr_reader :type
 
-      def create(bodies, position, context)
+      def create(parent, bodies, position, context)
         klass = find_class(type, context)
         check_class(klass)
-        create_object(klass, bodies, position, context)
+        create_object(parent, klass, bodies, position)
       end
 
       private
 
       def find_class(type, context)
-        [Base.instance, *context&.objects].reverse_each do |scope|
-          next unless scope.respond_to?(:classes)
+        [Base.instance, *(context || current_context)&.objects]
+          .reverse_each do |scope|
+            next unless scope.respond_to?(:classes)
 
-          klass = scope.classes&.fetch(type.last.id, nil)
-          return klass if klass
-        end
+            klass = scope.classes&.fetch(type.last.id, nil)
+            return klass if klass
+          end
 
         nil
       end
@@ -45,13 +46,13 @@ module RuPkl
         raise EvaluationError.new(message, position)
       end
 
-      def create_object(klass, bodies, position, context)
-        klass.new(bodies.first.copy, position)
-          .tap { |o| o.evaluate_lazily(context) }
+      def create_object(parent, klass, bodies, position)
+        klass.new(parent, bodies.first.copy, position)
+          .tap(&:evaluate_lazily)
           .tap do |o|
-            push_object(context, o) do |c|
-              o.merge!(*bodies[1..].each { |b| b.evaluate_lazily(c) })
-            end
+            bodies[1..]
+              .map { _1.copy(o).evaluate_lazily }
+              .then { o.merge!(*_1) }
           end
       end
     end

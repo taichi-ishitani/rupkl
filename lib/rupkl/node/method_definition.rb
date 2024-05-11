@@ -5,7 +5,7 @@ module RuPkl
     class MethodParam
       include NodeCommon
 
-      def initialize(name, position)
+      def initialize(parent, name, position)
         super
         @name = name
       end
@@ -16,8 +16,8 @@ module RuPkl
     class MethodDefinition
       include NodeCommon
 
-      def initialize(name, params, body, position)
-        super(name, *params, body, position)
+      def initialize(parent, name, params, body, position)
+        super(parent, name, *params, body, position)
         @name = name
         @params = params
         @body = body

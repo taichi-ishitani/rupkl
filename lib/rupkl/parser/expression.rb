@@ -117,14 +117,14 @@ module RuPkl
       end
 
       rule(member_ref: { member: simple(:member) }) do
-        Node::MemberReference.new(nil, member, member.position)
+        Node::MemberReference.new(nil, nil, member, member.position)
       end
 
       rule(
         member_ref:
           { member: simple(:name), arguments: subtree(:arguments) }
       ) do
-        Node::MethodCall.new(nil, name, arguments, name.position)
+        Node::MethodCall.new(nil, nil, name, arguments, name.position)
       end
 
       rule(
@@ -132,7 +132,7 @@ module RuPkl
           { receiver: simple(:receiver), member: sequence(:member) }
       ) do
         member.inject(receiver) do |r, m|
-          Node::MemberReference.new(r, m, r.position)
+          Node::MemberReference.new(nil, r, m, r.position)
         end
       end
 
@@ -145,34 +145,34 @@ module RuPkl
       ) do
         r_node =
           member[..-2].inject(receiver) do |r, m|
-            Node::MemberReference.new(r, m, r.position)
+            Node::MemberReference.new(nil, r, m, r.position)
           end
-        Node::MethodCall.new(r_node, member.last, arguments, r_node.position)
+        Node::MethodCall.new(nil, r_node, member.last, arguments, r_node.position)
       end
 
       rule(this_expression: simple(:this)) do
-        Node::This.new(node_position(this))
+        Node::This.new(nil, node_position(this))
       end
 
       rule(
         new_expression:
           { kw_new: simple(:n), bodies: subtree(:b) }
       ) do
-        Node::UnresolvedObject.new(nil, b, node_position(n))
+        Node::UnresolvedObject.new(nil, nil, b, node_position(n))
       end
 
       rule(
         new_expression:
           { kw_new: simple(:n), type: simple(:t), bodies: subtree(:b) }
       ) do
-        Node::UnresolvedObject.new(t, b, node_position(n))
+        Node::UnresolvedObject.new(nil, t, b, node_position(n))
       end
 
       rule(
         amend_expression:
           { target: simple(:t), bodies: subtree(:b) }
       ) do
-        Node::AmendExpression.new(t, Array(b), t.position)
+        Node::AmendExpression.new(nil, t, Array(b), t.position)
       end
 
       rule(
@@ -180,12 +180,12 @@ module RuPkl
           { receiver: simple(:receiver), key: sequence(:key) }
       ) do
         key.inject(receiver) do |r, k|
-          Node::SubscriptOperation.new(r, k, r.position)
+          Node::SubscriptOperation.new(nil, :[], r, k, r.position)
         end
       end
 
       rule(unary_operator: simple(:operator), operand: simple(:operand)) do
-        Node::UnaryOperation.new(operator.to_sym, operand, node_position(operator))
+        Node::UnaryOperation.new(nil, operator.to_sym, operand, node_position(operator))
       end
 
       rule(
@@ -193,7 +193,8 @@ module RuPkl
         l_operand: simple(:l_operand), r_operand: simple(:r_operand)
       ) do
         Node::BinaryOperation.new(
-          operator.to_sym, l_operand, r_operand, l_operand.position
+          nil, operator.to_sym,
+          l_operand, r_operand, l_operand.position
         )
       end
     end

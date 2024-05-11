@@ -20,6 +20,11 @@ module RuPkl
         @body&.classes
       end
 
+      def evaluate(context = nil)
+        evaluate_lazily(context)
+        super
+      end
+
       private
 
       def properties_not_allowed?

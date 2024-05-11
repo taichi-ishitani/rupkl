@@ -5,8 +5,22 @@ module RuPkl
     module OperationCommon
       include NodeCommon
 
-      def evaluate_lazily(_context)
+      def initialize(parent, operator, *operands, position)
+        super(parent, *operands, position)
+        @operator = operator
+        @operands = operands
+      end
+
+      attr_reader :operator
+      attr_reader :operands
+
+      def evaluate_lazily(_context = nil)
         self
+      end
+
+      def copy(parent = nil)
+        copied_operands = operands.map(&:copy)
+        self.class.new(parent, operator, *copied_operands, position)
       end
 
       private
@@ -24,7 +38,7 @@ module RuPkl
             raise EvaluationError.new(message, position)
           end
 
-        v.evaluate(context)
+        v.evaluate
       end
 
       def u_op(context)
@@ -115,10 +129,10 @@ module RuPkl
 
       def create_op_result(result)
         case result
-        when ::Integer then Int.new(result, position)
-        when ::Float then Float.new(result, position)
-        when ::String then String.new(result, nil, position)
-        when true, false then Boolean.new(result, position)
+        when ::Integer then Int.new(parent, result, position)
+        when ::Float then Float.new(parent, result, position)
+        when ::String then String.new(parent, result, nil, position)
+        when true, false then Boolean.new(parent, result, position)
         end
       end
     end
@@ -126,7 +140,7 @@ module RuPkl
     class SubscriptOperation
       include OperationCommon
 
-      def initialize(receiver, key, position)
+      def initialize(parent, operator, receiver, key, position)
         super
         @receiver = receiver
         @key = key
@@ -135,11 +149,7 @@ module RuPkl
       attr_reader :receiver
       attr_reader :key
 
-      def operator
-        :[]
-      end
-
-      def evaluate(context)
+      def evaluate(context = nil)
         s_op(context)
       end
     end
@@ -147,16 +157,14 @@ module RuPkl
     class UnaryOperation
       include OperationCommon
 
-      def initialize(operator, operand, position)
-        super(operand, position)
-        @operator = operator
+      def initialize(parent, operator, operand, position)
+        super
         @operand = operand
       end
 
-      attr_reader :operator
       attr_reader :operand
 
-      def evaluate(context)
+      def evaluate(context = nil)
         u_op(context)
       end
     end
@@ -164,19 +172,17 @@ module RuPkl
     class BinaryOperation
       include OperationCommon
 
-      def initialize(operator, l_operand, r_operand, position)
-        super(l_operand, r_operand, position)
-        @operator = operator
+      def initialize(parent, operator, l_operand, r_operand, position)
+        super
         @l_operand = l_operand
         @r_operand = r_operand
       end
 
-      attr_reader :operator
       attr_reader :l_operand
       attr_reader :r_operand
       attr_reader :position
 
-      def evaluate(context)
+      def evaluate(context = nil)
         b_op(context)
       end
     end

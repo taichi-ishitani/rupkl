@@ -85,7 +85,7 @@ RSpec.describe RuPkl::Node::String do
         node.evaluate(nil).then do |n|
           expect(n.properties[-1].value)
             .to be_evaluated_string(
-              'new Dynamic { foo = 0; bar = 1; baz = "?" }'
+              'new Dynamic { foo = 0; bar = 1; baz = "new Dynamic { foo = 0; bar = 1; baz = ? }" }'
             )
         end
       end

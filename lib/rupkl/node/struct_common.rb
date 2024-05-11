@@ -5,7 +5,7 @@ module RuPkl
     module StructCommon
       include NodeCommon
 
-      def initialize(body, position)
+      def initialize(parent, body, position)
         super
         @body = body
         body && check_members
@@ -13,32 +13,42 @@ module RuPkl
 
       attr_reader :body
 
-      def evaluate(context)
-        push_object(context, 1) { |c| @body&.evaluate(c) }
+      def evaluate(context = nil)
+        do_evaluation(__method__, context, 1) do |c|
+          @body&.evaluate(c)
+        end
         self
       end
 
-      def evaluate_lazily(context)
-        push_object(context, 1) { |c| @body&.evaluate_lazily(c) }
+      def evaluate_lazily(context = nil)
+        do_evaluation(__method__, context, 1) do |c|
+          @body&.evaluate_lazily(c)
+        end
         self
       end
 
-      def to_ruby(context)
-        push_object(context, 1) { |c| create_pkl_object(c) }
-          .then { _1 || PklObject::SELF }
+      def to_ruby(context = nil)
+        do_evaluation(__method__, context, 1, PklObject::SELF) do |c|
+          create_pkl_object(c)
+        end
       end
 
-      def to_pkl_string(context)
+      def to_pkl_string(context = nil)
         to_string(context)
       end
 
-      def to_string(context)
-        push_object(context, 2) { |c| to_string_object(c) }
-          .then { _1 || '?' }
+      def to_string(context = nil)
+        do_evaluation(__method__, context, 2, invalid_string) do |c|
+          to_string_object(c)
+        end
       end
 
-      def copy
-        self.class.new(@body&.copy, position)
+      def current_context
+        super&.push_object(self) || Context.new(nil, [self])
+      end
+
+      def copy(parent = nil)
+        self.class.new(parent, @body&.copy, position)
       end
 
       def merge!(*bodies)
@@ -83,24 +93,23 @@ module RuPkl
         body.elements
       end
 
-      def push_object(context, call_limit, &block)
-        return if reach_call_limit?(context, call_limit)
+      def do_evaluation(method, context, limit, ifreachlimit = nil)
+        return ifreachlimit if reach_limit?(method, limit)
 
-        super(context, self, &block)
+        call_depth[method] += 1
+        result = yield(context&.push_object(self) || current_context)
+        call_depth.delete(method)
+
+        result
       end
 
-      def reach_call_limit?(context, limit)
-        return false if context&.objects.nil?
+      def call_depth
+        @call_depth ||= Hash.new { |h, k| h[k] = 0 }
+      end
 
-        depth = call_depth(context)
+      def reach_limit?(method, limit)
+        depth = call_depth[method]
         depth >= 1 && depth >= limit
-      end
-
-      def call_depth(context)
-        context
-          .objects
-          .reverse_each
-          .count { _1.equal?(self) }
       end
 
       def match_members?(lhs, rhs, match_order)
@@ -113,11 +122,13 @@ module RuPkl
       end
 
       def create_pkl_object(context)
-        RuPkl::PklObject.new(
-          to_ruby_hash(@body.properties, context),
-          to_ruby_hash(@body.entries, context),
-          to_ruby_array(@body.elements, context)
-        )
+        context.push_scope(@body).then do |c|
+          RuPkl::PklObject.new(
+            to_ruby_hash(@body.properties, c),
+            to_ruby_hash(@body.entries, c),
+            to_ruby_array(@body.elements, c)
+          )
+        end
       end
 
       def to_ruby_hash(members, context)
@@ -136,10 +147,12 @@ module RuPkl
         members = @body.members
         return '{}' if members.empty?
 
-        members
-          .map { _1.to_pkl_string(context) }
-          .join('; ')
-          .then { "{ #{_1} }" }
+        context.push_scope(@body).then do |c|
+          members
+            .map { _1.to_pkl_string(c) }
+            .join('; ')
+            .then { "{ #{_1} }" }
+        end
       end
 
       def find_entry(key)

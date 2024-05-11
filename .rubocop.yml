@@ -43,7 +43,7 @@ Metrics/MethodLength:
   Max: 15
 
 Metrics/ModuleLength:
-  Max: 130
+  Max: 200
 
 Naming/VariableNumber:
   EnforcedStyle: snake_case

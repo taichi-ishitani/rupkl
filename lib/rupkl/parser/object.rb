@@ -57,15 +57,15 @@ module RuPkl
     define_transform do
       rule(object: { bodies: subtree(:b) }) do
         bodies = Array(b)
-        Node::UnresolvedObject.new(nil, bodies, bodies.first.position)
+        Node::UnresolvedObject.new(nil, nil, bodies, bodies.first.position)
       end
 
       rule(object_body: { body_begin: simple(:b) }) do
-        Node::ObjectBody.new(nil, node_position(b))
+        Node::ObjectBody.new(nil, nil, node_position(b))
       end
 
       rule(object_body: { body_begin: simple(:b), members: subtree(:m) }) do
-        Node::ObjectBody.new(Array(m), node_position(b))
+        Node::ObjectBody.new(nil, Array(m), node_position(b))
       end
 
       rule(object_property: { name: simple(:n), value: simple(:v) }) do
@@ -87,7 +87,7 @@ module RuPkl
             params: subtree(:params), body: simple(:body)
           }
       ) do
-        Node::MethodDefinition.new(name, params, body, node_position(kw))
+        Node::MethodDefinition.new(nil, name, params, body, node_position(kw))
       end
     end
   end

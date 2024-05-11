@@ -5,7 +5,7 @@ module RuPkl
     class MemberReference
       include NodeCommon
 
-      def initialize(receiver, member, position)
+      def initialize(parent, receiver, member, position)
         super
         @receiver = receiver
         @member = member
@@ -14,16 +14,25 @@ module RuPkl
       attr_reader :receiver
       attr_reader :member
 
-      def evaluate(context)
+      def evaluate(context = nil)
         do_evaluate do
-          resolve_reference(context).evaluate(context)
+          resolve_reference(context).evaluate
         end
       end
 
-      def evaluate_lazily(context)
+      def evaluate_lazily(context = nil)
         do_evaluate do
-          resolve_reference(context).evaluate_lazily(context)
+          resolve_reference(context).evaluate_lazily
         end
+      end
+
+      def copy(parent = nil)
+        self
+          .class.new(parent, receiver&.copy, member&.copy, position)
+          .tap do |node|
+            @scope_index &&
+              node.instance_exec(@scope_index) { @scope_index = _1 }
+          end
       end
 
       private
@@ -42,8 +51,9 @@ module RuPkl
       def resolve_reference(context)
         scopes =
           if receiver
-            [receiver.evaluate_lazily(context)]
+            [receiver.evaluate_lazily]
           else
+            context ||= current_context
             [*context.scopes].insert(-2, context.objects&.last)
           end
         find_member(scopes)

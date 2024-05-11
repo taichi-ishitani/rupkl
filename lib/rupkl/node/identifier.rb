@@ -5,12 +5,16 @@ module RuPkl
     class Identifier
       include NodeCommon
 
-      def initialize(id, position)
-        super(position)
+      def initialize(parent, id, position)
+        super(parent, position)
         @id = id
       end
 
       attr_reader :id
+
+      def copy(parent = nil)
+        self.class.new(parent, id, position)
+      end
 
       def ==(other)
         other.instance_of?(self.class) && id == other.id

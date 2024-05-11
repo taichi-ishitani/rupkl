@@ -17,7 +17,7 @@ module RuPkl
         declared_type:
           { type: simple(:t) }
       ) do
-        Node::DeclaredType.new(Array(t), t.position)
+        Node::DeclaredType.new(nil, Array(t), t.position)
       end
     end
   end

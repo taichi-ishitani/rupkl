@@ -32,7 +32,7 @@ module RuPkl
             params: subtree(:params), body: simple(:body)
           }
       ) do
-        Node::MethodDefinition.new(name, params, body, node_position(kw))
+        Node::MethodDefinition.new(nil, name, params, body, node_position(kw))
       end
     end
   end

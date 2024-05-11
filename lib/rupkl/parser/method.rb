@@ -25,7 +25,7 @@ module RuPkl
       rule(
         method_param: { name: simple(:name) }
       ) do
-        Node::MethodParam.new(name, name.position)
+        Node::MethodParam.new(nil, name, name.position)
       end
     end
   end

@@ -6,7 +6,7 @@ module RuPkl
       include Singleton
 
       def initialize
-        super(nil, nil)
+        super(nil, nil, nil)
       end
 
       attr_reader :classes

@@ -5,8 +5,8 @@ module RuPkl
     class MethodCall
       include NodeCommon
 
-      def initialize(receiver, method_name, arguments, position)
-        super(receiver, method_name, *arguments, position)
+      def initialize(parent, receiver, method_name, arguments, position)
+        super(parent, receiver, method_name, *arguments, position)
         @receiver = receiver
         @method_name = method_name
         @arguments = arguments

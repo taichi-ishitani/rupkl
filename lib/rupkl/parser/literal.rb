@@ -13,11 +13,11 @@ module RuPkl
 
     define_transform do
       rule(true_value: simple(:v)) do
-        Node::Boolean.new(true, node_position(v))
+        Node::Boolean.new(nil, true, node_position(v))
       end
 
       rule(false_value: simple(:v)) do
-        Node::Boolean.new(false, node_position(v))
+        Node::Boolean.new(nil, false, node_position(v))
       end
     end
 
@@ -52,7 +52,7 @@ module RuPkl
       rule(int_literal: simple(:v)) do
         base = { 'b' => 2, 'o' => 8, 'x' => 16 }.fetch(v.to_s[1], 10)
         value = v.to_s.tr('_', '').to_i(base)
-        Node::Int.new(value, node_position(v))
+        Node::Int.new(nil, value, node_position(v))
       end
     end
 
@@ -75,7 +75,7 @@ module RuPkl
     define_transform do
       rule(float_literal: simple(:f)) do
         v = f.to_s.tr('_', '').to_f
-        Node::Float.new(v, node_position(f))
+        Node::Float.new(nil, v, node_position(f))
       end
     end
 
@@ -225,19 +225,25 @@ module RuPkl
 
     define_transform do
       rule(ss_bq: simple(:bq), ss_eq: simple(:eq)) do
-        Node::String.new(nil, nil, node_position(bq))
+        Node::String.new(nil, nil, nil, node_position(bq))
       end
 
       rule(ss_bq: simple(:bq), ss_portions: subtree(:portions), ss_eq: simple(:eq)) do
-        Node::String.new(nil, process_ss_portions(portions, bq), node_position(bq))
+        Node::String.new(
+          nil, nil, process_ss_portions(portions, bq),
+          node_position(bq)
+        )
       end
 
       rule(ms_bq: simple(:bq), ms_eq: simple(:eq)) do
-        Node::String.new(nil, nil, node_position(bq))
+        Node::String.new(nil, nil, nil, node_position(bq))
       end
 
       rule(ms_bq: simple(:bq), ms_portions: subtree(:portions), ms_eq: simple(:eq)) do
-        Node::String.new(nil, process_ms_portions(portions, bq, eq), node_position(bq))
+        Node::String.new(
+          nil, nil, process_ms_portions(portions, bq, eq),
+          node_position(bq)
+        )
       end
 
       private

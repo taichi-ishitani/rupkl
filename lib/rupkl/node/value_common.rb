@@ -5,31 +5,35 @@ module RuPkl
     module ValueCommon
       include NodeCommon
 
-      def initialize(value, position)
-        super(position)
+      def initialize(parent, value, position)
+        super(parent, position)
         @value = value
       end
 
       attr_reader :value
 
-      def evaluate(_context)
+      def evaluate(_context = nil)
         self
       end
 
-      def evaluate_lazily(_context)
+      def evaluate_lazily(_context = nil)
         self
       end
 
-      def to_ruby(context)
+      def to_ruby(context = nil)
         evaluate(context).value
       end
 
-      def to_string(context)
+      def to_string(context = nil)
         to_ruby(context).to_s
       end
 
-      def to_pkl_string(context)
+      def to_pkl_string(context = nil)
         to_string(context)
+      end
+
+      def copy(parent = nil)
+        self.class.new(parent, @value, position)
       end
 
       def ==(other)

@@ -7,26 +7,36 @@ module RuPkl
 
       uninstantiable_class
 
-      def initialize(value, portions, position)
-        super(value, position)
+      def initialize(parent, value, portions, position)
+        super(parent, value, position)
         @portions = portions
+        portions&.each do |portion|
+          portion.is_a?(NodeCommon) && add_child(portion)
+        end
       end
 
       attr_reader :portions
 
-      def evaluate(context)
-        @value ||= (evaluate_portions(context) || '')
+      def evaluate(context = nil)
+        @value ||= evaluate_portions(context)
         self
       end
 
-      def to_pkl_string(context)
-        super
-          .then { |s| escape(s) }
-          .then { |s| "\"#{s}\"" }
+      def to_pkl_string(context = nil)
+        s = to_ruby(context)
+        if invalid_string?(s)
+          s
+        else
+          "\"#{escape(s)}\""
+        end
       end
 
-      def copy
-        self.class.new(nil, portions, position)
+      def copy(parent = nil)
+        copied_portions =
+          portions&.map do |portion|
+            portion.is_a?(NodeCommon) && portion.copy || portion
+          end
+        self.class.new(parent, nil, copied_portions, position)
       end
 
       def undefined_operator?(operator)
@@ -41,15 +51,18 @@ module RuPkl
         index = key.value
         return nil unless (0...value.length).include?(index)
 
-        self.class.new(value[index], nil, portions)
+        self.class.new(parent, value[index], nil, position)
       end
 
       private
 
       def evaluate_portions(context)
-        portions
-          &.map { evaluate_portion(_1, context) }
-          &.join
+        evaluated_portions =
+          portions&.map do |portion|
+            evaluate_portion(portion, context)
+              .tap { |s| return s if invalid_string?(s) }
+          end
+        evaluated_portions&.join || ''
       end
 
       def evaluate_portion(portion, context)

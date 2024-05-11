@@ -3,46 +3,57 @@
 module RuPkl
   module Node
     module NodeCommon
-      def initialize(*children, position)
+      def initialize(parent, *children, position)
         @position = position
-        children.each { _1 && add_child(_1) }
+        parent&.add_child(self)
+        children.each { add_child(_1) }
       end
 
       attr_reader :parent
       attr_reader :children
       attr_reader :position
 
-      def to_ruby(...)
-        evaluate(...).to_ruby(...)
+      def to_ruby(context = nil)
+        evaluate(context).to_ruby(context)
       end
 
-      def to_string(...)
-        evaluate(...).to_string(...)
+      def to_string(context = nil)
+        evaluate(context).to_string(context)
       end
 
-      def to_pkl_string(...)
-        evaluate(...).to_pkl_string(...)
+      def to_pkl_string(context = nil)
+        evaluate(context).to_pkl_string(context)
       end
 
-      def copy
-        self
+      def add_child(child)
+        return unless child
+
+        child.parent ||
+          child.instance_exec(self) { @parent = _1 }
+
+        @children&.any? { _1.equal?(child) } ||
+          (@children ||= []) << child
+      end
+
+      def copy(parent = nil)
+        copied_children = children&.map(&:copy)
+        self.class.new(parent, *copied_children, position)
+      end
+
+      def current_context
+        parent&.current_context
       end
 
       private
 
-      def add_child(child)
-        (@children ||= []) << child
-        child.instance_exec(self) { @parent = _1 }
+      INVALID_STRING = String.new('?').freeze
+
+      def invalid_string
+        INVALID_STRING
       end
 
-      def push_scope(context, scope)
-        c = context&.push_scope(scope) || Context.new([scope], nil)
-        yield c if block_given?
-      end
-
-      def push_object(context, object)
-        c = context&.push_object(object) || Context.new(nil, [object])
-        yield c if block_given?
+      def invalid_string?(string)
+        string.equal?(INVALID_STRING)
       end
     end
   end
