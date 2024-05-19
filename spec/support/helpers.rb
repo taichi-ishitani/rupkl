@@ -273,7 +273,7 @@ module RuPkl
           be_instance_of(Node::ObjectBody)
             .and have_attributes(
               properties: properties_matcher, entries: entries_matcher,
-              elements: elements_matcher, methods: methods_matcher
+              elements: elements_matcher, pkl_methods: methods_matcher
             )
         end
       end
@@ -466,7 +466,7 @@ module RuPkl
           be_instance_of(Node::PklModule)
             .and have_attributes(
               properties: properties_matcher,
-              methods: methods_matcher
+              pkl_methods: methods_matcher
             )
         end
       end

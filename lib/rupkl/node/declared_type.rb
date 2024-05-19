@@ -23,9 +23,9 @@ module RuPkl
       def find_class(type, context)
         [Base.instance, *(context || current_context)&.objects]
           .reverse_each do |scope|
-            next unless scope.respond_to?(:classes)
+            next unless scope.respond_to?(:pkl_classes)
 
-            klass = scope.classes&.fetch(type.last.id, nil)
+            klass = scope.pkl_classes&.fetch(type.last.id, nil)
             return klass if klass
           end
 

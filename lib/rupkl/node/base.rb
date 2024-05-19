@@ -9,7 +9,7 @@ module RuPkl
         super(nil, nil, nil)
       end
 
-      attr_reader :classes
+      attr_reader :pkl_classes
 
       class << self
         private
@@ -17,7 +17,7 @@ module RuPkl
         def add_builtin_class(klass)
           instance.instance_eval do
             name = klass.class_name
-            (@classes ||= {})[name] = klass
+            (@pkl_classes ||= {})[name] = klass
           end
         end
       end

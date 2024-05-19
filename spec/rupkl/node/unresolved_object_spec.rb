@@ -278,7 +278,6 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
       )
 
       node = parse(pkl_strings[3])
-      n = node.evaluate_lazily(nil)
       expect(node.evaluate_lazily(nil)).to (
         be_dynamic do |o1|
           o1.property :name, 'Pigeon'
@@ -297,7 +296,6 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
       )
 
       node = parse(pkl_strings[4])
-      n = node.evaluate_lazily(nil)
       expect(node.evaluate_lazily(nil)).to (
         be_dynamic do |o1|
           o1.property :foo, (

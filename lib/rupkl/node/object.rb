@@ -188,11 +188,19 @@ module RuPkl
       attr_reader :properties
       attr_reader :entries
       attr_reader :elements
-      attr_reader :methods
-      attr_reader :classes
+      attr_reader :pkl_methods
+      attr_reader :pkl_classes
+
+      def fields
+        [*properties, *entries, *elements]
+      end
+
+      def definitions
+        [*pkl_methods, *pkl_classes]
+      end
 
       def members
-        [*properties, *entries, *elements]
+        [*fields, *definitions]
       end
 
       def evaluate(context = nil)
@@ -209,7 +217,7 @@ module RuPkl
       end
 
       def current_context
-        super.push_scope(self)
+        super&.push_scope(self)
       end
 
       def merge!(*others)
@@ -234,13 +242,13 @@ module RuPkl
           ObjectProperty => :@properties,
           ObjectEntry => :@entries,
           ObjectElement => :@elements,
-          MethodDefinition => :@methods
+          MethodDefinition => :@pkl_methods
         }[member.class]
       end
 
       def do_evaluation(evaluator, context)
         (context&.push_scope(self) || current_context).then do |c|
-          members.each { |m| m.__send__(evaluator, c) }
+          fields.each { |f| f.__send__(evaluator, c) }
           check_duplication
           self
         end
@@ -249,6 +257,7 @@ module RuPkl
       def check_duplication
         check_duplication_members(@properties, :name)
         check_duplication_members(@entries, :key)
+        check_duplication_members(@pkl_methods, :name)
       end
 
       def check_duplication_members(members, accessor)

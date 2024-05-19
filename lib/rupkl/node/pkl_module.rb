@@ -12,12 +12,12 @@ module RuPkl
         @body&.properties
       end
 
-      def methods
-        @body&.methods
+      def pkl_methods
+        @body&.pkl_methods
       end
 
-      def classes
-        @body&.classes
+      def pkl_classes
+        @body&.pkl_classes
       end
 
       def evaluate(context = nil)

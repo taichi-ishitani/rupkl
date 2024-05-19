@@ -4,6 +4,7 @@ module RuPkl
   module Node
     class MemberReference
       include NodeCommon
+      include ReferenceResolver
 
       def initialize(parent, receiver, member, position)
         super
@@ -16,13 +17,13 @@ module RuPkl
 
       def evaluate(context = nil)
         do_evaluate do
-          resolve_reference(context).evaluate
+          resolve_reference(context, receiver, member).evaluate
         end
       end
 
       def evaluate_lazily(context = nil)
         do_evaluate do
-          resolve_reference(context).evaluate_lazily
+          resolve_reference(context, receiver, member).evaluate_lazily
         end
       end
 
@@ -48,50 +49,16 @@ module RuPkl
         result
       end
 
-      def resolve_reference(context)
-        scopes =
-          if receiver
-            [receiver.evaluate_lazily]
-          else
-            context ||= current_context
-            [*context.scopes].insert(-2, context.objects&.last)
-          end
-        find_member(scopes)
+      def unresolve_reference_error(target)
+        EvaluationError.new("cannot find property '#{target.id}'", position)
       end
 
-      def find_member(scopes)
-        if @scope_index
-          get_member_node(scopes[@scope_index])
-        else
-          search_member(scopes)
-        end
-      end
-
-      def search_member(scopes)
-        node, index = search_member_from_scopes(scopes)
-        if node
-          @scope_index = index
-          return node
-        end
-
-        raise EvaluationError.new("cannot find property '#{member.id}'", position)
-      end
-
-      def search_member_from_scopes(scopes)
-        scopes.reverse_each.with_index do |scope, i|
-          node = get_member_node(scope)
-          return [node, scopes.size - i - 1] if node
-        end
-
-        nil
-      end
-
-      def get_member_node(scope)
+      def get_member_node(scope, target)
         return unless scope.respond_to?(:properties)
 
         scope
           &.properties
-          &.find { _1.name == member }
+          &.find { _1.name == target }
           &.value
       end
     end

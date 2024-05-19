@@ -44,7 +44,7 @@ module RuPkl
       end
 
       def current_context
-        super&.push_object(self) || Context.new(nil, [self])
+        super&.push_object(self) || Context.new(nil, [self], nil)
       end
 
       def copy(parent = nil)
