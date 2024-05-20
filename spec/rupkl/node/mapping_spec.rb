@@ -154,66 +154,6 @@ RSpec.describe RuPkl::Node::Mapping do
     end
   end
 
-  describe '#evaluate_lazily' do
-    it 'should return a Mapping object containing members lazily evaluated' do
-      node = parse(pkl_strings[0])
-      expect(node.evaluate_lazily(nil)).to be_mapping
-
-      node = parse(pkl_strings[1])
-      expect(node.evaluate_lazily(nil)).to (
-        be_mapping do |m|
-          m['foo'] = 1; m['bar'] = 2; m['baz'] = b_op(:+, 1, 2)
-        end
-      )
-
-      node = parse(pkl_strings[2])
-      expect(node.evaluate_lazily(nil)).to (
-        be_mapping do |m|
-          m['foo'] = 1; m['bar'] = 2; m['baz'] = 3
-        end
-      )
-
-      node = parse(pkl_strings[3], root: :object)
-      node.evaluate_lazily(nil).properties[-1].then do |n|
-        expect(n.value).to (
-          be_mapping do |m|
-            m['foo'] = 2; m['bar'] = 2; m['baz'] = b_op(:+, 1, 2)
-          end
-        )
-      end
-
-      node = parse(pkl_strings[4])
-      expect(node.evaluate_lazily(nil)).to (
-        be_mapping do |m1|
-          m1[1] = mapping do |m2|
-            m2['a'] = mapping do |m3|
-              m3['x'] = b_op(:+, 0, 1)
-            end
-            m2['b'] = mapping do |m3|
-              m3['y'] = b_op(:+, 1, 1)
-            end
-          end
-          m1[2] = mapping do |m2|
-            m2['c'] = mapping do |m3|
-              m3['z'] = b_op(:+, 2, 1)
-            end
-          end
-        end
-      )
-
-      node = parse(pkl_strings[5])
-      node.evaluate_lazily(nil).then do |n|
-        expect(n).to (
-          be_mapping do |m|
-            m['foo'] = 0
-            m['bar'] = 1
-            m['baz'] = equal(n)
-          end
-        )
-      end
-    end
-  end
-
   describe '#to_ruby' do
     it 'should return a PklObject object containing evaluated members' do
       node = parse(pkl_strings[0])
@@ -292,7 +232,7 @@ RSpec.describe RuPkl::Node::Mapping do
 
       node = parse(pkl_strings[3], root: :object)
       s = 'new Mapping { ["foo"] = 2; ["bar"] = 2; ["baz"] = 3 }'
-      node.evaluate_lazily(nil).properties[-1].then do |n|
+      node.resolve_structure(nil).properties[-1].then do |n|
         expect(n.value.to_string(nil)).to eq s
         expect(n.value.to_pkl_string(nil)).to eq s
       end

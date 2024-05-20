@@ -5,23 +5,20 @@ module RuPkl
     module ReferenceResolver
       private
 
-      def resolve_reference(context, receiver, target)
+      def resolve_member_reference(context, receiver, target)
         scopes =
           if receiver
-            [receiver.evaluate_lazily]
+            [receiver.resolve_reference.resolve_structure]
           else
             context ||= current_context
-            [
-              *context.scopes[..-2], context.objects&.last,
-              context.scopes.last, context.local
-            ]
+            [context.objects&.last, *context.scopes]
           end
         find_member(scopes, target)
       end
 
       def find_member(scopes, target)
-        if @scope_index
-          get_member_node(scopes[@scope_index], target)
+        if scope_index.index
+          get_member_node(scopes[scope_index.index], target)
         else
           search_member(scopes, target)
         end
@@ -30,7 +27,7 @@ module RuPkl
       def search_member(scopes, target)
         node, index = search_member_from_scopes(scopes, target)
         if node
-          @scope_index = index
+          scope_index.index = index
           return node
         end
 
@@ -44,6 +41,16 @@ module RuPkl
         end
 
         nil
+      end
+
+      ScopeIndex = Struct.new(:index)
+
+      def scope_index
+        @scope_index ||= ScopeIndex.new
+      end
+
+      def copy_scope_index(target)
+        target.instance_exec(scope_index) { @scope_index = _1 }
       end
     end
   end

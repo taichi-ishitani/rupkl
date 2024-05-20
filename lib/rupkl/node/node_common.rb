@@ -13,6 +13,14 @@ module RuPkl
       attr_reader :children
       attr_reader :position
 
+      def resolve_reference(_context = nil)
+        self
+      end
+
+      def resolve_structure(_context = nil)
+        self
+      end
+
       def to_ruby(context = nil)
         evaluate(context).to_ruby(context)
       end

@@ -161,69 +161,6 @@ RSpec.describe RuPkl::Node::Listing do
     end
   end
 
-  describe '#evaluate_lazily' do
-    it 'should return Listing object containing members laziliy evaluated' do
-      node = parse(pkl_strings[0])
-      expect(node.evaluate_lazily(nil)).to be_listing
-
-      node = parse(pkl_strings[1])
-      expect(node.evaluate_lazily(nil)).to (
-        be_listing do |l|
-          l <<1; l << 2; l << b_op(:+, 1, 2)
-        end
-      )
-
-      node = parse(pkl_strings[2])
-      expect(node.evaluate_lazily(nil)).to (
-        be_listing do |l|
-          l <<1; l << 2; l << 3
-        end
-      )
-
-      node = parse(pkl_strings[3], root: :object)
-      node.evaluate_lazily(nil).properties[-1].then do |n|
-        expect(n.value).to (
-          be_listing do |l|
-            l <<2; l << 2; l << b_op(:+, 1, 2)
-          end
-        )
-      end
-
-      node = parse(pkl_strings[4])
-      expect(node.evaluate_lazily(nil)).to (
-        be_listing do |l1|
-          l1 << (listing { |l2| l2 << 'one' })
-          l1 << (listing { |l2| l2 << 'two'; l2 << b_op(:+, 'th', 'ree') })
-          l1 << (mapping { |m2| m2['four'] = 4 })
-        end
-      )
-
-      node = parse(pkl_strings[5], root: :object)
-      node.evaluate_lazily(nil).properties[-2..-1].then do |(n1, n2)|
-        expect(n1.value).to (
-          be_listing do |l1|
-            l1 << (dynamic { |d2| d2.property :name, 'Pigeon'; d2.property :diet, 'Seeds' })
-            l1 << (dynamic { |d2| d2.property :name, 'Parrot'; d2.property :diet, 'Berries' })
-          end
-        )
-        expect(n2.value).to (
-          be_listing do |l1|
-            l1 << (dynamic { |d2| d2.property :name, 'Pigeon'; d2.property :diet, 'Worms' })
-            l1 << (dynamic { |d2| d2.property :name, 'Albatross'; d2.property :diet, 'Fish' })
-            l1 << (dynamic { |d2| d2.property :name, 'Barn owl'; d2.property :diet, 'Mice' })
-          end
-        )
-      end
-
-      node = parse(pkl_strings[6])
-      node.evaluate_lazily(nil).then do |n|
-        expect(n).to (
-          be_listing { |l| l << 0; l << 1; l << equal(n) }
-        )
-      end
-    end
-  end
-
   describe '#to_ruby' do
     it 'should return a PklObject object containing evaluated members' do
       node = parse(pkl_strings[0])

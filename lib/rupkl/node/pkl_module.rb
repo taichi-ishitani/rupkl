@@ -9,7 +9,7 @@ module RuPkl
       klass_name :Module
 
       def properties
-        @body&.properties
+        @body&.properties(visibility: :object)
       end
 
       def pkl_methods
@@ -21,7 +21,7 @@ module RuPkl
       end
 
       def evaluate(context = nil)
-        evaluate_lazily(context)
+        resolve_structure(context)
         super
       end
 

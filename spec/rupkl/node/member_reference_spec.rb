@@ -79,28 +79,28 @@ RSpec.describe RuPkl::Node::MemberReference do
       node.evaluate(nil).properties[-1].value.properties[0]
         .then { |m| expect(m.value).to be_int(2) }
 
-      #node = parser.parse(<<~'PKL', root: :pkl_module)
-      #  foo = 1
-      #  bar {
-      #    bar = foo
-      #    foo = 2
-      #  }{
-      #    foo = 3
-      #  }
-      #PKL
-      #node.evaluate(nil).properties[-1].value.properties[0]
-      #  .then { |m| expect(m.value).to be_int(3) }
+      node = parser.parse(<<~'PKL', root: :pkl_module)
+        foo = 1
+        bar {
+          bar = foo
+          foo = 2
+        }{
+          foo = 3
+        }
+      PKL
+      node.evaluate(nil).properties[-1].value.properties[0]
+        .then { |m| expect(m.value).to be_int(3) }
 
-      #node = parser.parse(<<~'PKL', root: :pkl_module)
-      #  foo = 1
-      #  bar {
-      #    bar = foo
-      #  }{
-      #    foo = 3
-      #  }
-      #PKL
-      #node.evaluate(nil).properties[-1].value.properties[0]
-      #  .then { |m| expect(m.value).to be_int(1) }
+      node = parser.parse(<<~'PKL', root: :pkl_module)
+        foo = 1
+        bar {
+          bar = foo
+        }{
+          foo = 3
+        }
+      PKL
+      node.evaluate(nil).properties[-1].value.properties[0]
+        .then { |m| expect(m.value).to be_int(1) }
 
       node = parser.parse(<<~'PKL', root: :pkl_module)
         foo = 1

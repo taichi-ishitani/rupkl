@@ -17,18 +17,17 @@ module RuPkl
       attr_reader :method_name
       attr_reader :arguments
 
-      def evaluate_lazily(_context = nil)
-        self
-      end
-
       def evaluate(context = nil)
-        pkl_method = resolve_reference(context, receiver, method_name)
-        pkl_method.call(receiver, arguments, context || current_context, position)
+        receiver_node = receiver&.resolve_reference(context)
+        pkl_method = resolve_member_reference(context, receiver_node, method_name)
+        pkl_method.call(receiver_node, arguments, context || current_context, position)
       end
 
       def copy(parent = nil)
         copied_args = arguments&.map(&:copy)
-        self.class.new(parent, receiver&.copy, method_name, copied_args, position)
+        self
+          .class.new(parent, receiver&.copy, method_name, copied_args, position)
+          .tap { copy_scope_index(_1) }
       end
 
       private
@@ -37,7 +36,7 @@ module RuPkl
         return unless scope.respond_to?(:pkl_methods)
 
         scope
-          &.pkl_methods
+          .pkl_methods
           &.find { _1.name == target }
       end
 

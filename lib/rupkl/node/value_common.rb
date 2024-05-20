@@ -16,10 +16,6 @@ module RuPkl
         self
       end
 
-      def evaluate_lazily(_context = nil)
-        self
-      end
-
       def to_ruby(context = nil)
         evaluate(context).value
       end

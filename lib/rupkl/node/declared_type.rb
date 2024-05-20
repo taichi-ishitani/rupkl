@@ -15,7 +15,7 @@ module RuPkl
       def create(parent, bodies, position, context)
         klass = find_class(type, context)
         check_class(klass)
-        create_object(parent, klass, bodies, position)
+        create_object(parent, klass, bodies, position, context)
       end
 
       private
@@ -46,12 +46,12 @@ module RuPkl
         raise EvaluationError.new(message, position)
       end
 
-      def create_object(parent, klass, bodies, position)
+      def create_object(parent, klass, bodies, position, context)
         klass.new(parent, bodies.first.copy, position)
-          .tap(&:evaluate_lazily)
+          .tap { _1.resolve_structure(context) }
           .tap do |o|
             bodies[1..]
-              .map { _1.copy(o).evaluate_lazily }
+              .map { _1.copy(o).resolve_structure(context) }
               .then { o.merge!(*_1) }
           end
       end

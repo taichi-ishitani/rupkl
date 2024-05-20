@@ -15,6 +15,12 @@ module RuPkl
           (@value_evaluated = child)
       end
 
+      def visibility
+        @visibility || :lexical
+      end
+
+      attr_writer :visibility
+
       private
 
       def evaluate_value(evaluator, context)
@@ -45,7 +51,7 @@ module RuPkl
         self
       end
 
-      def evaluate_lazily(context = nil)
+      def resolve_structure(context = nil)
         evaluate_value(__method__, context)
         self
       end
@@ -96,7 +102,7 @@ module RuPkl
         self
       end
 
-      def evaluate_lazily(context = nil)
+      def resolve_structure(context = nil)
         evaluate_key(context)
         evaluate_value(__method__, context)
         self
@@ -129,7 +135,10 @@ module RuPkl
       private
 
       def evaluate_key(context)
-        @key_evaluated ||= @key.evaluate((context || current_context).pop)
+        @key_evaluated ||=
+          (context || current_context).pop.then do |c|
+            @key.evaluate(c)
+          end
         @key_evaluated
       end
 
@@ -149,7 +158,7 @@ module RuPkl
         self
       end
 
-      def evaluate_lazily(context = nil)
+      def resolve_structure(context = nil)
         evaluate_value(__method__, context)
         self
       end
@@ -185,11 +194,19 @@ module RuPkl
         members&.each { add_member(_1) }
       end
 
-      attr_reader :properties
       attr_reader :entries
       attr_reader :elements
       attr_reader :pkl_methods
       attr_reader :pkl_classes
+
+      def properties(visibility: :lexical)
+        if visibility == :lexical
+          @properties
+            &.select { _1.visibility == :lexical || _1.parent.equal?(self) }
+        else
+          @properties
+        end
+      end
 
       def fields
         [*properties, *entries, *elements]
@@ -207,13 +224,13 @@ module RuPkl
         do_evaluation(__method__, context)
       end
 
-      def evaluate_lazily(context = nil)
+      def resolve_structure(context = nil)
         do_evaluation(__method__, context)
       end
 
       def copy(parent = nil)
         copied_members = members.map(&:copy)
-        self.class.new(parent, copied_members, properties)
+        self.class.new(parent, copied_members, position)
       end
 
       def current_context
@@ -303,6 +320,7 @@ module RuPkl
           if (index = find_member_index(lhs, r, accessor))
             lhs[index] = merge_hash_value(lhs[index], r)
           else
+            r.visibility = :object
             lhs << r
           end
         end
@@ -332,7 +350,13 @@ module RuPkl
           lhs_array[index] = merge_array_value(lhs_array[index], r)
         end
 
-        rhs_array && lhs_array.concat(rhs_array)
+        concat_array_members(lhs_array, rhs_array)
+      end
+
+      def concat_array_members(lhs_array, rhs_array)
+        rhs_array
+          &.each { _1.visibility = :object }
+          &.then { lhs_array.concat(_1) }
         lhs_array
       end
 
@@ -359,10 +383,10 @@ module RuPkl
       attr_reader :bodies
 
       def evaluate(context = nil)
-        evaluate_lazily(context).evaluate(context)
+        resolve_structure(context).evaluate(context)
       end
 
-      def evaluate_lazily(context = nil)
+      def resolve_structure(context = nil)
         (type || default_type)
           .create(parent, bodies, position, context || current_context)
       end

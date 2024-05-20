@@ -15,11 +15,14 @@ module RuPkl
       attr_reader :bodies
 
       def evaluate(context = nil)
-        evaluate_lazily(context).evaluate(context)
+        resolve_structure(context).evaluate(context)
       end
 
-      def evaluate_lazily(context = nil)
-        t = target.evaluate_lazily(context)
+      def resolve_structure(context = nil)
+        t =
+          target
+            .resolve_reference(context)
+            .resolve_structure(context)
         t.respond_to?(:body) ||
           begin
             message = "cannot amend the target type #{t.class.basename}"
@@ -36,7 +39,7 @@ module RuPkl
 
       def do_amend(target)
         bodies
-          .map { _1.copy(target).evaluate_lazily }
+          .map { _1.copy(target).resolve_structure }
           .then { target.merge!(*_1) }
         target
       end

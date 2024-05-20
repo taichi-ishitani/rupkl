@@ -6,7 +6,7 @@ module RuPkl
       include StructCommon
 
       def properties
-        @body&.properties
+        @body&.properties(visibility: :object)
       end
 
       def entries

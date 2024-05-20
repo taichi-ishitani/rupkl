@@ -17,23 +17,20 @@ module RuPkl
 
       def evaluate(context = nil)
         do_evaluate do
-          resolve_reference(context, receiver, member).evaluate
+          resolve_member_reference(context, receiver, member).evaluate
         end
       end
 
-      def evaluate_lazily(context = nil)
+      def resolve_reference(context = nil)
         do_evaluate do
-          resolve_reference(context, receiver, member).evaluate_lazily
+          resolve_member_reference(context, receiver, member).resolve_reference
         end
       end
 
       def copy(parent = nil)
         self
           .class.new(parent, receiver&.copy, member&.copy, position)
-          .tap do |node|
-            @scope_index &&
-              node.instance_exec(@scope_index) { @scope_index = _1 }
-          end
+          .tap { copy_scope_index(_1) }
       end
 
       private
@@ -57,7 +54,7 @@ module RuPkl
         return unless scope.respond_to?(:properties)
 
         scope
-          &.properties
+          .properties
           &.find { _1.name == target }
           &.value
       end

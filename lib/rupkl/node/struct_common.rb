@@ -20,9 +20,9 @@ module RuPkl
         self
       end
 
-      def evaluate_lazily(context = nil)
+      def resolve_structure(context = nil)
         do_evaluation(__method__, context, 1) do |c|
-          @body&.evaluate_lazily(c)
+          @body&.resolve_structure(c)
         end
         self
       end
@@ -44,7 +44,7 @@ module RuPkl
       end
 
       def current_context
-        super&.push_object(self) || Context.new(nil, [self], nil)
+        super&.push_object(self) || Context.new(nil, [self])
       end
 
       def copy(parent = nil)

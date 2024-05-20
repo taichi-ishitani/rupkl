@@ -60,9 +60,9 @@ module RuPkl
         local_context = MethodCallContext.new(arguments)
         method_context = current_context
         if receiver
-          Context.new(method_context.scopes, [receiver], local_context)
+          Context.new([*method_context.scopes, local_context], [receiver])
         else
-          method_context.push_local_context(local_context)
+          method_context.push_scope(local_context)
         end
       end
 

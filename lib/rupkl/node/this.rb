@@ -6,12 +6,11 @@ module RuPkl
       include NodeCommon
 
       def evaluate(context = nil)
-        evaluate_lazily(context)
+        resolve_reference(context)
       end
 
-      def evaluate_lazily(context = nil)
-        context ||= current_context
-        context.objects.last
+      def resolve_reference(context = nil)
+        (context || current_context).objects.last
       end
     end
   end

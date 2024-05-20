@@ -47,22 +47,25 @@ RSpec.describe RuPkl::Node::MethodCall do
         expect(n2.value).to be_int(60)
       end
 
-      #pkl = <<~'PKL'
-      #  k = 3
-      #  v = 4
-      #  a = foo(1, 2, 3)
-      #  function foo(a, b, c) = new Dynamic {
-      #    c = 2
-      #    [a] = b * c
-      #    [k] = v
-      #  }
-      #PKL
-      #parse(pkl).properties[-1].then do |n|
-      #  expect(n.value).to be_mapping do |m|
-      #    m[1] = 2
-      #    m[3] = 4
-      #  end
-      #end
+      pkl = <<~'PKL'
+        k = 3
+        v = 4
+        a = foo(1, 2, 3)
+        function foo(a, b, c) = new Dynamic {
+          c = 2
+          [a] = b * c
+          [k] = v
+        }
+      PKL
+      parse(pkl).properties[-1].then do |n|
+        expect(n.value).to (
+          be_dynamic do |d|
+            d.property :c, 2
+            d.entry 1, 4
+            d.entry 3, 4
+          end
+        )
+      end
 
       pkl = <<~'PKL'
         function foo() = b * c * this.d
