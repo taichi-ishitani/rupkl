@@ -87,7 +87,17 @@ module RuPkl
             params: subtree(:params), body: simple(:body)
           }
       ) do
-        Node::MethodDefinition.new(nil, name, params, body, node_position(kw))
+        Node::MethodDefinition.new(nil, name, params, nil, body, node_position(kw))
+      end
+
+      rule(
+        object_method:
+          {
+            kw_function: simple(:kw), name: simple(:name),
+            params: subtree(:params), type: simple(:type), body: simple(:body)
+          }
+      ) do
+        Node::MethodDefinition.new(nil, name, params, type, body, node_position(kw))
       end
     end
   end

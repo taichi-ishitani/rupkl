@@ -45,6 +45,9 @@ Metrics/MethodLength:
 Metrics/ModuleLength:
   Max: 200
 
+Metrics/ParameterLists:
+  Max: 7
+
 Naming/VariableNumber:
   EnforcedStyle: snake_case
   CheckSymbols: false

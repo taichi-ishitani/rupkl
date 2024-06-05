@@ -5,7 +5,8 @@ module RuPkl
     define_parser do
       rule(:method_header) do
         kw_function.as(:kw_function) >> ws >>
-          id.as(:name) >> ws? >> method_params.as(:params)
+          id.as(:name) >> ws? >> method_params.as(:params) >>
+          (ws? >> type_annotation.as(:type)).maybe
       end
 
       rule(:method_params) do
@@ -13,7 +14,9 @@ module RuPkl
       end
 
       rule(:method_param) do
-        id.as(:name).as(:method_param)
+        (
+          id.as(:name) >> (ws? >> type_annotation.as(:type)).maybe
+        ).as(:method_param)
       end
     end
 
@@ -25,7 +28,13 @@ module RuPkl
       rule(
         method_param: { name: simple(:name) }
       ) do
-        Node::MethodParam.new(nil, name, name.position)
+        Node::MethodParam.new(nil, name, nil, name.position)
+      end
+
+      rule(
+        method_param: { name: simple(:name), type: simple(:type) }
+      ) do
+        Node::MethodParam.new(nil, name, type, name.position)
       end
     end
   end

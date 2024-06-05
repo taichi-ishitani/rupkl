@@ -10,6 +10,10 @@ module RuPkl
       rule(:type) do
         declared_type
       end
+
+      rule(:type_annotation) do
+        str(':').ignore >> ws? >> type
+      end
     end
 
     define_transform do

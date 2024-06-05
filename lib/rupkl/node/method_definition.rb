@@ -5,26 +5,30 @@ module RuPkl
     class MethodParam
       include NodeCommon
 
-      def initialize(parent, name, position)
+      def initialize(parent, name, type, position)
         super
         @name = name
+        @type = type
       end
 
       attr_reader :name
+      attr_reader :type
     end
 
     class MethodDefinition
       include NodeCommon
 
-      def initialize(parent, name, params, body, position)
-        super(parent, name, *params, body, position)
+      def initialize(parent, name, params, type, body, position)
+        super(parent, name, *params, type, body, position)
         @name = name
         @params = params
+        @type = type
         @body = body
       end
 
       attr_reader :name
       attr_reader :params
+      attr_reader :type
       attr_reader :body
 
       def call(receiver, arguments, context, position)

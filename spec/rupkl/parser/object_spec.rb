@@ -179,6 +179,32 @@ RSpec.describe RuPkl::Parser::Parser do
           end
         end
       )
+
+      pkl = <<~'PKL'
+        {
+          function sum1(a: Int, b: Int): Int = a + b
+          function sum2(a: Number, b: Number): Number = a + b
+          function sum3(a: Int, b: Int): Int = 1.1
+        }
+      PKL
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o|
+          o.body do |b|
+            b.method(
+              :sum1, params: [param(:a, declared_type(:Int)), param(:b, declared_type(:Int))],
+              type: declared_type(:Int), body: b_op(:+, member_ref(:a),  member_ref(:b))
+            )
+            b.method(
+              :sum2, params: [param(:a, declared_type(:Number)), param(:b, declared_type(:Number))],
+              type: declared_type(:Number), body: b_op(:+, member_ref(:a),  member_ref(:b))
+            )
+            b.method(
+              :sum3, params: [param(:a, declared_type(:Int)), param(:b, declared_type(:Int))],
+              type: declared_type(:Int), body: be_float(1.1)
+            )
+          end
+        end
+      )
     end
   end
 end

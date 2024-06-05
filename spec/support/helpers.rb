@@ -205,42 +205,45 @@ module RuPkl
     end
 
     class MethodParam
-      def initialize(name)
+      def initialize(name, type)
         @name = name
+        @type = type
       end
 
       def to_matcher(context)
-        context.instance_exec(@name) do |name|
+        context.instance_exec(@name, @type) do |name, type|
+          type_matcher = type || be_nil
           be_instance_of(Node::MethodParam)
-            .and have_attributes(name: identifer(name))
+            .and have_attributes(name: identifer(name), type: type_matcher)
         end
       end
     end
 
-    def param(name)
-      MethodParam.new(name)
+    def param(name, type = nil)
+      MethodParam.new(name, type)
     end
 
     class MethodDefinition
-      def initialize(name, params: nil, body: nil)
+      def initialize(name, params: nil, type: nil, body: nil)
         @name = name
         @params = params
-        @params = params
+        @type = type
         @body = body
       end
 
       def to_matcher(context)
-        context.instance_exec(@name, @params, @body) do |name, params, body|
+        context.instance_exec(@name, @params, @type, @body) do |name, params, type, body|
           params_matcher =
             if params
               match(params.map { _1.to_matcher(self) })
             else
               be_nil
             end
+          type_matcher = type || be_nil
           be_instance_of(Node::MethodDefinition)
             .and have_attributes(
               name: identifer(name), params: params_matcher,
-              body: expression_matcher(body)
+              type: type_matcher, body: expression_matcher(body)
             )
         end
       end
