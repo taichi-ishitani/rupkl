@@ -13,6 +13,10 @@ module RuPkl
 
       attr_reader :name
       attr_reader :type
+
+      def check_type(value, context, position)
+        type&.check_type(value, context, position)
+      end
     end
 
     class MethodDefinition
@@ -42,8 +46,14 @@ module RuPkl
         check_arity(arguments, position)
 
         arguments&.zip(params)&.map do |arg, param|
-          [param.name, arg.evaluate(context)]
+          evaluate_argument(arg, param, context)
         end
+      end
+
+      def evaluate_argument(arg, param, context)
+        value = arg.evaluate(context)
+        param.check_type(value, context, position)
+        [param.name, value]
       end
 
       def check_arity(arguments, position)

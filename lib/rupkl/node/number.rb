@@ -25,6 +25,9 @@ module RuPkl
         operator == :/ ||
           operator != :'~/' && [self, r_operand].any?(Float)
       end
+
+      abstract_class
+      uninstantiable_class
     end
 
     class Int < Number

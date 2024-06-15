@@ -63,6 +63,10 @@ module RuPkl
       def invalid_string?(string)
         string.equal?(INVALID_STRING)
       end
+
+      def exec_on(context)
+        yield(context || current_context)
+      end
     end
   end
 end

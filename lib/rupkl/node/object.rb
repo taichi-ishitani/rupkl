@@ -387,8 +387,10 @@ module RuPkl
       end
 
       def resolve_structure(context = nil)
-        (type || default_type)
-          .create(parent, bodies, position, context || current_context)
+        exec_on(context) do |c|
+          klass = find_class(c)
+          create_object(klass, c)
+        end
       end
 
       def copy(parent = nil)
@@ -397,9 +399,33 @@ module RuPkl
 
       private
 
-      def default_type
-        id = Identifier.new(nil, :Dynamic, position)
-        DeclaredType.new(self, [id], position)
+      def find_class(context)
+        type
+          &.find_class(context)
+          &.tap { |klass| check_class(klass) } || Dynamic
+      end
+
+      def check_class(klass)
+        message =
+          if klass.abstract?
+            "cannot instantiate abstract class '#{klass.class_name}'"
+          elsif !klass.instantiable?
+            "cannot instantiate class '#{klass.class_name}'"
+          else
+            return
+          end
+        raise EvaluationError.new(message, position)
+      end
+
+      def create_object(klass, context)
+        klass
+          .new(parent, bodies.first.copy, position)
+          .tap { _1.resolve_structure(context) }
+          .tap do |o|
+            bodies[1..]
+              .map { _1.copy(o).resolve_structure(context) }
+              .then { o.merge!(*_1) }
+          end
       end
     end
   end

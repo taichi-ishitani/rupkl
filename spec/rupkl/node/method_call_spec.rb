@@ -82,6 +82,19 @@ RSpec.describe RuPkl::Node::MethodCall do
       parse(pkl).properties[-1].value.properties[0].then do |n|
         expect(n.value).to be_int(6)
       end
+
+      pkl = <<~'PKL'
+        function sum1(a: Int, b: Int): Int = a + b
+        function sum2(a: Number, b: Number): Number = a + b
+        a = sum1(1, 2)
+        b = sum2(1, 2)
+        c = sum2(1.1, 2.2)
+      PKL
+      parse(pkl).properties.then do |(a, b, c)|
+        expect(a.value).to be_int(3)
+        expect(b.value).to be_int(3)
+        expect(c.value).to be_float(1.1 + 2.2)
+      end
     end
 
     context 'the given method is not found' do
@@ -115,42 +128,92 @@ RSpec.describe RuPkl::Node::MethodCall do
           bar = foo(1)
         PKL
         expect { parse(pkl) }
-          .to raise_evaluation_error "expected 0 method arguments but got 1"
+          .to raise_evaluation_error 'expected 0 method arguments but got 1'
 
         pkl = <<~'PKL'
           function foo(a) = 1
           bar = foo()
         PKL
         expect { parse(pkl) }
-          .to raise_evaluation_error "expected 1 method arguments but got 0"
+          .to raise_evaluation_error 'expected 1 method arguments but got 0'
 
         pkl = <<~'PKL'
           function foo(a) = 1
           bar = foo(1, 2)
         PKL
         expect { parse(pkl) }
-          .to raise_evaluation_error "expected 1 method arguments but got 2"
+          .to raise_evaluation_error 'expected 1 method arguments but got 2'
 
         pkl = <<~'PKL'
           function foo(a, b) = 1
           bar = foo()
         PKL
         expect { parse(pkl) }
-          .to raise_evaluation_error "expected 2 method arguments but got 0"
+          .to raise_evaluation_error 'expected 2 method arguments but got 0'
 
         pkl = <<~'PKL'
           function foo(a, b) = 1
           bar = foo(1)
         PKL
         expect { parse(pkl) }
-          .to raise_evaluation_error "expected 2 method arguments but got 1"
+          .to raise_evaluation_error 'expected 2 method arguments but got 1'
 
         pkl = <<~'PKL'
           function foo(a, b) = 1
           bar = foo(1, 2, 3)
         PKL
         expect { parse(pkl) }
-          .to raise_evaluation_error "expected 2 method arguments but got 3"
+          .to raise_evaluation_error 'expected 2 method arguments but got 3'
+      end
+    end
+
+    context 'when the parameter type is not found' do
+      it 'should raise EvaluationError' do
+        pkl = <<~'PKL'
+          function foo(a: INT) = a
+          bar = foo(1)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'cannot find type \'INT\''
+
+        pkl = <<~'PKL'
+          function foo(a: Int, b: INT) = a + b
+          bar = foo(1, 2)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'cannot find type \'INT\''
+      end
+    end
+
+    context 'when the types of the given argument and the parameter are not matched' do
+      it 'should raise EvaluationError' do
+        pkl = <<~'PKL'
+          function foo(a :Int) = a
+          bar = foo(1.0)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'expected type \'Int\', but got type \'Float\''
+
+        pkl = <<~'PKL'
+          function foo(a :Number) = a
+          bar = foo("1")
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'expected type \'Number\', but got type \'String\''
+
+        pkl = <<~'PKL'
+          function foo(a :Int, b: Int) = a + b
+          bar = foo(1.0, 1)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'expected type \'Int\', but got type \'Float\''
+
+        pkl = <<~'PKL'
+          function foo(a :Int, b: Int) = a + b
+          bar = foo(1, 1.0)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'expected type \'Int\', but got type \'Float\''
       end
     end
   end

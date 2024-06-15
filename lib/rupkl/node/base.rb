@@ -24,6 +24,7 @@ module RuPkl
 
       add_builtin_class Any
       add_builtin_class Boolean
+      add_builtin_class Number
       add_builtin_class Int
       add_builtin_class Float
       add_builtin_class String
