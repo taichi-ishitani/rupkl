@@ -20,7 +20,7 @@ group 'development_lint' do
   gem 'rubocop', '~> 1.56.3', require: false
 end
 
-group 'develpment_local' do
+group 'development_local' do
   gem 'bump', '~> 0.10.0', require: false
   gem 'debug', require: false
   gem 'ruby-lsp', require: false
