@@ -185,6 +185,17 @@ RSpec.describe RuPkl::Node::MethodCall do
       end
     end
 
+    context 'when the result type is not found' do
+      it 'should raise EvaluationError' do
+        pkl = <<~'PKL'
+          function foo(a): INT = a
+          bar = foo(1)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'cannot find type \'INT\''
+      end
+    end
+
     context 'when the types of the given argument and the parameter are not matched' do
       it 'should raise EvaluationError' do
         pkl = <<~'PKL'
@@ -214,6 +225,24 @@ RSpec.describe RuPkl::Node::MethodCall do
         PKL
         expect { parse(pkl) }
           .to raise_evaluation_error 'expected type \'Int\', but got type \'Float\''
+      end
+    end
+
+    context 'when the type of result and the return type are not matched' do
+      it 'should raise EvaluationError' do
+        pkl = <<~'PKL'
+          function foo(a): Int = a
+          bar = foo(1.0)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'expected type \'Int\', but got type \'Float\''
+
+        pkl = <<~'PKL'
+          function foo(a): Number = a
+          bar = foo("1.0")
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'expected type \'Number\', but got type \'String\''
       end
     end
   end

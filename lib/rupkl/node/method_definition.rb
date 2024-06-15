@@ -81,7 +81,9 @@ module RuPkl
       end
 
       def execute_body(context)
-        body.evaluate(context)
+        body
+          .evaluate(context)
+          .tap { type&.check_type(_1, context, position) }
       end
     end
 
