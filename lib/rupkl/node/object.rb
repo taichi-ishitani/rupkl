@@ -188,6 +188,7 @@ module RuPkl
 
     class ObjectBody
       include NodeCommon
+      include MemberFinder
 
       def initialize(parent, members, position)
         super(parent, position)

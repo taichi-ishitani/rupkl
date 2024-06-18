@@ -249,4 +249,47 @@ RSpec.describe RuPkl::Node::Number do
       end
     end
   end
+
+  describe 'properties' do
+    describe 'sign' do
+      it 'should return 0 for 0' do
+        node = parser.parse('0.sign', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).sign', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('0.0.sign', root: :expression)
+        expect(node.evaluate(nil)).to be_float(0.0)
+
+        node = parser.parse('(-0.0).sign', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-0.0)
+      end
+
+      it 'should return NaN for NaN', skip: 'unimplemented' do
+      end
+
+      it 'should return 1 for positive numbers' do
+        node = parser.parse('123.sign', root: :expression)
+        expect(node.evaluate(nil)).to be_int(1)
+
+        node = parser.parse('2.34.sign', root: :expression)
+        expect(node.evaluate(nil)).to be_float(1.0)
+      end
+
+      it 'should return 1.0 for Infinity', skip: 'unimplemented' do
+      end
+
+      it 'should return -1 for negative numbers' do
+        node = parser.parse('(-123).sign', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-1)
+
+        node = parser.parse('(-2.34).sign', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-1.0)
+      end
+
+      it 'should return -1.0 for -Infinity', skip: 'unimplemented' do
+      end
+    end
+  end
 end

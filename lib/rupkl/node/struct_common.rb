@@ -4,6 +4,7 @@ module RuPkl
   module Node
     module StructCommon
       include NodeCommon
+      include MemberFinder
 
       def initialize(parent, body, position)
         super
@@ -153,21 +154,6 @@ module RuPkl
             .join('; ')
             .then { "{ #{_1} }" }
         end
-      end
-
-      def find_entry(key)
-        entries
-          &.find { _1.key == key }
-          &.then(&:value)
-      end
-
-      def find_element(index)
-        return nil unless elements
-        return nil unless index.value.is_a?(::Integer)
-
-        elements
-          .find.with_index { |_, i| i == index.value }
-          &.then(&:value)
       end
     end
   end

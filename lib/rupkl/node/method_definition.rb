@@ -89,6 +89,7 @@ module RuPkl
 
     class MethodCallContext
       include NodeCommon
+      include MemberFinder
 
       def initialize(arguments)
         @properties =

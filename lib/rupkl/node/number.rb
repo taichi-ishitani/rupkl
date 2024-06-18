@@ -28,13 +28,31 @@ module RuPkl
 
       abstract_class
       uninstantiable_class
+
+      define_builtin_property(:sign) do
+        result =
+          case value
+          when :positive?.to_proc then 1
+          when :negative?.to_proc then -1
+          else value
+          end
+        self.class.new(parent, result, position)
+      end
     end
 
     class Int < Number
+      def initialize(parent, value, position)
+        super(parent, value.to_i, position)
+      end
+
       uninstantiable_class
     end
 
     class Float < Number
+      def initialize(parent, value, position)
+        super(parent, value.to_f, position)
+      end
+
       uninstantiable_class
     end
   end

@@ -18,6 +18,10 @@ module RuPkl
           @class_name || basename.to_sym
         end
 
+        def builtin_property(name)
+          @builtin_properties&.[](name.id)
+        end
+
         private
 
         def abstract_class
@@ -31,10 +35,30 @@ module RuPkl
         def klass_name(name)
           @class_name = name
         end
+
+        def define_builtin_property(name, &body)
+          (@builtin_properties ||= {})[name] = body
+        end
       end
 
       abstract_class
       uninstantiable_class
+
+      def property(name)
+        builtin_property(name)
+      end
+
+      private
+
+      def builtin_property(name)
+        self.class.ancestors.each do |klass|
+          break if klass > Any
+          next unless klass.respond_to?(:builtin_property)
+
+          body = klass.builtin_property(name)
+          return instance_exec(&body) if body
+        end
+      end
     end
   end
 end

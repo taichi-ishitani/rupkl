@@ -14,6 +14,10 @@ module RuPkl
       attr_reader :operator
       attr_reader :operands
 
+      def resolve_reference(context = nil)
+        evaluate(context)
+      end
+
       def copy(parent = nil)
         copied_operands = operands.map(&:copy)
         self.class.new(parent, operator, *copied_operands, position)

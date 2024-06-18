@@ -51,12 +51,9 @@ module RuPkl
       end
 
       def get_member_node(scope, target)
-        return unless scope.respond_to?(:properties)
+        return unless scope.respond_to?(:property)
 
-        scope
-          .properties
-          &.find { _1.name == target }
-          &.value
+        scope.property(target)
       end
     end
   end
