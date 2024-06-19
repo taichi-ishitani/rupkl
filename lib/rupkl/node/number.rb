@@ -38,6 +38,27 @@ module RuPkl
           end
         self.class.new(parent, result, position)
       end
+
+      define_builtin_property(:abs) do
+        self.class.new(parent, value.abs, position)
+      end
+
+      define_builtin_property(:ceil) do
+        self.class.new(parent, value.ceil, position)
+      end
+
+      define_builtin_property(:floor) do
+        self.class.new(parent, value.floor, position)
+      end
+
+      define_builtin_property(:isPositive) do
+        result = value.zero? || value.positive?
+        Boolean.new(parent, result, position)
+      end
+
+      define_builtin_property(:isNonZero) do
+        Boolean.new(parent, !value.zero?, position)
+      end
     end
 
     class Int < Number
