@@ -15,7 +15,13 @@ module RuPkl
     alias_method :be_int, :int_literal
 
     def float_literal(value)
-      be_instance_of(Node::Float).and have_attributes(value: value)
+      matcher =
+        if value.nan?
+          have_attributes(value: be_nan)
+        else
+          have_attributes(value: value)
+        end
+      be_instance_of(Node::Float).and matcher
     end
 
     alias_method :be_float, :float_literal

@@ -32,6 +32,14 @@ module RuPkl
       add_builtin_class Mapping
       add_builtin_class Listing
       add_builtin_class PklModule
+
+      define_builtin_property(:NaN) do
+        Float.new(parent, ::Float::NAN, position)
+      end
+
+      define_builtin_property(:Infinity) do
+        Float.new(parent, ::Float::INFINITY, position)
+      end
     end
   end
 end

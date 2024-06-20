@@ -266,7 +266,9 @@ RSpec.describe RuPkl::Node::Number do
         expect(node.evaluate(nil)).to be_float(-0.0)
       end
 
-      it 'should return NaN for NaN', skip: 'unimplemented' do
+      it 'should return NaN for NaN' do
+        node = parser.parse('NaN.sign', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::NAN)
       end
 
       it 'should return 1 for positive numbers' do
@@ -275,9 +277,9 @@ RSpec.describe RuPkl::Node::Number do
 
         node = parser.parse('2.34.sign', root: :expression)
         expect(node.evaluate(nil)).to be_float(1.0)
-      end
 
-      it 'should return 1.0 for Infinity', skip: 'unimplemented' do
+        node = parser.parse('Infinity.sign', root: :expression)
+        expect(node.evaluate(nil)).to be_float(1.0)
       end
 
       it 'should return -1 for negative numbers' do
@@ -286,9 +288,9 @@ RSpec.describe RuPkl::Node::Number do
 
         node = parser.parse('(-2.34).sign', root: :expression)
         expect(node.evaluate(nil)).to be_float(-1.0)
-      end
 
-      it 'should return -1.0 for -Infinity', skip: 'unimplemented' do
+        node = parser.parse('(-Infinity).sign', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-1.0)
       end
     end
 
@@ -321,14 +323,14 @@ RSpec.describe RuPkl::Node::Number do
         node = parser.parse('(-2.34).abs', root: :expression)
         expect(node.evaluate(nil)).to be_float(2.34)
 
-        #node = parser.parse('NaN.abs', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(Float::NAN)
+        node = parser.parse('NaN.abs', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::NAN)
 
-        #node = parser.parse('Infinity.abs', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(Float::INFINITY)
+        node = parser.parse('Infinity.abs', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::INFINITY)
 
-        #node = parser.parse('(-Infinity).abs', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(Float::INFINITY)
+        node = parser.parse('(-Infinity).abs', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::INFINITY)
       end
     end
 
@@ -364,14 +366,14 @@ RSpec.describe RuPkl::Node::Number do
         node = parser.parse('(-2.9).ceil', root: :expression)
         expect(node.evaluate(nil)).to be_float(-2.0)
 
-        #node = parser.parse('NaN.ceil', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(Float::NAN)
+        node = parser.parse('NaN.ceil', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::NAN)
 
-        #node = parser.parse('Infinity.ceil', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(Float::INFINITY)
+        node = parser.parse('Infinity.ceil', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::INFINITY)
 
-        #node = parser.parse('(-Infinity).ceil', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
+        node = parser.parse('(-Infinity).ceil', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
       end
     end
 
@@ -407,14 +409,14 @@ RSpec.describe RuPkl::Node::Number do
         node = parser.parse('(-2.9).floor', root: :expression)
         expect(node.evaluate(nil)).to be_float(-3.0)
 
-        #node = parser.parse('NaN.floor', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(Float::NAN)
+        node = parser.parse('NaN.floor', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::NAN)
 
-        #node = parser.parse('Infinity.floor', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(Float::INFINITY)
+        node = parser.parse('Infinity.floor', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::INFINITY)
 
-        #node = parser.parse('(-Infinity).floor', root: :expression)
-        #expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
+        node = parser.parse('(-Infinity).floor', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
       end
     end
 
@@ -441,14 +443,125 @@ RSpec.describe RuPkl::Node::Number do
         node = parser.parse('(-42.123).isPositive', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(false)
 
-        #node = parser.parse('NaN.isPositive', root: :expression)
-        #expect(node.evaluate(nil)).to be_boolean(false)
+        node = parser.parse('NaN.isPositive', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
 
-        #node = parser.parse('Infinity.isPositive', root: :expression)
-        #expect(node.evaluate(nil)).to be_boolean(true)
+        node = parser.parse('Infinity.isPositive', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
 
-        #node = parser.parse('(-Infinity).isPositive', root: :expression)
-        #expect(node.evaluate(nil)).to be_boolean(false)
+        node = parser.parse('(-Infinity).isPositive', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+      end
+    end
+
+    describe 'isFinite' do
+      it 'should tell if its value is not NaN nor Infinity' do
+        node = parser.parse('0.isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-0).isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('42.isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-42).isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('0.0.isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-0.0).isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('42.123.isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-42.123).isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('NaN.isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('Infinity.isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-Infinity).isFinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+      end
+    end
+
+    describe 'isInfinite' do
+      it 'should tell if its value is Infinity or -Infinity' do
+        node = parser.parse('0.isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-0).isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('42.isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-42).isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('0.0.isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-0.0).isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('42.123.isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-42.123).isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('NaN.isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('Infinity.isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-Infinity).isInfinite', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+      end
+    end
+
+    describe 'isNaN' do
+      it 'should tell if its value is NaN' do
+        node = parser.parse('0.isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-0).isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('42.isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-42).isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('0.0.isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-0.0).isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('42.123.isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-42.123).isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('NaN.isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('Infinity.isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-Infinity).isNaN', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
       end
     end
 
@@ -475,14 +588,14 @@ RSpec.describe RuPkl::Node::Number do
         node = parser.parse('(-42.123).isNonZero', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(true)
 
-        #node = parser.parse('NaN.isNonZero', root: :expression)
-        #expect(node.evaluate(nil)).to be_boolean(true)
+        node = parser.parse('NaN.isNonZero', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
 
-        #node = parser.parse('Infinity.isNonZero', root: :expression)
-        #expect(node.evaluate(nil)).to be_boolean(true)
+        node = parser.parse('Infinity.isNonZero', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
 
-        #node = parser.parse('(-Infinity).isNonZero', root: :expression)
-        #expect(node.evaluate(nil)).to be_boolean(false)
+        node = parser.parse('(-Infinity).isNonZero', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
       end
     end
   end

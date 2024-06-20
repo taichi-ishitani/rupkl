@@ -44,15 +44,31 @@ module RuPkl
       end
 
       define_builtin_property(:ceil) do
-        self.class.new(parent, value.ceil, position)
+        result = value.finite? && value.ceil || value
+        self.class.new(parent, result, position)
       end
 
       define_builtin_property(:floor) do
-        self.class.new(parent, value.floor, position)
+        result = value.finite? && value.floor || value
+        self.class.new(parent, result, position)
       end
 
       define_builtin_property(:isPositive) do
         result = value.zero? || value.positive?
+        Boolean.new(parent, result, position)
+      end
+
+      define_builtin_property(:isFinite) do
+        Boolean.new(parent, value.finite?, position)
+      end
+
+      define_builtin_property(:isInfinite) do
+        result = value.infinite? && true || false
+        Boolean.new(parent, result, position)
+      end
+
+      define_builtin_property(:isNaN) do
+        result = !value.integer? && value.nan?
         Boolean.new(parent, result, position)
       end
 

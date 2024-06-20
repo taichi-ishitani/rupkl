@@ -10,8 +10,9 @@ module RuPkl
           if receiver
             [receiver.resolve_reference.resolve_structure]
           else
-            context ||= current_context
-            [context.objects&.last, *context.scopes]
+            exec_on(context) do |c|
+              [c&.objects&.last, Base.instance, *c&.scopes]
+            end
           end
         find_member(scopes, target)
       end

@@ -52,12 +52,13 @@ module RuPkl
 
       def builtin_property(name)
         self.class.ancestors.each do |klass|
-          break if klass > Any
           next unless klass.respond_to?(:builtin_property)
 
           body = klass.builtin_property(name)
           return instance_exec(&body) if body
         end
+
+        nil
       end
     end
   end
