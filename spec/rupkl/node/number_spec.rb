@@ -598,5 +598,71 @@ RSpec.describe RuPkl::Node::Number do
         expect(node.evaluate(nil)).to be_boolean(true)
       end
     end
+
+    describe 'isEven' do
+      it 'should tell if its value is even' do
+        node = parser.parse('0.isEven', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-0).isEven', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('123.isEven', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-123).isEven', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('124.isEven', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-124).isEven', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+      end
+    end
+
+    describe 'isOdd' do
+      it 'should tell if its value is odd' do
+        node = parser.parse('0.isOdd', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-0).isOdd', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('123.isOdd', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-123).isOdd', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('124.isOdd', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('(-124).isOdd', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+      end
+    end
+
+    describe 'inv' do
+      it 'should bitwise not of its value' do
+        node = parser.parse('0.inv', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-1)
+
+        node = parser.parse('(-0).inv', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-1)
+
+        node = parser.parse('1.inv', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-2)
+
+        node = parser.parse('(-1).inv', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.inv', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-124)
+
+        node = parser.parse('(-123).inv', root: :expression)
+        expect(node.evaluate(nil)).to be_int(122)
+      end
+    end
   end
 end

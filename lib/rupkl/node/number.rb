@@ -83,6 +83,18 @@ module RuPkl
       end
 
       uninstantiable_class
+
+      define_builtin_property(:isEven) do
+        Boolean.new(parent, value.even?, position)
+      end
+
+      define_builtin_property(:isOdd) do
+        Boolean.new(parent, value.odd?, position)
+      end
+
+      define_builtin_property(:inv) do
+        self.class.new(parent, ~value, position)
+      end
     end
 
     class Float < Number
