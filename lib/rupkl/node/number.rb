@@ -75,6 +75,20 @@ module RuPkl
       define_builtin_property(:isNonZero) do
         Boolean.new(parent, !value.zero?, position)
       end
+
+      define_builtin_method(:toString) do
+        String.new(parent, value.to_s, nil, position)
+      end
+
+      define_builtin_method(:round) do
+        result = value.finite? && value.round || value
+        self.class.new(parent, result, position)
+      end
+
+      define_builtin_method(:truncate) do
+        result = value.finite? && value.truncate || value
+        self.class.new(parent, result, position)
+      end
     end
 
     class Int < Number

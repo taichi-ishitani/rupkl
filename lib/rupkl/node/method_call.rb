@@ -33,11 +33,9 @@ module RuPkl
       private
 
       def get_member_node(scope, target)
-        return unless scope.respond_to?(:pkl_methods)
+        return unless scope.respond_to?(:pkl_method)
 
-        scope
-          .pkl_methods
-          &.find { _1.name == target }
+        scope.pkl_method(target)
       end
 
       def unresolve_reference_error(target)

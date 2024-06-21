@@ -10,6 +10,13 @@ module RuPkl
         super if self.class <= Any
       end
 
+      def pkl_method(name)
+        method = find_pkl_method(name)
+        return method if method
+
+        super if self.class <= Any
+      end
+
       private
 
       def find_property(name)
@@ -25,7 +32,7 @@ module RuPkl
 
         entries
           &.find { _1.key == key }
-          &.then(&:value)
+          &.value
       end
 
       def find_element(index)
@@ -35,7 +42,13 @@ module RuPkl
 
         elements
           .find.with_index { |_, i| i == index.value }
-          &.then(&:value)
+          &.value
+      end
+
+      def find_pkl_method(name)
+        return unless respond_to?(:pkl_methods)
+
+        pkl_methods&.find { _1.name == name }
       end
     end
   end

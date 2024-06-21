@@ -87,6 +87,21 @@ module RuPkl
       end
     end
 
+    class BuiltinMethodDefinition < MethodDefinition
+      def initialize(name, **params, &body)
+        param_list = params.map { |n, t| MethodParam.new(nil, n, t, nil) }
+        id = Identifier.new(nil, name, nil)
+        super(nil, id, param_list, nil, nil, nil)
+        @body = body
+      end
+
+      private
+
+      def execute_method(receiver, arguments)
+        receiver.instance_exec(*arguments&.values, &body)
+      end
+    end
+
     class MethodCallContext
       include NodeCommon
       include MemberFinder

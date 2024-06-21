@@ -22,6 +22,10 @@ module RuPkl
           @builtin_properties&.[](name.id)
         end
 
+        def buildin_method(name)
+          @builtin_methods&.[](name.id)
+        end
+
         private
 
         def abstract_class
@@ -39,6 +43,10 @@ module RuPkl
         def define_builtin_property(name, &body)
           (@builtin_properties ||= {})[name] = body
         end
+
+        def define_builtin_method(name, ...)
+          (@builtin_methods ||= {})[name] = BuiltinMethodDefinition.new(name, ...)
+        end
       end
 
       abstract_class
@@ -46,6 +54,10 @@ module RuPkl
 
       def property(name)
         builtin_property(name)
+      end
+
+      def pkl_method(name)
+        buildin_method(name)
       end
 
       private
@@ -56,6 +68,17 @@ module RuPkl
 
           body = klass.builtin_property(name)
           return instance_exec(&body) if body
+        end
+
+        nil
+      end
+
+      def buildin_method(name)
+        self.class.ancestors.each do |klass|
+          next unless klass.respond_to?(:buildin_method)
+
+          method = klass.buildin_method(name)
+          return method if method
         end
 
         nil

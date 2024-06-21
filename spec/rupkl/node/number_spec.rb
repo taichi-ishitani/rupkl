@@ -665,4 +665,129 @@ RSpec.describe RuPkl::Node::Number do
       end
     end
   end
+
+  describe 'methods' do
+    describe 'toString' do
+      it 'should convert its value to its decimal string representation' do
+        node = parser.parse('0.toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('0')
+
+        node = parser.parse('(-0).toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('0')
+
+        node = parser.parse('123.toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('123')
+
+        node = parser.parse('(-123).toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('-123')
+
+        node = parser.parse('0.0.toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('0.0')
+
+        node = parser.parse('(-0.0).toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('-0.0')
+
+        node = parser.parse('2.34.toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('2.34')
+
+        node = parser.parse('(-2.34).toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('-2.34')
+
+        node = parser.parse('NaN.toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('NaN')
+
+        node = parser.parse('Infinity.toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('Infinity')
+
+        node = parser.parse('(-Infinity).toString()', root: :expression)
+        expect(node.evaluate(nil)).to be_evaluated_string('-Infinity')
+      end
+    end
+
+    describe 'round' do
+      it 'should round its value to the nearest mathematical integer' do
+        node = parser.parse('0.round()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).round()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.round()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).round()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('0.0.round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(0.0)
+
+        node = parser.parse('(-0.0).round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-0.0)
+
+        node = parser.parse('2.34.round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(2.0)
+
+        node = parser.parse('(-2.34).round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-2.0)
+
+        node = parser.parse('2.9.round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(3.0)
+
+        node = parser.parse('(-2.9).round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-3.0)
+
+        node = parser.parse('NaN.round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::NAN)
+
+        node = parser.parse('Infinity.round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::INFINITY)
+
+        node = parser.parse('(-Infinity).round()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
+      end
+    end
+
+    describe 'truncate' do
+      it 'should round its value to the nearest mathematical integer towards zero' do
+        node = parser.parse('0.truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('0.0.truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(0.0)
+
+        node = parser.parse('(-0.0).truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-0.0)
+
+        node = parser.parse('2.34.truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(2.0)
+
+        node = parser.parse('(-2.34).truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-2.0)
+
+        node = parser.parse('2.9.truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(2.0)
+
+        node = parser.parse('(-2.9).truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-2.0)
+
+        node = parser.parse('NaN.truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::NAN)
+
+        node = parser.parse('Infinity.truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::INFINITY)
+
+        node = parser.parse('(-Infinity).truncate()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
+      end
+    end
+  end
 end
