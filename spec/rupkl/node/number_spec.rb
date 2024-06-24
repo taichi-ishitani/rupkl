@@ -704,6 +704,91 @@ RSpec.describe RuPkl::Node::Number do
       end
     end
 
+    describe 'toInt' do
+      it 'should convert its value to an Int value' do
+        node = parser.parse('0.toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('0.0.toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0.0).toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('2.39.toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(2)
+
+        node = parser.parse('(-2.39).toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-2)
+
+        node = parser.parse('2.9.toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(2)
+
+        node = parser.parse('(-2.9).toInt()', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-2)
+
+        #node = parser.parse('NaN.toInt()', root: :expression)
+
+        #node = parser.parse('Infinity.toInt()', root: :expression)
+
+        #node = parser.parse('(-Infinity).toInt()', root: :expression)
+
+        #node = parser.parse('9223372036854775808.1.toInt()', root: :expression)
+      end
+    end
+
+    describe 'toFloat' do
+      it 'should convert its value to a Float value' do
+        node = parser.parse('0.toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(0.0)
+
+        node = parser.parse('(-0).toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(0.0)
+
+        node = parser.parse('123.toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(123.0)
+
+        node = parser.parse('(-123).toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-123.0)
+
+        node = parser.parse('0.0.toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(0.0)
+
+        node = parser.parse('(-0.0).toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-0.0)
+
+        node = parser.parse('2.39.toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(2.39)
+
+        node = parser.parse('(-2.39).toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-2.39)
+
+        node = parser.parse('2.9.toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(2.9)
+
+        node = parser.parse('(-2.9).toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-2.9)
+
+        node = parser.parse('NaN.toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::NAN)
+
+        node = parser.parse('Infinity.toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(Float::INFINITY)
+
+        node = parser.parse('(-Infinity).toFloat()', root: :expression)
+        expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
+      end
+    end
+
     describe 'round' do
       it 'should round its value to the nearest mathematical integer' do
         node = parser.parse('0.round()', root: :expression)
@@ -787,6 +872,79 @@ RSpec.describe RuPkl::Node::Number do
 
         node = parser.parse('(-Infinity).truncate()', root: :expression)
         expect(node.evaluate(nil)).to be_float(-Float::INFINITY)
+      end
+    end
+
+    describe 'isBetween' do
+      it 'should tell if this number is greater than or equal to start and less than or equal to inclusiveEnd' do
+        node = parser.parse('3.isBetween(2, 4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(2.2, 4.4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(2.2, 4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(2, 4.4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(2, 3)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(3, 4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(3, 3)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(3.0, 3.0)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.isBetween(1, 2)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('3.isBetween(4, 2)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('3.3.isBetween(2, 4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.3.isBetween(2.2, 4.4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.3.isBetween(2.2, 4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.3.isBetween(2, 4.4)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.3.isBetween(2, 3.3)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.3.isBetween(3.3, 4.0)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.3.isBetween(3.3, 3.3)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('3.3.isBetween(1.1, 2.2)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('3.3.isBetween(4.4, 2.2)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('Infinity.isBetween(0, Infinity)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('(-Infinity).isBetween(-Infinity, 0)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(true)
+
+        node = parser.parse('NaN.isBetween(0, 0)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
+
+        node = parser.parse('0.isBetween(0, NaN)', root: :expression)
+        expect(node.evaluate(nil)).to be_boolean(false)
       end
     end
   end

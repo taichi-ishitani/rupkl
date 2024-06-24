@@ -80,6 +80,14 @@ module RuPkl
         String.new(parent, value.to_s, nil, position)
       end
 
+      define_builtin_method(:toInt) do
+        Int.new(parent, value.to_i, position)
+      end
+
+      define_builtin_method(:toFloat) do
+        Float.new(parent, value.to_f, position)
+      end
+
       define_builtin_method(:round) do
         result = value.finite? && value.round || value
         self.class.new(parent, result, position)
@@ -88,6 +96,13 @@ module RuPkl
       define_builtin_method(:truncate) do
         result = value.finite? && value.truncate || value
         self.class.new(parent, result, position)
+      end
+
+      define_builtin_method(:isBetween, first: Number, last: Number) do |f, l|
+        result =
+          [f.value, l.value, value].all? { _1.finite? || _1.infinite? } &&
+          (f.value..l.value).include?(value)
+        Boolean.new(parent, result, position)
       end
     end
 

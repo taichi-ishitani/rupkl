@@ -87,21 +87,6 @@ module RuPkl
       end
     end
 
-    class BuiltinMethodDefinition < MethodDefinition
-      def initialize(name, **params, &body)
-        param_list = params.map { |n, t| MethodParam.new(nil, n, t, nil) }
-        id = Identifier.new(nil, name, nil)
-        super(nil, id, param_list, nil, nil, nil)
-        @body = body
-      end
-
-      private
-
-      def execute_method(receiver, arguments)
-        receiver.instance_exec(*arguments&.values, &body)
-      end
-    end
-
     class MethodCallContext
       include NodeCommon
       include MemberFinder
@@ -115,6 +100,44 @@ module RuPkl
       end
 
       attr_reader :properties
+    end
+
+    class BuiltinMethodTypeChecker
+      include TypeCommon
+
+      def initialize(klass)
+        super(nil, nil)
+        @klass = klass
+      end
+
+      private
+
+      def match_type?(klass, _context)
+        klass <= @klass
+      end
+    end
+
+    class BuiltinMethodParams < MethodParam
+      def initialize(name, klass)
+        id = Identifier.new(nil, name, nil)
+        type = BuiltinMethodTypeChecker.new(klass)
+        super(nil, id, type, nil)
+      end
+    end
+
+    class BuiltinMethodDefinition < MethodDefinition
+      def initialize(name, **params, &body)
+        param_list = params.map { |n, t| BuiltinMethodParams.new(n, t) }
+        id = Identifier.new(nil, name, nil)
+        super(nil, id, param_list, nil, nil, nil)
+        @body = body
+      end
+
+      private
+
+      def execute_method(receiver, arguments)
+        receiver.instance_exec(*arguments&.map(&:last), &body)
+      end
     end
   end
 end
