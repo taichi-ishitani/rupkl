@@ -124,6 +124,39 @@ module RuPkl
       define_builtin_property(:inv) do
         self.class.new(parent, ~value, position)
       end
+
+      define_builtin_method(:shl, n: Int) do |n|
+        result = value << n.value
+        self.class.new(parent, result, position)
+      end
+
+      define_builtin_method(:shr, n: Int) do |n|
+        result = value >> n.value
+        self.class.new(parent, result, position)
+      end
+
+      define_builtin_method(:ushr, n: Int) do |n|
+        result =
+          if value.negative?
+            mask = (1 << 63) - 1
+            n.value.times.inject(value) { |v, _| (v >> 1) & mask }
+          else
+            value >> n.value
+          end
+        self.class.new(parent, result, position)
+      end
+
+      define_builtin_method(:and, n: Int) do |n|
+        self.class.new(parent, value & n.value, position)
+      end
+
+      define_builtin_method(:or, n: Int) do |n|
+        self.class.new(parent, value | n.value, position)
+      end
+
+      define_builtin_method(:xor, n: Int) do |n|
+        self.class.new(parent, value ^ n.value, position)
+      end
     end
 
     class Float < Number

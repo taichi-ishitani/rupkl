@@ -876,7 +876,7 @@ RSpec.describe RuPkl::Node::Number do
     end
 
     describe 'isBetween' do
-      it 'should tell if this number is greater than or equal to start and less than or equal to inclusiveEnd' do
+      it 'should tell if its value is greater than or equal to start and less than or equal to inclusiveEnd' do
         node = parser.parse('3.isBetween(2, 4)', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(true)
 
@@ -945,6 +945,156 @@ RSpec.describe RuPkl::Node::Number do
 
         node = parser.parse('0.isBetween(0, NaN)', root: :expression)
         expect(node.evaluate(nil)).to be_boolean(false)
+      end
+    end
+
+    describe 'shl' do
+      it 'should shift its value left by n bits' do
+        node = parser.parse('0.shl(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).shl(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('0.shl(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).shl(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.shl(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).shl(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('123.shl(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(492)
+
+        node = parser.parse('(-123).shl(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-492)
+      end
+    end
+
+    describe 'shr' do
+      it 'should shift its value right by n bits, preserving the sign bit' do
+        node = parser.parse('0.shr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).shr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('0.shr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).shr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.shr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).shr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('123.shr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(30)
+
+        node = parser.parse('(-123).shr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-31)
+      end
+    end
+
+    describe 'ushr' do
+      it 'should shift its value right by n bits, setting the sign bit to zero' do
+        node = parser.parse('0.ushr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).ushr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('0.ushr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).ushr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.ushr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).ushr(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('123.ushr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(30)
+
+        node = parser.parse('(-123).ushr(2)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(4611686018427387873)
+      end
+    end
+
+    describe 'and' do
+      it 'should return bitwise AND of its value and n' do
+        node = parser.parse('0.and(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-0).and(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.and(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('(-123).and(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(0)
+
+        node = parser.parse('123.and(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(72)
+
+        node = parser.parse('(-123).and(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(384)
+      end
+    end
+
+    describe 'or' do
+      it 'should return bitwise OR of its value and n' do
+        node = parser.parse('0.or(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(456)
+
+        node = parser.parse('(-0).or(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(456)
+
+        node = parser.parse('123.or(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).or(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('123.or(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(507)
+
+        node = parser.parse('(-123).or(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-51)
+      end
+    end
+
+    describe 'xor' do
+      it 'should return bitwise XOR of its value and n' do
+        node = parser.parse('0.xor(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(456)
+
+        node = parser.parse('(-0).xor(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(456)
+
+        node = parser.parse('123.xor(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(123)
+
+        node = parser.parse('(-123).xor(0)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-123)
+
+        node = parser.parse('123.xor(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(435)
+
+        node = parser.parse('(-123).xor(456)', root: :expression)
+        expect(node.evaluate(nil)).to be_int(-435)
       end
     end
   end
