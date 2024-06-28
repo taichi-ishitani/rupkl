@@ -52,6 +52,10 @@ module RuPkl
         parent&.current_context
       end
 
+      def structure?
+        false
+      end
+
       private
 
       INVALID_STRING = String.new('?').freeze

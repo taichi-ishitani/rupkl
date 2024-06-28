@@ -18,9 +18,11 @@ module RuPkl
       attr_reader :arguments
 
       def evaluate(context = nil)
-        receiver_node = receiver&.resolve_reference(context)
+        receiver_node = evaluate_receiver(receiver)
         pkl_method = resolve_member_reference(context, receiver_node, method_name)
-        pkl_method.call(receiver_node, arguments, context || current_context, position)
+        exec_on(context) do |c|
+          pkl_method.call(receiver_node, arguments, c, position)
+        end
       end
 
       def copy(parent = nil)

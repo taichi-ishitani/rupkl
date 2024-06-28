@@ -17,7 +17,11 @@ module RuPkl
       end
 
       def ==(other)
-        other.instance_of?(self.class) && id == other.id
+        case other
+        when self.class then id == other.id
+        when Symbol then id == other
+        else false
+        end
       end
     end
   end

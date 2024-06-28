@@ -28,6 +28,16 @@ module RuPkl
         find_entry(key) || find_element(key)
       end
 
+      define_builtin_method(:length) do
+        result = elements&.size || 0
+        Int.new(nil, result, position)
+      end
+
+      define_builtin_method(:hasProperty, name: String) do |name|
+        result = find_property(name.value.to_sym) && true || false
+        Boolean.new(nil, result, position)
+      end
+
       private
 
       def properties_not_allowed?

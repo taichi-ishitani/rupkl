@@ -48,6 +48,10 @@ module RuPkl
         super&.push_object(self) || Context.new(nil, [self])
       end
 
+      def structure?
+        true
+      end
+
       def copy(parent = nil)
         self.class.new(parent, @body&.copy, position)
       end

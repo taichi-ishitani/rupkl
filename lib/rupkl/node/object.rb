@@ -394,6 +394,10 @@ module RuPkl
         end
       end
 
+      def structure?
+        true
+      end
+
       def copy(parent = nil)
         self.class.new(parent, type, bodies, position)
       end

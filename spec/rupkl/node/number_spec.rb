@@ -666,7 +666,7 @@ RSpec.describe RuPkl::Node::Number do
     end
   end
 
-  describe 'methods' do
+  describe 'builtin methods' do
     describe 'toString' do
       it 'should convert its value to its decimal string representation' do
         node = parser.parse('0.toString()', root: :expression)

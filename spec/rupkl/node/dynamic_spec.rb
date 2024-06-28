@@ -93,8 +93,8 @@ RSpec.describe RuPkl::Node::Dynamic do
     PKL
   end
 
-  def parse(string)
-    parser.parse(string.chomp, root: :object)
+  def parse(string, root: :object)
+    parser.parse(string.chomp, root: root)
   end
 
   describe '#evaluate' do
@@ -396,7 +396,7 @@ RSpec.describe RuPkl::Node::Dynamic do
   describe 'subscript operation' do
     context 'when the given key mathes an element index' do
       it 'should return the specified element' do
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo { 0 1 2 }
           bar_0 = foo[2]
           bar_1 = foo[1]
@@ -412,7 +412,7 @@ RSpec.describe RuPkl::Node::Dynamic do
 
     context 'when the given key matches an entry key' do
       it 'should return the specified entry' do
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo { 1 2 3 }
           bar {
             [foo]   = 0
@@ -439,28 +439,28 @@ RSpec.describe RuPkl::Node::Dynamic do
 
     context 'when no elements/entries are not found' do
       it 'should raise EvaluationError' do
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo { 0 1 2 }
           bar_0 = foo[-1]
         PKL
         expect { node.evaluate(nil) }
           .to raise_evaluation_error 'cannot find key \'-1\''
 
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo { 0 1 2 }
           bar_0 = foo[3]
         PKL
         expect { node.evaluate(nil) }
           .to raise_evaluation_error 'cannot find key \'3\''
 
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo { 0 1 2 }
           bar_0 = foo[0.0]
         PKL
         expect { node.evaluate(nil) }
           .to raise_evaluation_error 'cannot find key \'0.0\''
 
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo {
             [true] = 0
             ["foo"] = 1
@@ -471,7 +471,7 @@ RSpec.describe RuPkl::Node::Dynamic do
         expect { node.evaluate(nil) }
           .to raise_evaluation_error 'cannot find key \'false\''
 
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo {
             [true] = 0
             ["foo"] = 1
@@ -482,7 +482,7 @@ RSpec.describe RuPkl::Node::Dynamic do
         expect { node.evaluate(nil) }
           .to raise_evaluation_error 'cannot find key \'"bar"\''
 
-        node = parser.parse(<<~'PKL', root: :pkl_module)
+        node = parse(<<~'PKL', root: :pkl_module)
           foo {
             [true] = 0
             ["foo"] = 1
@@ -498,14 +498,14 @@ RSpec.describe RuPkl::Node::Dynamic do
 
   describe 'unary operation' do
     specify 'any unary operations are not defined' do
-      node = parser.parse(<<~'PKL', root: :pkl_module)
+      node = parse(<<~'PKL', root: :pkl_module)
         foo {}
         bar = -foo
       PKL
       expect { node.evaluate(nil) }
         .to raise_evaluation_error 'operator \'-\' is not defined for Dynamic type'
 
-      node = parser.parse(<<~'PKL', root: :pkl_module)
+      node = parse(<<~'PKL', root: :pkl_module)
         foo {}
         bar = !foo
       PKL
@@ -682,7 +682,7 @@ RSpec.describe RuPkl::Node::Dynamic do
 
       it 'should execlute the given operation' do
         pkl_match_strings.each do |pkl|
-          node = parser.parse(<<~PKL, root: :pkl_module)
+          node = parse(<<~PKL, root: :pkl_module)
             #{pkl}
             c = a == b
             d = a != b
@@ -694,7 +694,7 @@ RSpec.describe RuPkl::Node::Dynamic do
         end
 
         pkl_unmatch_strings.each do |pkl|
-          node = parser.parse(<<~PKL, root: :pkl_module)
+          node = parse(<<~PKL, root: :pkl_module)
             #{pkl}
             c = a != b
             d = a == b
@@ -714,13 +714,86 @@ RSpec.describe RuPkl::Node::Dynamic do
           '+', '-', '*', '/', '~/', '%', '**',
           '&&', '||'
         ].each do |op|
-          node = parser.parse(<<~PKL, root: :pkl_module)
+          node = parse(<<~PKL, root: :pkl_module)
             foo {}
             bar {}
             baz = foo #{op} bar
           PKL
           expect { node.evaluate(nil) }
             .to raise_evaluation_error "operator '#{op}' is not defined for Dynamic type"
+        end
+      end
+    end
+  end
+
+  describe 'builtin method' do
+    describe 'length' do
+      it 'should return the number of the elements in this object' do
+        node = parse(<<~'PKL', root: :pkl_module)
+          obj1 = new Dynamic {
+            prop1 = "prop1"
+            prop2 = "prop2"
+            ["name"] = "Pigeon"
+            ["age"] = 42
+            "one"
+            "two"
+          }
+          obj2 = (obj1) { "three"; "four" }{ x = 1 }{ "five" }{}
+          obj3 = (obj1) { [0] = "one one"; [1] = "two two" }
+          a = obj1.length()
+          b = obj2.length()
+          c = obj3.length()
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_int(2)
+          expect(b.value).to be_int(5)
+          expect(c.value).to be_int(2)
+        end
+
+        node = parse(<<~'PKL', root: :pkl_module)
+          a = new Dynamic {}.length()
+          b = new Dynamic { name = "Pigeon" }.length()
+          c = new Dynamic { ["name"] = "Pigeon" }.length()
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(0)
+          expect(c.value).to be_int(0)
+        end
+      end
+    end
+
+    describe 'hasProperty' do
+      it 'should tell this object has a property with the given name' do
+        node = parse(<<~'PKL', root: :pkl_module)
+          obj1 = new Dynamic {
+            name = "Pigeon"
+            age = 42
+          }
+          obj2 = (obj1) {
+            age = 43
+            nostalgia = true
+          }
+          a = obj1.hasProperty("name")
+          b = obj1.hasProperty("na" + "me")
+          c = obj1.hasProperty("age")
+          d = obj1.hasProperty("nostalgia")
+          e = obj1.hasProperty("other")
+          f = obj2.hasProperty("name")
+          g = obj2.hasProperty("age")
+          h = obj2.hasProperty("nostalgia")
+          i = obj2.hasProperty("other")
+        PKL
+        node.evaluate(nil).properties[-9..].then do |(a, b, c, d, e, f, g, h, i)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(false)
+          expect(e.value).to be_boolean(false)
+          expect(f.value).to be_boolean(true)
+          expect(g.value).to be_boolean(true)
+          expect(h.value).to be_boolean(true)
+          expect(i.value).to be_boolean(false)
         end
       end
     end
