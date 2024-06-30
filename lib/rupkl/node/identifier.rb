@@ -17,11 +17,12 @@ module RuPkl
       end
 
       def ==(other)
-        case other
-        when self.class then id == other.id
-        when Symbol then id == other
-        else false
-        end
+        id ==
+          if other.respond_to?(:id)
+            other.id
+          else
+            other
+          end
       end
     end
   end
