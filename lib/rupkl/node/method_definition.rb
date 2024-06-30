@@ -27,7 +27,7 @@ module RuPkl
         @name = name
         @params = params
         @type = type
-        @body = body
+        @body = body&.copy # reset `#parent` handle
       end
 
       attr_reader :name

@@ -8,7 +8,7 @@ module RuPkl
       def resolve_member_reference(context, receiver, target)
         scopes =
           if receiver
-            [evaluate_receiver(receiver)]
+            [evaluate_receiver(receiver, context)]
           else
             exec_on(context) do |c|
               [c&.objects&.last, Base.instance, *c&.scopes]
@@ -17,13 +17,15 @@ module RuPkl
         find_member(scopes, target)
       end
 
-      def evaluate_receiver(receiver)
+      def evaluate_receiver(receiver, context)
         return unless receiver
 
         if receiver.structure?
-          receiver.resolve_reference.resolve_structure
+          receiver
+            .resolve_reference(context)
+            .resolve_structure(context)
         else
-          receiver.evaluate
+          receiver.evaluate(context)
         end
       end
 

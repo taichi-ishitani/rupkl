@@ -18,10 +18,10 @@ module RuPkl
       attr_reader :arguments
 
       def evaluate(context = nil)
-        receiver_node = evaluate_receiver(receiver)
-        pkl_method = resolve_member_reference(context, receiver_node, method_name)
         exec_on(context) do |c|
-          pkl_method.call(receiver_node, arguments, c, position)
+          receiver_node = evaluate_receiver(receiver, c)
+          pkl_method = resolve_member_reference(c, receiver_node, method_name)
+          execute_method(pkl_method, receiver_node, c)
         end
       end
 
@@ -43,6 +43,12 @@ module RuPkl
       def unresolve_reference_error(target)
         m = "cannot find method '#{target.id}'"
         raise EvaluationError.new(m, position)
+      end
+
+      def execute_method(pkl_method, receiver, context)
+        pkl_method
+          .call(receiver, arguments, context, position)
+          .tap { parent&.add_child(_1) }
       end
     end
   end

@@ -36,73 +36,73 @@ module RuPkl
           when :negative?.to_proc then -1
           else value
           end
-        self.class.new(parent, result, position)
+        self.class.new(self, result, position)
       end
 
       define_builtin_property(:abs) do
-        self.class.new(parent, value.abs, position)
+        self.class.new(self, value.abs, position)
       end
 
       define_builtin_property(:ceil) do
         result = value.finite? && value.ceil || value
-        self.class.new(parent, result, position)
+        self.class.new(self, result, position)
       end
 
       define_builtin_property(:floor) do
         result = value.finite? && value.floor || value
-        self.class.new(parent, result, position)
+        self.class.new(self, result, position)
       end
 
       define_builtin_property(:isPositive) do
         result = value.zero? || value.positive?
-        Boolean.new(parent, result, position)
+        Boolean.new(self, result, position)
       end
 
       define_builtin_property(:isFinite) do
-        Boolean.new(parent, value.finite?, position)
+        Boolean.new(self, value.finite?, position)
       end
 
       define_builtin_property(:isInfinite) do
         result = value.infinite? && true || false
-        Boolean.new(parent, result, position)
+        Boolean.new(self, result, position)
       end
 
       define_builtin_property(:isNaN) do
         result = !value.integer? && value.nan?
-        Boolean.new(parent, result, position)
+        Boolean.new(self, result, position)
       end
 
       define_builtin_property(:isNonZero) do
-        Boolean.new(parent, !value.zero?, position)
+        Boolean.new(self, !value.zero?, position)
       end
 
       define_builtin_method(:toString) do
-        String.new(parent, value.to_s, nil, position)
+        String.new(nil, value.to_s, nil, position)
       end
 
       define_builtin_method(:toInt) do
-        Int.new(parent, value.to_i, position)
+        Int.new(nil, value.to_i, position)
       end
 
       define_builtin_method(:toFloat) do
-        Float.new(parent, value.to_f, position)
+        Float.new(nil, value.to_f, position)
       end
 
       define_builtin_method(:round) do
         result = value.finite? && value.round || value
-        self.class.new(parent, result, position)
+        self.class.new(nil, result, position)
       end
 
       define_builtin_method(:truncate) do
         result = value.finite? && value.truncate || value
-        self.class.new(parent, result, position)
+        self.class.new(nil, result, position)
       end
 
       define_builtin_method(:isBetween, first: Number, last: Number) do |f, l|
         result =
           [f.value, l.value, value].all? { _1.finite? || _1.infinite? } &&
           (f.value..l.value).include?(value)
-        Boolean.new(parent, result, position)
+        Boolean.new(nil, result, position)
       end
     end
 
@@ -114,25 +114,25 @@ module RuPkl
       uninstantiable_class
 
       define_builtin_property(:isEven) do
-        Boolean.new(parent, value.even?, position)
+        Boolean.new(self, value.even?, position)
       end
 
       define_builtin_property(:isOdd) do
-        Boolean.new(parent, value.odd?, position)
+        Boolean.new(self, value.odd?, position)
       end
 
       define_builtin_property(:inv) do
-        self.class.new(parent, ~value, position)
+        self.class.new(self, ~value, position)
       end
 
       define_builtin_method(:shl, n: Int) do |n|
         result = value << n.value
-        self.class.new(parent, result, position)
+        self.class.new(self, result, position)
       end
 
       define_builtin_method(:shr, n: Int) do |n|
         result = value >> n.value
-        self.class.new(parent, result, position)
+        self.class.new(self, result, position)
       end
 
       define_builtin_method(:ushr, n: Int) do |n|
@@ -143,19 +143,19 @@ module RuPkl
           else
             value >> n.value
           end
-        self.class.new(parent, result, position)
+        self.class.new(self, result, position)
       end
 
       define_builtin_method(:and, n: Int) do |n|
-        self.class.new(parent, value & n.value, position)
+        self.class.new(nil, value & n.value, position)
       end
 
       define_builtin_method(:or, n: Int) do |n|
-        self.class.new(parent, value | n.value, position)
+        self.class.new(nil, value | n.value, position)
       end
 
       define_builtin_method(:xor, n: Int) do |n|
-        self.class.new(parent, value ^ n.value, position)
+        self.class.new(nil, value ^ n.value, position)
       end
     end
 
