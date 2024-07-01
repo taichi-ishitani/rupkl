@@ -67,6 +67,10 @@ module RuPkl
       be_instance_of(Node::This)
     end
 
+    def null_expression
+      be_instance_of(Node::Null)
+    end
+
     def method_call(*args)
       arguments_matcher =
         if args[-1].is_a?(Array)

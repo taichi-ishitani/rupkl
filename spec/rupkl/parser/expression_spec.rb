@@ -66,6 +66,13 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'null expression' do
+    it 'should be parsred by expression parser' do
+      expect(parser)
+        .to parse('null').as(null_expression)
+    end
+  end
+
   describe 'method call' do
     it 'should be parsed by expression parser' do
       expect(parser)

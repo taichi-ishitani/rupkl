@@ -21,6 +21,10 @@ module RuPkl
         kw_this.as(:this_expression)
       end
 
+      rule(:null_expression) do
+        kw_null.as(:null_expression)
+      end
+
       rule(:new_expression) do
         (
           kw_new.as(:kw_new) >>
@@ -39,7 +43,7 @@ module RuPkl
       rule(:primary) do
         [
           float_literal, int_literal, boolean_literal, string_literal,
-          this_expression, new_expression, amend_expression,
+          this_expression, null_expression, new_expression, amend_expression,
           unqualified_member_ref, parenthesized_expression
         ].inject(:|)
       end
@@ -152,6 +156,10 @@ module RuPkl
 
       rule(this_expression: simple(:this)) do
         Node::This.new(nil, node_position(this))
+      end
+
+      rule(null_expression: simple(:null)) do
+        Node::Null.new(nil, node_position(null))
       end
 
       rule(
