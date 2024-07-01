@@ -38,6 +38,14 @@ module RuPkl
         Boolean.new(nil, result, position)
       end
 
+      define_builtin_method(:getProperty, name: String) do |name|
+        find_property(name.value.to_sym) ||
+          begin
+            m = "cannot find property '#{name.value}'"
+            raise EvaluationError.new(m, position)
+          end
+      end
+
       private
 
       def properties_not_allowed?

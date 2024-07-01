@@ -797,5 +797,69 @@ RSpec.describe RuPkl::Node::Dynamic do
         end
       end
     end
+
+    describe 'getProperty' do
+      it 'should return the value of the property with the given name' do
+        pkl = <<~'PKL'
+            obj1 = new Dynamic {
+              name = "Pig" + "eon"
+              age = 42
+            }
+            obj2 = (obj1) {
+              age = 43
+              nostalgia = true
+            }
+            a = obj1.getProperty("name")
+            b = obj1.getProperty("na" + "me")
+            c = obj1.getProperty("age")
+            d = obj2.getProperty("name")
+            e = obj2.getProperty("age")
+            f = obj2.getProperty("nostalgia")
+        PKL
+        node = parse(pkl, root: :pkl_module)
+        node.evaluate(nil).properties[-6..].then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_evaluated_string('Pigeon')
+          expect(b.value).to be_evaluated_string('Pigeon')
+          expect(c.value).to be_int(42)
+          expect(d.value).to be_evaluated_string('Pigeon')
+          expect(e.value).to be_int(43)
+          expect(f.value).to be_boolean(true)
+        end
+      end
+
+      context 'when there are no properties with the given name' do
+        it 'should raise EvaluationError' do
+          pkl = <<~'PKL'
+            obj1 = new Dynamic {
+              name = "Pigeon"
+              age = 42
+            }
+            obj2 = (obj1) {
+              age = 43
+              nostalgia = true
+            }
+            a = obj1.getProperty("nostalgia")
+          PKL
+          node = parse(pkl, root: :pkl_module)
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot find property \'nostalgia\''
+
+          pkl = <<~'PKL'
+            obj1 = new Dynamic {
+              name = "Pigeon"
+              age = 42
+            }
+            obj2 = (obj1) {
+              age = 43
+              nostalgia = true
+            }
+            a = obj2.getProperty("other")
+          PKL
+          node = parse(pkl, root: :pkl_module)
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot find property \'other\''
+        end
+      end
+    end
   end
 end
