@@ -71,7 +71,7 @@ module RuPkl
       be_instance_of(Node::Null)
     end
 
-    def method_call(*args)
+    def method_call(*args, nullable: false)
       arguments_matcher =
         if args[-1].is_a?(Array)
           args[-1]
@@ -86,23 +86,28 @@ module RuPkl
         else
           [expression_matcher(args[-2]), identifer(args[-1])]
         end
+      nullable_matcher = be(nullable)
 
       be_instance_of(Node::MethodCall)
         .and have_attributes(
           receiver: receiver_matcher, method_name: method_name_matcher,
-          arguments: arguments_matcher
+          arguments: arguments_matcher, nullable?: nullable_matcher
         )
     end
 
-    def member_ref(receiver_or_member, member = nil)
+    def member_ref(receiver_or_member, member = nil, nullable: false)
       receiver_matcher, memer_matcher =
         if member
           [expression_matcher(receiver_or_member), identifer(member)]
         else
           [be_nil, identifer(receiver_or_member)]
         end
+      nullable_matcher = be(nullable)
       be_instance_of(Node::MemberReference)
-        .and have_attributes(receiver: receiver_matcher, member: memer_matcher)
+        .and have_attributes(
+          receiver: receiver_matcher, member: memer_matcher,
+          nullable?: nullable_matcher
+        )
     end
 
     def expression_matcher(expression)

@@ -6,14 +6,19 @@ module RuPkl
       include NodeCommon
       include ReferenceResolver
 
-      def initialize(parent, receiver, member, position)
-        super
+      def initialize(parent, receiver, member, nullable, position)
+        super(parent, receiver, member, position)
         @receiver = receiver
         @member = member
+        @nullable = nullable
       end
 
       attr_reader :receiver
       attr_reader :member
+
+      def nullable?
+        @nullable
+      end
 
       def evaluate(context = nil)
         do_evaluate do
@@ -29,7 +34,7 @@ module RuPkl
 
       def copy(parent = nil)
         self
-          .class.new(parent, receiver&.copy, member&.copy, position)
+          .class.new(parent, receiver&.copy, member&.copy, nullable?, position)
           .tap { copy_scope_index(_1) }
       end
 

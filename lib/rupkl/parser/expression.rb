@@ -9,8 +9,9 @@ module RuPkl
 
       rule(:unqualified_member_ref) do
         (
-          id.as(:member) >> (pure_ws? >> argument_list.as(:arguments)).maybe
-        ).as(:member_ref)
+          id.as(:name) >>
+            (pure_ws? >> argument_list.as(:arguments)).maybe
+        ).as(:unqualified_member_ref)
       end
 
       rule(:parenthesized_expression) do
@@ -48,12 +49,17 @@ module RuPkl
         ].inject(:|)
       end
 
+      rule(:qualified_members) do
+        (
+          ws? >> (str('?.') | str('.')).as(:dot) >> ws? >> id.as(:name)
+        ).as(:qualified_member).repeat(1)
+      end
+
       rule(:qualified_member_ref) do
         (
-          primary.as(:receiver) >>
-            (ws? >> str('.') >> ws? >> id).repeat(1).as(:member) >>
+          primary.as(:receiver) >> qualified_members.as(:members) >>
             (pure_ws? >> argument_list.as(:arguments)).maybe
-        ).as(:member_ref) | primary
+        ).as(:qualified_member_ref) | primary
       end
 
       rule(:subscript_operation) do
@@ -120,38 +126,55 @@ module RuPkl
         arguments == '' ? nil : Array(arguments)
       end
 
-      rule(member_ref: { member: simple(:member) }) do
-        Node::MemberReference.new(nil, nil, member, member.position)
+      rule(
+        unqualified_member_ref:
+          { name: simple(:name) }
+      ) do
+        Node::MemberReference.new(nil, nil, name, false, name.position)
       end
 
       rule(
-        member_ref:
-          { member: simple(:name), arguments: subtree(:arguments) }
+        unqualified_member_ref:
+          { name: simple(:name), arguments: subtree(:arguments) }
       ) do
-        Node::MethodCall.new(nil, nil, name, arguments, name.position)
+        Node::MethodCall.new(nil, nil, name, arguments, false, name.position)
       end
 
       rule(
-        member_ref:
-          { receiver: simple(:receiver), member: sequence(:member) }
+        qualified_member:
+          { dot: simple(:dot), name: simple(:name) }
       ) do
-        member.inject(receiver) do |r, m|
-          Node::MemberReference.new(nil, r, m, r.position)
+        [name, dot == '?.']
+      end
+
+      rule(
+        qualified_member_ref:
+          {
+            receiver: simple(:receiver), members: subtree(:members)
+          }
+      ) do
+        members.inject(receiver) do |r, m|
+          name, nullable = m
+          Node::MemberReference.new(nil, r, name, nullable, r.position)
         end
       end
 
       rule(
-        member_ref:
+        qualified_member_ref:
           {
-            receiver: simple(:receiver), member: sequence(:member),
+            receiver: simple(:receiver), members: subtree(:members),
             arguments: subtree(:arguments)
           }
       ) do
         r_node =
-          member[..-2].inject(receiver) do |r, m|
-            Node::MemberReference.new(nil, r, m, r.position)
+          members[..-2].inject(receiver) do |r, m|
+            name, nullable = m
+            Node::MemberReference.new(nil, r, name, nullable, r.position)
           end
-        Node::MethodCall.new(nil, r_node, member.last, arguments, r_node.position)
+        [r_node, members[-1]].then do |r, m|
+          name, nullable = m
+          Node::MethodCall.new(nil, r, name, arguments, nullable, name.position)
+        end
       end
 
       rule(this_expression: simple(:this)) do
