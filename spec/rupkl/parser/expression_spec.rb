@@ -359,6 +359,23 @@ RSpec.describe RuPkl::Parser do
       end
     end
 
+    describe 'non-null operation' do
+      it 'should be parsed by expression parser' do
+        expect(parser)
+          .to parse('123!!')
+          .as(non_null_op(123))
+        expect(parser)
+          .to parse('null!!')
+          .as(non_null_op(null_expression))
+        expect(parser)
+          .to parse(spacing('123', '!!'))
+          .as(non_null_op(123))
+        expect(parser)
+          .to parse(spacing('null', '!!'))
+          .as(non_null_op(null_expression))
+      end
+    end
+
     describe 'unary operation' do
       it 'should be parsed by expression parser' do
         # unaryMinusExpr
@@ -601,6 +618,20 @@ RSpec.describe RuPkl::Parser do
         expect(parser)
           .to parse(spacing('1', '||', '2'))
           .as(b_op(:'||', 1, 2))
+
+        # nullCoalesceExpr
+        expect(parser)
+          .to parse('123??456')
+          .as(null_coalescing_op(123, 456))
+        expect(parser)
+          .to parse('null??789')
+          .as(null_coalescing_op(null_expression, 789))
+        expect(parser)
+          .to parse(spacing('123', '??', '456'))
+          .as(null_coalescing_op(123, 456))
+        expect(parser)
+          .to parse('null??789')
+          .as(null_coalescing_op(null_expression, 789))
       end
 
       specify "newline or semicolon should not precede '-' or '[]' operator" do
@@ -655,6 +686,13 @@ RSpec.describe RuPkl::Parser do
         .to parse('1&&2||3').as(b_op(:'||', b_op(:'&&', 1, 2), 3))
       expect(parser)
         .to parse('1&&(2||3)').as(b_op(:'&&', 1, b_op(:'||', 2, 3)))
+
+      expect(parser)
+        .to parse('1||2??3').as(null_coalescing_op(b_op(:'||', 1, 2), 3))
+      expect(parser)
+        .to parse('1||(2??3)').as(b_op(:'||', 1, null_coalescing_op(2, 3)))
+      expect(parser)
+        .to parse('1??2??3').as(null_coalescing_op(1, null_coalescing_op(2, 3)))
     end
   end
 end

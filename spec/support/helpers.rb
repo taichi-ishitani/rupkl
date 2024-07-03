@@ -129,6 +129,11 @@ module RuPkl
         .and have_attributes(operator: :[], receiver: receiver_matcher, key: key_matcher)
     end
 
+    def non_null_op(operand)
+      be_instance_of(Node::NonNullOperation)
+        .and have_attributes(operand: expression_matcher(operand))
+    end
+
     def u_op(operator, operand)
       be_instance_of(Node::UnaryOperation)
         .and have_attributes(operator: operator, operand: expression_matcher(operand))
@@ -139,6 +144,13 @@ module RuPkl
       r_matcher = expression_matcher(r_operand)
       be_instance_of(Node::BinaryOperation)
         .and have_attributes(operator: operator, l_operand: l_matcher, r_operand: r_matcher)
+    end
+
+    def null_coalescing_op(l_operand, r_operand)
+      l_matcher = expression_matcher(l_operand)
+      r_matcher = expression_matcher(r_operand)
+      be_instance_of(Node::NullCoalescingOperation)
+        .and have_attributes(l_operand: l_matcher, r_operand: r_matcher)
     end
 
     class AmendExpression

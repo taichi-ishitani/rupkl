@@ -136,29 +136,33 @@ module RuPkl
     class SubscriptOperation
       include OperationCommon
 
-      def initialize(parent, operator, receiver, key, position)
-        super
-        @receiver = receiver
-        @key = key
+      def receiver
+        operands.first
       end
 
-      attr_reader :receiver
-      attr_reader :key
+      def key
+        operands.last
+      end
 
       def evaluate(context = nil)
         s_op(context)
       end
     end
 
+    class NonNullOperation
+      include OperationCommon
+
+      def operand
+        operands.first
+      end
+    end
+
     class UnaryOperation
       include OperationCommon
 
-      def initialize(parent, operator, operand, position)
-        super
-        @operand = operand
+      def operand
+        operands.first
       end
-
-      attr_reader :operand
 
       def evaluate(context = nil)
         u_op(context)
@@ -168,18 +172,28 @@ module RuPkl
     class BinaryOperation
       include OperationCommon
 
-      def initialize(parent, operator, l_operand, r_operand, position)
-        super
-        @l_operand = l_operand
-        @r_operand = r_operand
+      def l_operand
+        operands.first
       end
 
-      attr_reader :l_operand
-      attr_reader :r_operand
-      attr_reader :position
+      def r_operand
+        operands.last
+      end
 
       def evaluate(context = nil)
         b_op(context)
+      end
+    end
+
+    class NullCoalescingOperation
+      include OperationCommon
+
+      def l_operand
+        operands.first
+      end
+
+      def r_operand
+        operands.last
       end
     end
   end

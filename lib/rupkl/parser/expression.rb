@@ -72,18 +72,25 @@ module RuPkl
         ).as(:subscript_operation) | qualified_member_ref
       end
 
+      rule(:non_null_operation) do
+        (
+          subscript_operation.as(:operand) >>
+            ws? >> str(:'!!').as(:non_null_operator)
+        ) | subscript_operation
+      end
+
       rule(:unary_operation) do
         (
           (str(:-) | str(:!)).as(:unary_operator) >>
-            ws? >> subscript_operation.as(:operand)
-        ) | subscript_operation
+            ws? >> non_null_operation.as(:operand)
+        ) | non_null_operation
       end
 
       rule(:binary_operation) do
         expression = unary_operation
         operators = binary_operators
         reducer = proc { |l, o, r| { binary_operator: o, l_operand: l, r_operand: r } }
-        infix_expression(expression, *operators, &reducer) | unary_operation
+        infix_expression(expression, *operators, &reducer)
       end
 
       rule(:expression) do
@@ -94,12 +101,13 @@ module RuPkl
 
       def binary_operators
         operators = {
-          '||': 1, '&&': 2,
-          '==': 3, '!=': 3,
-          '<': 4, '>': 4, '<=': 4, '>=': 4,
-          '+': 5, '-': 5,
-          '*': 6, '/': 6, '~/': 6, '%': 6,
-          '**': 7
+          '??': 1,
+          '||': 2, '&&': 3,
+          '==': 4, '!=': 4,
+          '<': 5, '>': 5, '<=': 5, '>=': 5,
+          '+': 6, '-': 6,
+          '*': 7, '/': 7, '~/': 7, '%': 7,
+          '**': 8
         }
         operators
           .sort_by { |op, _| op.length }.reverse
@@ -113,11 +121,9 @@ module RuPkl
           else
             ws? >> str(operator) >> ws?
           end
-        if operator == :**
-          [atom, priority, :right]
-        else
-          [atom, priority, :left]
-        end
+        associativity =
+          (operator in :** | :'??') && :right || :left
+        [atom, priority, associativity]
       end
     end
 
@@ -215,6 +221,10 @@ module RuPkl
         end
       end
 
+      rule(operand: simple(:operand), non_null_operator: simple(:operator)) do
+        Node::NonNullOperation.new(nil, operator.to_sym, operand, operand.position)
+      end
+
       rule(unary_operator: simple(:operator), operand: simple(:operand)) do
         Node::UnaryOperation.new(nil, operator.to_sym, operand, node_position(operator))
       end
@@ -223,10 +233,12 @@ module RuPkl
         binary_operator: simple(:operator),
         l_operand: simple(:l_operand), r_operand: simple(:r_operand)
       ) do
-        Node::BinaryOperation.new(
-          nil, operator.to_sym,
-          l_operand, r_operand, l_operand.position
-        )
+        klass =
+          case operator.to_sym
+          when :'??' then Node::NullCoalescingOperation
+          else Node::BinaryOperation
+          end
+        klass.new(nil, operator.to_sym, l_operand, r_operand, l_operand.position)
       end
     end
   end
