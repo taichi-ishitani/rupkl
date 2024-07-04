@@ -109,6 +109,17 @@ RSpec.describe RuPkl::Node::MemberReference do
       PKL
       node.evaluate(nil).properties[-1]
         .then { |m| expect(m.value).to be_int(3) }
+
+      node = parser.parse(<<~'PKL', root: :pkl_module)
+        foo = 1
+        bar = null
+        baz = foo?.abs
+        qux = bar?.abs
+      PKL
+      node.evaluate(nil).properties[-2..].then do |(baz, qux)|
+        expect(baz.value).to be_int(1)
+        expect(qux.value).to be_null
+      end
     end
 
     context 'when the given member is not found' do
@@ -161,6 +172,12 @@ RSpec.describe RuPkl::Node::MemberReference do
         PKL
         expect { node.evaluate(nil) }
           .to raise_evaluation_error 'cannot find property \'qux_0\''
+
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          a = null.abs
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'cannot find property \'abs\''
       end
     end
 

@@ -60,6 +60,10 @@ module RuPkl
         buildin_method(name)
       end
 
+      def null?
+        false
+      end
+
       private
 
       def builtin_property(name)

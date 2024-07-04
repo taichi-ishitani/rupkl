@@ -18,6 +18,10 @@ module RuPkl
       def undefined_operator?(operator)
         [:==, :'!='].none?(operator)
       end
+
+      def null?
+        true
+      end
     end
   end
 end

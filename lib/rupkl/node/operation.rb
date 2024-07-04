@@ -37,6 +37,14 @@ module RuPkl
         v.evaluate
       end
 
+      def non_null_op(context)
+        o = operand.evaluate(context)
+        return o unless o.null?
+
+        m = "expected a non-null value but got '#{o.to_pkl_string(context)}'"
+        raise EvaluationError.new(m, position)
+      end
+
       def u_op(context)
         o = operand.evaluate(context)
         check_operator(o)
@@ -61,6 +69,13 @@ module RuPkl
 
         l, r = l.coerce(operator, r)
         create_op_result(l.__send__(ruby_op, r))
+      end
+
+      def null_coalescing_op(context)
+        l = l_operand.evaluate(context)
+        return l unless l.null?
+
+        r_operand.evaluate(context)
       end
 
       def check_operator(operand)
@@ -155,6 +170,10 @@ module RuPkl
       def operand
         operands.first
       end
+
+      def evaluate(context = nil)
+        non_null_op(context)
+      end
     end
 
     class UnaryOperation
@@ -194,6 +213,10 @@ module RuPkl
 
       def r_operand
         operands.last
+      end
+
+      def evaluate(context = nil)
+        null_coalescing_op(context)
       end
     end
   end

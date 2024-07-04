@@ -22,13 +22,13 @@ module RuPkl
 
       def evaluate(context = nil)
         do_evaluate do
-          resolve_member_reference(context, receiver, member).evaluate
+          resolve_member_reference(context, member, receiver, nullable?).evaluate
         end
       end
 
       def resolve_reference(context = nil)
         do_evaluate do
-          resolve_member_reference(context, receiver, member).resolve_reference
+          resolve_member_reference(context, member, receiver, nullable?).resolve_reference
         end
       end
 
@@ -51,14 +51,18 @@ module RuPkl
         result
       end
 
-      def unresolve_reference_error(target)
-        EvaluationError.new("cannot find property '#{target.id}'", position)
+      def ifnone_value(receiver)
+        receiver
       end
 
       def get_member_node(scope, target)
         return unless scope.respond_to?(:property)
 
         scope.property(target)
+      end
+
+      def unresolve_reference_error(target)
+        EvaluationError.new("cannot find property '#{target.id}'", position)
       end
     end
   end

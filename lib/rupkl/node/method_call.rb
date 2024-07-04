@@ -24,9 +24,9 @@ module RuPkl
 
       def evaluate(context = nil)
         exec_on(context) do |c|
-          receiver_node = evaluate_receiver(receiver, c)
-          pkl_method = resolve_member_reference(c, receiver_node, method_name)
-          execute_method(pkl_method, receiver_node, c)
+          r = evaluate_receiver(receiver, c)
+          m = resolve_member_reference(c, method_name, r, nullable?)
+          m && execute_method(m, r, c) || r
         end
       end
 
@@ -38,6 +38,10 @@ module RuPkl
       end
 
       private
+
+      def ifnone_value(_)
+        nil
+      end
 
       def get_member_node(scope, target)
         return unless scope.respond_to?(:pkl_method)

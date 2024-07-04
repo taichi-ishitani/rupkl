@@ -95,6 +95,17 @@ RSpec.describe RuPkl::Node::MethodCall do
         expect(b.value).to be_int(3)
         expect(c.value).to be_float(1.1 + 2.2)
       end
+
+      pkl = <<~'PKL'
+        a = 1
+        b = null
+        c = a?.or(2)
+        d = b?.or(2)
+      PKL
+      parse(pkl).properties[-2..].then do |(c, d)|
+        expect(c.value).to be_int(3)
+        expect(d.value).to be_null
+      end
     end
 
     context 'the given method is not found' do
@@ -118,6 +129,12 @@ RSpec.describe RuPkl::Node::MethodCall do
         PKL
         expect { parse(pkl) }
           .to raise_evaluation_error 'cannot find method \'foo\''
+
+        pkl = <<~'PKL'
+          a = null.or(1)
+        PKL
+        expect { parse(pkl) }
+          .to raise_evaluation_error 'cannot find method \'or\''
       end
     end
 
