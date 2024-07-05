@@ -57,8 +57,11 @@ module RuPkl
 
       rule(:qualified_member_ref) do
         (
-          primary.as(:receiver) >> qualified_members.as(:members) >>
-            (pure_ws? >> argument_list.as(:arguments)).maybe
+          primary.as(:receiver) >>
+            (
+              qualified_members.as(:members) >>
+                (pure_ws? >> argument_list.as(:arguments)).maybe
+            ).repeat(1).as(:member_refs)
         ).as(:qualified_member_ref) | primary
       end
 
@@ -177,6 +180,36 @@ module RuPkl
             name, nullable = m
             Node::MemberReference.new(nil, r, name, nullable, r.position)
           end
+        [r_node, members[-1]].then do |r, m|
+          name, nullable = m
+          Node::MethodCall.new(nil, r, name, arguments, nullable, name.position)
+        end
+      end
+
+      rule(
+        qualified_member_ref:
+          {
+            receiver: simple(:receiver), member_refs: subtree(:member_refs)
+          }
+      ) do
+        member_refs.inject(receiver) do |r, refs|
+          if refs.key?(:arguments)
+            process_method_call(r, refs[:members], refs[:arguments])
+          else
+            process_member_ref(r, refs[:members])
+          end
+        end
+      end
+
+      define_helper(:process_member_ref) do |receiver, members|
+        members.inject(receiver) do |r, m|
+          name, nullable = m
+          Node::MemberReference.new(nil, r, name, nullable, r.position)
+        end
+      end
+
+      define_helper(:process_method_call) do |receiver, members, arguments|
+        r_node = process_member_ref(receiver, members[..-2])
         [r_node, members[-1]].then do |r, m|
           name, nullable = m
           Node::MethodCall.new(nil, r, name, arguments, nullable, name.position)

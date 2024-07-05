@@ -73,6 +73,14 @@ module RuPkl
     end
 
     class Transform < Parslet::Transform
+      class << self
+        private
+
+        def define_helper(name, &body)
+          private define_method(name, &body)
+        end
+      end
+
       def apply(obj, context = nil, filename: nil)
         @filename = filename if filename
         super(obj, context)
