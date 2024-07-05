@@ -159,36 +159,6 @@ module RuPkl
       rule(
         qualified_member_ref:
           {
-            receiver: simple(:receiver), members: subtree(:members)
-          }
-      ) do
-        members.inject(receiver) do |r, m|
-          name, nullable = m
-          Node::MemberReference.new(nil, r, name, nullable, r.position)
-        end
-      end
-
-      rule(
-        qualified_member_ref:
-          {
-            receiver: simple(:receiver), members: subtree(:members),
-            arguments: subtree(:arguments)
-          }
-      ) do
-        r_node =
-          members[..-2].inject(receiver) do |r, m|
-            name, nullable = m
-            Node::MemberReference.new(nil, r, name, nullable, r.position)
-          end
-        [r_node, members[-1]].then do |r, m|
-          name, nullable = m
-          Node::MethodCall.new(nil, r, name, arguments, nullable, name.position)
-        end
-      end
-
-      rule(
-        qualified_member_ref:
-          {
             receiver: simple(:receiver), member_refs: subtree(:member_refs)
           }
       ) do
