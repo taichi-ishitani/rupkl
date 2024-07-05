@@ -46,6 +46,10 @@ module RuPkl
           end
       end
 
+      define_builtin_method(:getPropertyOrNull, name: String) do |name|
+        find_property(name.value.to_sym) || Null.new(nil, position)
+      end
+
       private
 
       def properties_not_allowed?

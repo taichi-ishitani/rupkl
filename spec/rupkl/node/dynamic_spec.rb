@@ -861,5 +861,57 @@ RSpec.describe RuPkl::Node::Dynamic do
         end
       end
     end
+
+    describe 'getPropertyOrNull' do
+      it 'should return the value of the property with the given name' do
+        pkl = <<~'PKL'
+            obj1 = new Dynamic {
+              name = "Pig" + "eon"
+              age = 42
+            }
+            obj2 = (obj1) {
+              age = 43
+              nostalgia = true
+            }
+            a = obj1.getPropertyOrNull("name")
+            b = obj1.getPropertyOrNull("na" + "me")
+            c = obj1.getPropertyOrNull("age")
+            d = obj2.getPropertyOrNull("name")
+            e = obj2.getPropertyOrNull("age")
+            f = obj2.getPropertyOrNull("nostalgia")
+        PKL
+        node = parse(pkl, root: :pkl_module)
+        node.evaluate(nil).properties[-6..].then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_evaluated_string('Pigeon')
+          expect(b.value).to be_evaluated_string('Pigeon')
+          expect(c.value).to be_int(42)
+          expect(d.value).to be_evaluated_string('Pigeon')
+          expect(e.value).to be_int(43)
+          expect(f.value).to be_boolean(true)
+        end
+      end
+
+      context 'when there are no properties with the given name' do
+        it 'should return a null value' do
+          pkl = <<~'PKL'
+            obj1 = new Dynamic {
+              name = "Pigeon"
+              age = 42
+            }
+            obj2 = (obj1) {
+              age = 43
+              nostalgia = true
+            }
+            a = obj1.getPropertyOrNull("nostalgia")
+            b = obj2.getPropertyOrNull("other")
+          PKL
+          node = parse(pkl, root: :pkl_module)
+          node.evaluate(nil).properties[-2..].then do |(a, b)|
+            expect(a.value).to be_null
+            expect(b.value).to be_null
+          end
+        end
+      end
+    end
   end
 end

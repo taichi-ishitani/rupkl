@@ -533,4 +533,138 @@ RSpec.describe RuPkl::Node::Mapping do
       end
     end
   end
+
+  describe 'builtin property' do
+    let(:mapping) do
+      <<~'PKL'
+        obj1 = new Mapping {
+          ["Pigeon"] { name = "Pigeon" }
+          ["Parrot"] { name = "Parrot"; age = 24 }
+        }
+        obj2 = (obj1) {
+          ["Pigeon"] { name = "Piggy" }
+          ["Barn Owl"] { name = "Barn Owl"; age = 84 }
+        }
+        obj3 = new Mapping {}
+      PKL
+    end
+
+    describe 'isEmpty' do
+      it 'should tell if this mapping is empty' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{mapping}
+          a = obj1.isEmpty
+          b = obj2.isEmpty
+          c = obj3.isEmpty
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_boolean(false)
+          expect(b.value).to be_boolean(false)
+          expect(c.value).to be_boolean(true)
+        end
+      end
+    end
+
+    describe 'length' do
+      it 'should return the number of entries in this mapping' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{mapping}
+          a = obj1.length
+          b = obj2.length
+          c = obj3.length
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_int(2)
+          expect(b.value).to be_int(3)
+          expect(c.value).to be_int(0)
+        end
+      end
+    end
+  end
+
+  describe 'builtin method' do
+    let(:mapping) do
+      <<~'PKL'
+        obj1 = new Mapping {
+          ["Pigeon"] { name = "Pigeon" }
+          ["Parrot"] { name = "Parrot"; age = 24 }
+        }
+        obj2 = (obj1) {
+          ["Pigeon"] { name = "Piggy" }
+          ["Barn Owl"] { name = "Barn Owl"; age = 84 }
+        }
+        obj3 = new Mapping {}
+      PKL
+    end
+
+    describe 'containsKey' do
+      it 'should tell if this mapping contains the given key' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{mapping}
+          a = obj1.containsKey("Pigeon")
+          b = obj1.containsKey("Parrot")
+          c = obj1.containsKey("Barn Owl")
+          d = obj1.containsKey("Other")
+          e = obj2.containsKey("Pigeon")
+          f = obj2.containsKey("Parrot")
+          g = obj2.containsKey("Barn Owl")
+          h = obj2.containsKey("Other")
+          i = obj3.containsKey("Pigeon")
+          j = obj3.containsKey("Other")
+        PKL
+        node.evaluate(nil).properties[-10..].then do |(a, b, c, d, e, f, g, h, i, j)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(false)
+          expect(d.value).to be_boolean(false)
+          expect(e.value).to be_boolean(true)
+          expect(f.value).to be_boolean(true)
+          expect(g.value).to be_boolean(true)
+          expect(h.value).to be_boolean(false)
+          expect(i.value).to be_boolean(false)
+          expect(j.value).to be_boolean(false)
+        end
+      end
+    end
+
+    describe 'getOrNull' do
+      it 'should return the value associated with the given key' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{mapping}
+          a = obj1.getOrNull("Pigeon")
+          b = obj1.getOrNull("Parrot")
+          c = obj2.getOrNull("Pigeon")
+          d = obj2.getOrNull("Parrot")
+          e = obj2.getOrNull("Barn Owl")
+        PKL
+        node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+          expect(a.value).to (be_dynamic { |o| o.property :name, 'Pigeon' })
+          expect(b.value).to (be_dynamic { |o| o.property :name, 'Parrot'; o.property :age, 24 })
+          expect(c.value).to (be_dynamic { |o| o.property :name, 'Piggy' })
+          expect(d.value).to (be_dynamic { |o| o.property :name, 'Parrot'; o.property :age, 24 })
+          expect(e.value).to (be_dynamic { |o| o.property :name, 'Barn Owl'; o.property :age, 84 })
+        end
+      end
+
+      context 'when this mapping does not contain the given key' do
+        it 'should return a null value' do
+          node = parse(<<~PKL, root: :pkl_module)
+            #{mapping}
+            a = obj1.getOrNull("Barn Owl")
+            b = obj1.getOrNull("Other")
+            c = obj2.getOrNull("Other")
+            d = obj3.getOrNull("Parrot")
+            e = obj3.getOrNull("Other")
+          PKL
+          node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+            expect(a.value).to be_null
+            expect(b.value).to be_null
+            expect(c.value).to be_null
+            expect(d.value).to be_null
+            expect(e.value).to be_null
+          end
+        end
+      end
+    end
+  end
 end

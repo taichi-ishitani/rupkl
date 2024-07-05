@@ -18,6 +18,25 @@ module RuPkl
         find_entry(key)
       end
 
+      define_builtin_property(:isEmpty) do
+        result = entries.nil? || entries.empty?
+        Boolean.new(nil, result, position)
+      end
+
+      define_builtin_property(:length) do
+        result = entries&.size || 0
+        Int.new(nil, result, position)
+      end
+
+      define_builtin_method(:containsKey, key: Any) do |key|
+        result = find_entry(key) && true || false
+        Boolean.new(nil, result, position)
+      end
+
+      define_builtin_method(:getOrNull, key: Any) do |key|
+        find_entry(key) || Null.new(nil, position)
+      end
+
       private
 
       def entries_not_allowed?
