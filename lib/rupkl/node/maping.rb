@@ -20,12 +20,12 @@ module RuPkl
 
       define_builtin_property(:isEmpty) do
         result = entries.nil? || entries.empty?
-        Boolean.new(nil, result, position)
+        Boolean.new(self, result, position)
       end
 
       define_builtin_property(:length) do
         result = entries&.size || 0
-        Int.new(nil, result, position)
+        Int.new(self, result, position)
       end
 
       define_builtin_method(:containsKey, key: Any) do |key|
