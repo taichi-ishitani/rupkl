@@ -499,4 +499,144 @@ RSpec.describe RuPkl::Node::Listing do
       end
     end
   end
+
+  describe 'builtin property/method' do
+    let(:listing) do
+      <<~'PKL'
+        obj0 = new Listing {
+          new { name = "Pigeon" }
+          new { name = "Barn Owl" }
+          new { name = "Parrot" }
+        }
+        obj1 = (obj0) {
+          new { name = "Albatross" }
+          new { name = "Elf Owl" }
+        }
+        obj2 = (obj0) {
+          new { name = "Albatross" }
+          new { name = "Parrot" }
+          new { name = "Elf Owl" }
+        }
+        obj3 = new Listing {}
+      PKL
+    end
+
+    describe 'length' do
+      it 'should return the number of elements in this listing' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{listing}
+          a = obj0.length
+          b = obj1.length
+          c = obj2.length
+          d = obj3.length
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_int(3)
+          expect(b.value).to be_int(5)
+          expect(c.value).to be_int(6)
+          expect(d.value).to be_int(0)
+        end
+      end
+    end
+
+    describe 'isEmpty' do
+      it 'should tell if this listing is empty' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{listing}
+          a = obj0.isEmpty
+          b = obj1.isEmpty
+          c = obj2.isEmpty
+          d = obj3.isEmpty
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_boolean(false)
+          expect(b.value).to be_boolean(false)
+          expect(c.value).to be_boolean(false)
+          expect(d.value).to be_boolean(true)
+        end
+      end
+    end
+
+    describe 'isDistinct' do
+      it 'should tell if this listing has no duplicate elements' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{listing}
+          a = obj0.isDistinct
+          b = obj1.isDistinct
+          c = obj2.isDistinct
+          d = obj3.isDistinct
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(false)
+          expect(d.value).to be_boolean(true)
+        end
+      end
+    end
+
+    describe 'distinct' do
+      it 'should remove duplicate elements from this listing' do
+        node = parse(<<~PKL, root: :pkl_module)
+          #{listing}
+          a = obj0.distinct
+          b = obj1.distinct
+          c = obj2.distinct
+          d = obj3.distinct
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to (be_listing do |l|
+            l << dynamic { |d| d.property :name, 'Pigeon' }
+            l << dynamic { |d| d.property :name, 'Barn Owl' }
+            l << dynamic { |d| d.property :name, 'Parrot' }
+          end)
+
+          expect(b.value).to (be_listing do |l|
+            l << dynamic { |d| d.property :name, 'Pigeon' }
+            l << dynamic { |d| d.property :name, 'Barn Owl' }
+            l << dynamic { |d| d.property :name, 'Parrot' }
+            l << dynamic { |d| d.property :name, 'Albatross' }
+            l << dynamic { |d| d.property :name, 'Elf Owl' }
+          end)
+
+          expect(c.value).to (be_listing do |l|
+            l << dynamic { |d| d.property :name, 'Pigeon' }
+            l << dynamic { |d| d.property :name, 'Barn Owl' }
+            l << dynamic { |d| d.property :name, 'Parrot' }
+            l << dynamic { |d| d.property :name, 'Albatross' }
+            l << dynamic { |d| d.property :name, 'Elf Owl' }
+          end)
+
+          expect(d.value).to be_listing
+        end
+      end
+    end
+
+    describe 'join' do
+      it 'should Convert the elements of this listing to strings and concatenate them inserting separator between elements' do
+        node = parse(<<~'PKL', root: :pkl_module)
+          obj0 = new Listing {}
+          obj1 = new Listing { 1; 2; 3 }
+          obj2 = new Listing { "Pigeon"; "Barn Owl"; "Parrot" }
+          obj3 = (obj2) { "Albatross"; "Elf Owl" }
+          a = obj0.join("")
+          b = obj1.join("")
+          c = obj1.join(", ")
+          d = obj2.join("")
+          e = obj2.join("---")
+          f = obj3.join("")
+          g = obj3.join("\n")
+        PKL
+        node.evaluate(nil).properties[-7..].then do |(a, b, c, d, e, f, g)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('123')
+          expect(c.value).to be_evaluated_string('1, 2, 3')
+          expect(d.value).to be_evaluated_string('PigeonBarn OwlParrot')
+          expect(e.value).to be_evaluated_string('Pigeon---Barn Owl---Parrot')
+          expect(f.value).to be_evaluated_string('PigeonBarn OwlParrotAlbatrossElf Owl')
+          expect(g.value).to be_evaluated_string("Pigeon\nBarn Owl\nParrot\nAlbatross\nElf Owl")
+        end
+      end
+    end
+  end
 end

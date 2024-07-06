@@ -534,7 +534,7 @@ RSpec.describe RuPkl::Node::Mapping do
     end
   end
 
-  describe 'builtin property' do
+  describe 'builtin property/method' do
     let(:mapping) do
       <<~'PKL'
         obj1 = new Mapping {
@@ -579,22 +579,6 @@ RSpec.describe RuPkl::Node::Mapping do
           expect(c.value).to be_int(0)
         end
       end
-    end
-  end
-
-  describe 'builtin method' do
-    let(:mapping) do
-      <<~'PKL'
-        obj1 = new Mapping {
-          ["Pigeon"] { name = "Pigeon" }
-          ["Parrot"] { name = "Parrot"; age = 24 }
-        }
-        obj2 = (obj1) {
-          ["Pigeon"] { name = "Piggy" }
-          ["Barn Owl"] { name = "Barn Owl"; age = 84 }
-        }
-        obj3 = new Mapping {}
-      PKL
     end
 
     describe 'containsKey' do

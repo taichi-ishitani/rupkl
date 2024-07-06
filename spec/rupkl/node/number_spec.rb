@@ -250,7 +250,7 @@ RSpec.describe RuPkl::Node::Number do
     end
   end
 
-  describe 'properties' do
+  describe 'builtin property/method' do
     describe 'sign' do
       it 'should return 0 for 0' do
         node = parser.parse('0.sign', root: :expression)
@@ -664,9 +664,7 @@ RSpec.describe RuPkl::Node::Number do
         expect(node.evaluate(nil)).to be_int(122)
       end
     end
-  end
 
-  describe 'builtin methods' do
     describe 'toString' do
       it 'should convert its value to its decimal string representation' do
         node = parser.parse('0.toString()', root: :expression)
