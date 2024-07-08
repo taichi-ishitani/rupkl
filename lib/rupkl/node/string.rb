@@ -54,6 +54,43 @@ module RuPkl
         self.class.new(parent, value[index], nil, position)
       end
 
+      define_builtin_property(:length) do
+        Int.new(self, value.length, position)
+      end
+
+      define_builtin_property(:lastIndex) do
+        Int.new(self, value.length - 1, position)
+      end
+
+      define_builtin_property(:isEmpty) do
+        Boolean.new(self, value.empty?, position)
+      end
+
+      define_builtin_property(:isBlank) do
+        result = /\A\p{White_Space}*\z/.match?(value)
+        Boolean.new(self, result, position)
+      end
+
+      define_builtin_property(:md5) do
+        hash = Digest::MD5.hexdigest(value)
+        String.new(self, hash, nil, position)
+      end
+
+      define_builtin_property(:sha1) do
+        hash = Digest::SHA1.hexdigest(value)
+        String.new(self, hash, nil, position)
+      end
+
+      define_builtin_property(:sha256) do
+        hash = Digest::SHA256.hexdigest(value)
+        String.new(self, hash, nil, position)
+      end
+
+      define_builtin_property(:sha256Int) do
+        hash = Digest::SHA256.digest(value).unpack1('q')
+        Int.new(self, hash, position)
+      end
+
       private
 
       def evaluate_portions(context)
