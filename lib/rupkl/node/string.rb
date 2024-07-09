@@ -91,6 +91,42 @@ module RuPkl
         Int.new(self, hash, position)
       end
 
+      define_builtin_property(:base64) do
+        result = Base64.urlsafe_encode64(value)
+        String.new(self, result, nil, position)
+      end
+
+      define_builtin_property(:base64Decoded) do
+        result = Base64.urlsafe_decode64(value)
+        String.new(self, result, nil, position)
+      rescue ArgumentError
+        message = "illegal base64: \"#{value}\""
+        raise EvaluationError.new(message, position)
+      end
+
+      define_builtin_method(:getOrNull, index: Int) do |index|
+        if (0...value.size).include?(index.value)
+          String.new(nil, value[index.value], nil, position)
+        else
+          Null.new(nil, position)
+        end
+      end
+
+      define_builtin_method(:substring, start: Int, exclusive_end: Int) do |s, e|
+        check_range(s.value, 0)
+        check_range(e.value, s.value)
+
+        String.new(nil, value[s.value...e.value], nil, position)
+      end
+
+      define_builtin_method(:substringOrNull, start: Int, exclusive_end: Int) do |s, e|
+        if inside_range?(s.value, 0) && inside_range?(e.value, s.value)
+          String.new(nil, value[s.value...e.value], nil, position)
+        else
+          Null.new(nil, position)
+        end
+      end
+
       private
 
       def evaluate_portions(context)
@@ -116,6 +152,18 @@ module RuPkl
           '"' => '\"', '\\' => '\\\\'
         }
         string.gsub(/([\t\n\r"\\])/) { replace[_1] }
+      end
+
+      def check_range(index, start_index)
+        return if inside_range?(index, start_index)
+
+        message = "index #{index} is out of range " \
+                  "#{start_index}..#{value.size}: \"#{value}\""
+        raise EvaluationError.new(message, position)
+      end
+
+      def inside_range?(index, start_index)
+        (start_index..value.size).include?(index)
       end
     end
   end

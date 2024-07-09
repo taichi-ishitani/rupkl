@@ -459,5 +459,148 @@ RSpec.describe RuPkl::Node::String do
         end
       end
     end
+
+    describe 'base64' do
+      it 'should return the Base64 encoding of this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          a = "".base64
+          b = "The quick brown fox jumps over the lazy dog".base64
+        PKL
+        node.evaluate(nil).properties.then do |(a, b)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw==')
+        end
+      end
+    end
+
+    describe 'base64Decoded' do
+      it 'should be the inverse of base64' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          a = "".base64Decoded
+          b = "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw==".base64Decoded
+        PKL
+        node.evaluate(nil).properties.then do |(a, b)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('The quick brown fox jumps over the lazy dog')
+        end
+      end
+
+      context 'when this string includes illegal bsae64 character' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            a = "~~~".base64Decoded
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'illegal base64: "~~~"'
+        end
+      end
+    end
+
+    describe 'getOrNull' do
+      it 'should return the character at the index' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = "abcdefg"
+          a = s.getOrNull(0)
+          b = s.getOrNull(3)
+          c = s.getOrNull(6)
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_evaluated_string('a')
+          expect(b.value).to be_evaluated_string('d')
+          expect(c.value).to be_evaluated_string('g')
+        end
+      end
+
+      context 'when the given index is out of ragne' do
+        it 'should return a null value' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "abcdefg"
+            a = s.getOrNull(-1)
+            b = s.getOrNull(7)
+          PKL
+          node.evaluate(nil).properties[-2..].then do |(a, b)|
+            expect(a.value).to be_null
+            expect(b.value).to be_null
+          end
+        end
+      end
+    end
+
+    describe 'substring' do
+      it 'should the substring specified by the given range' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = "abcdefg"
+          a = s.substring(2, 2)
+          b = s.substring(2, 3)
+          c = s.substring(2, 4)
+          d = s.substring(0, 7)
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('c')
+          expect(c.value).to be_evaluated_string('cd')
+          expect(d.value).to be_evaluated_string('abcdefg')
+        end
+      end
+
+      context 'when the given range is outside of the range of this string' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "abcdefg"
+            a = s.substring(-1, 4)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'index -1 is out of range 0..7: "abcdefg"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "abcdefg"
+            a = s.substring(1, 8)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'index 8 is out of range 1..7: "abcdefg"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "abcdefg"
+            a = s.substring(3, 2)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'index 2 is out of range 3..7: "abcdefg"'
+        end
+      end
+    end
+
+    describe 'substringOrNull' do
+      it 'should the substring specified by the given range' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = "abcdefg"
+          a = s.substringOrNull(2, 2)
+          b = s.substringOrNull(2, 3)
+          c = s.substringOrNull(2, 4)
+          d = s.substringOrNull(0, 7)
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('c')
+          expect(c.value).to be_evaluated_string('cd')
+          expect(d.value).to be_evaluated_string('abcdefg')
+        end
+      end
+
+      context 'when the given range is outside of the range of this string' do
+        it 'should return a null value' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "abcdefg"
+            a = s.substringOrNull(-1, 4)
+            b = s.substringOrNull(1, 8)
+            c = s.substringOrNull(3, 2)
+          PKL
+          node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+            expect(a.value).to be_null
+            expect(b.value).to be_null
+            expect(c.value).to be_null
+          end
+        end
+      end
+    end
   end
 end
