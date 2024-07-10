@@ -602,5 +602,367 @@ RSpec.describe RuPkl::Node::String do
         end
       end
     end
+
+    describe 'repeat' do
+      it 'should concatenates count copies of this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          a = s0.repeat(0)
+          b = s0.repeat(1)
+          c = s0.repeat(5)
+          d = s1.repeat(0)
+          e = s1.repeat(1)
+          f = s1.repeat(5)
+        PKL
+        node.evaluate(nil).properties[-6..].then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('abcdefg')
+          expect(c.value).to be_evaluated_string('abcdefgabcdefgabcdefgabcdefgabcdefg')
+          expect(d.value).to be_evaluated_string('')
+          expect(e.value).to be_evaluated_string('')
+          expect(f.value).to be_evaluated_string('')
+        end
+      end
+
+      context 'when the given value is negative' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abcdefg"
+            a = s0.repeat(-1)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a positive number, but got \'-1\''
+        end
+      end
+    end
+
+    describe 'contains' do
+      it 'should tell whether this string contains pattern' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = "cde"
+          s2 = ""
+          a = s0.contains(s0)
+          b = s0.contains(s1)
+          c = s0.contains(s2)
+          d = s1.contains(s0)
+          e = s1.contains(s1)
+          f = s1.contains(s2)
+          g = s2.contains(s0)
+          h = s2.contains(s1)
+          i = s2.contains(s2)
+        PKL
+        node.evaluate(nil).properties[-9..].then do |(a, b, c, d, e, f, g, h, i)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(false)
+          expect(e.value).to be_boolean(true)
+          expect(f.value).to be_boolean(true)
+          expect(g.value).to be_boolean(false)
+          expect(h.value).to be_boolean(false)
+          expect(i.value).to be_boolean(true)
+        end
+      end
+    end
+
+    describe 'startsWith' do
+      it 'should tell whether this string starts with pattern' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          s2 = "abc"
+          s3 = "abx"
+          a = s0.startsWith(s0)
+          b = s0.startsWith(s1)
+          c = s0.startsWith(s2)
+          d = s0.startsWith(s3)
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(false)
+        end
+      end
+    end
+
+    describe 'endsWith' do
+      it 'should tell whether this string ends with pattern' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          s2 = "efg"
+          s3 = "efx"
+          a = s0.endsWith(s0)
+          b = s0.endsWith(s1)
+          c = s0.endsWith(s2)
+          d = s0.endsWith(s3)
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(false)
+        end
+      end
+    end
+
+    describe 'indexOf' do
+      it 'should return the index of the first occurrence of pattern in this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          s2 = "abc"
+          s3 = "cde"
+          a = s0.indexOf(s0)
+          b = s0.indexOf(s1)
+          c = s0.indexOf(s2)
+          d = s0.indexOf(s3)
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(0)
+          expect(c.value).to be_int(0)
+          expect(d.value).to be_int(2)
+        end
+      end
+
+      context 'when the pattern does not occur in this string' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abcdefg"
+            s1 = "cdx"
+            a = s0.indexOf(s1)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error '"cdx" does not occur in "abcdefg"'
+        end
+      end
+    end
+
+    describe 'indexOfOrNull' do
+      it 'should return the index of the first occurrence of pattern in this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          s2 = "abc"
+          s3 = "cde"
+          a = s0.indexOfOrNull(s0)
+          b = s0.indexOfOrNull(s1)
+          c = s0.indexOfOrNull(s2)
+          d = s0.indexOfOrNull(s3)
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(0)
+          expect(c.value).to be_int(0)
+          expect(d.value).to be_int(2)
+        end
+      end
+
+      context 'when the pattern does not occur in this string' do
+        it 'should return a null value' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abcdefg"
+            s1 = "cdx"
+            a = s0.indexOfOrNull(s1)
+          PKL
+          node.evaluate(nil).properties[-1].then do |a|
+            expect(a.value).to be_null
+          end
+        end
+      end
+    end
+
+    describe 'lastIndexOf' do
+      it 'should return the index of the last occurrence of pattern in this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abxabyabz"
+          s1 = ""
+          s2 = "ab"
+          a = s0.lastIndexOf(s0)
+          b = s0.lastIndexOf(s1)
+          c = s0.lastIndexOf(s2)
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(9)
+          expect(c.value).to be_int(6)
+        end
+      end
+
+      context 'when the pattern does not occur in this string' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abxabyabz"
+            s1 = "cdx"
+            a = s0.lastIndexOf(s1)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error '"cdx" does not occur in "abxabyabz"'
+        end
+      end
+    end
+
+    describe 'lastIndexOfOrNull' do
+      it 'should return the index of the last occurrence of pattern in this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abxabyabz"
+          s1 = ""
+          s2 = "ab"
+          a = s0.lastIndexOfOrNull(s0)
+          b = s0.lastIndexOfOrNull(s1)
+          c = s0.lastIndexOfOrNull(s2)
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(9)
+          expect(c.value).to be_int(6)
+        end
+      end
+
+      context 'when the pattern does not occur in this string' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abxabyabz"
+            s1 = "cdx"
+            a = s0.lastIndexOfOrNull(s1)
+          PKL
+          node.evaluate(nil).properties[-1].then do |a|
+            expect(a.value).to be_null
+          end
+        end
+      end
+    end
+
+    describe 'take' do
+      it 'should returns the first n characters of this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          a = s0.take(0)
+          b = s0.take(3)
+          c = s0.take(42)
+          d = s1.take(0)
+          e = s1.take(3)
+        PKL
+        node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('abc')
+          expect(c.value).to be_evaluated_string('abcdefg')
+          expect(d.value).to be_evaluated_string('')
+          expect(e.value).to be_evaluated_string('')
+        end
+      end
+
+      context 'when the given value is negative' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abcdefg"
+            a = s0.take(-1)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a positive number, but got \'-1\''
+        end
+      end
+    end
+
+    describe 'takeLast' do
+      it 'should returns the last n characters of this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          a = s0.takeLast(0)
+          b = s0.takeLast(3)
+          c = s0.takeLast(42)
+          d = s1.takeLast(0)
+          e = s1.takeLast(3)
+        PKL
+        node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('efg')
+          expect(c.value).to be_evaluated_string('abcdefg')
+          expect(d.value).to be_evaluated_string('')
+          expect(e.value).to be_evaluated_string('')
+        end
+      end
+
+      context 'when the given value is negative' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abcdefg"
+            a = s0.takeLast(-1)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a positive number, but got \'-1\''
+        end
+      end
+    end
+
+    describe 'drop' do
+      it 'should remove the first n characters of this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          a = s0.drop(0)
+          b = s0.drop(3)
+          c = s0.drop(42)
+          d = s1.drop(0)
+          e = s1.drop(3)
+        PKL
+        node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+          expect(a.value).to be_evaluated_string('abcdefg')
+          expect(b.value).to be_evaluated_string('defg')
+          expect(c.value).to be_evaluated_string('')
+          expect(d.value).to be_evaluated_string('')
+          expect(e.value).to be_evaluated_string('')
+        end
+      end
+
+      context 'when the given value is negative' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abcdefg"
+            a = s0.drop(-1)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a positive number, but got \'-1\''
+        end
+      end
+    end
+
+    describe 'dropLast' do
+      it 'should remove the last n characters of this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "abcdefg"
+          s1 = ""
+          a = s0.dropLast(0)
+          b = s0.dropLast(3)
+          c = s0.dropLast(42)
+          d = s1.dropLast(0)
+          e = s1.dropLast(3)
+        PKL
+        node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+          expect(a.value).to be_evaluated_string('abcdefg')
+          expect(b.value).to be_evaluated_string('abcd')
+          expect(c.value).to be_evaluated_string('')
+          expect(d.value).to be_evaluated_string('')
+          expect(e.value).to be_evaluated_string('')
+        end
+      end
+
+      context 'when the given value is negative' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "abcdefg"
+            a = s0.dropLast(-1)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a positive number, but got \'-1\''
+        end
+      end
+    end
   end
 end

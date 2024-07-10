@@ -127,6 +127,86 @@ module RuPkl
         end
       end
 
+      define_builtin_method(:repeat, count: Int) do |count|
+        check_positive_number(count)
+
+        result = value * count.value
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(:contains, pattern: String) do |pattern|
+        result = value.include?(pattern.value)
+        Boolean.new(nil, result, position)
+      end
+
+      define_builtin_method(:startsWith, pattern: String) do |pattern|
+        result = value.start_with?(pattern.value)
+        Boolean.new(nil, result, position)
+      end
+
+      define_builtin_method(:endsWith, pattern: String) do |pattern|
+        result = value.end_with?(pattern.value)
+        Boolean.new(nil, result, position)
+      end
+
+      define_builtin_method(:indexOf, pattern: String) do |pattern|
+        result = value.index(pattern.value)
+        result && Int.new(nil, result, position) ||
+          begin
+            message = "\"#{pattern.value}\" does not occur in \"#{value}\""
+            raise EvaluationError.new(message, position)
+          end
+      end
+
+      define_builtin_method(:indexOfOrNull, pattern: String) do |pattern|
+        result = value.index(pattern.value)
+        result && Int.new(nil, result, position) || Null.new(nil, position)
+      end
+
+      define_builtin_method(:lastIndexOf, pattern: String) do |pattern|
+        result = value.rindex(pattern.value)
+        result && Int.new(nil, result, position) ||
+          begin
+            message = "\"#{pattern.value}\" does not occur in \"#{value}\""
+            raise EvaluationError.new(message, position)
+          end
+      end
+
+      define_builtin_method(:lastIndexOfOrNull, pattern: String) do |pattern|
+        result = value.rindex(pattern.value)
+        result && Int.new(nil, result, position) || Null.new(nil, position)
+      end
+
+      define_builtin_method(:take, n: Int) do |n|
+        check_positive_number(n)
+
+        result = value[0, n.value] || value
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(:takeLast, n: Int) do |n|
+        check_positive_number(n)
+
+        pos = value.size - n.value
+        result = pos.negative? && value || value[pos..]
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(:drop, n: Int) do |n|
+        check_positive_number(n)
+
+        result = value[n.value..] || ''
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(:dropLast, n: Int) do |n|
+        check_positive_number(n)
+
+        length = value.size - n.value
+        result = length.negative? && '' || value[0, length]
+        String.new(nil, result, nil, position)
+      end
+
       private
 
       def evaluate_portions(context)

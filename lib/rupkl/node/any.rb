@@ -87,6 +87,13 @@ module RuPkl
 
         nil
       end
+
+      def check_positive_number(number)
+        return unless number.value.negative?
+
+        m = "expected a positive number, but got '#{number.value}'"
+        raise EvaluationError.new(m, position)
+      end
     end
   end
 end
