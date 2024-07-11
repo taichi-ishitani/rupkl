@@ -964,5 +964,224 @@ RSpec.describe RuPkl::Node::String do
         end
       end
     end
+
+    describe 'replaceFirst' do
+      it 'should replace the first occurrence of pattern in this string with replacement' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "aabbccaabbcc"
+          s1 = "aabb..aabbcc"
+          a = s0.replaceFirst("aa", "xx")
+          b = s1.replaceFirst(".", "x")
+        PKL
+        node.evaluate(nil).properties[-2..].then do |(a, b)|
+          expect(a.value).to be_evaluated_string('xxbbccaabbcc')
+          expect(b.value).to be_evaluated_string('aabbx.aabbcc')
+        end
+      end
+
+      context 'when the pattern does not occur in this string' do
+        it 'should return this string unchanged' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "aabbccaabbcc"
+            s1 = "aabb..aabbcc"
+            a = s0.replaceFirst("xx", "yy")
+            b = s1.replaceFirst("-", "x")
+          PKL
+          node.evaluate(nil).properties[-2..].then do |(a, b)|
+            expect(a.value).to be_evaluated_string('aabbccaabbcc')
+            expect(b.value).to be_evaluated_string('aabb..aabbcc')
+          end
+        end
+      end
+    end
+
+    describe 'replaceLast' do
+      it 'should replace the last occurrence of pattern in this string with replacement' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "aabbccaabbcc"
+          s1 = "aabb..aabbcc"
+          a = s0.replaceLast("aa", "xx")
+          b = s1.replaceLast(".", "x")
+        PKL
+        node.evaluate(nil).properties[-2..].then do |(a, b)|
+          expect(a.value).to be_evaluated_string('aabbccxxbbcc')
+          expect(b.value).to be_evaluated_string('aabb.xaabbcc')
+        end
+      end
+
+      context 'when the pattern does not occur in this string' do
+        it 'should return this string unchanged' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "aabbccaabbcc"
+            s1 = "aabb..aabbcc"
+            a = s0.replaceLast("xx", "yy")
+            b = s1.replaceLast("-", "x")
+          PKL
+          node.evaluate(nil).properties[-2..].then do |(a, b)|
+            expect(a.value).to be_evaluated_string('aabbccaabbcc')
+            expect(b.value).to be_evaluated_string('aabb..aabbcc')
+          end
+        end
+      end
+    end
+
+    describe 'replaceAll' do
+      it 'should replace all occurrences of pattern in this string with replacement' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "aabbccaabbcc"
+          s1 = "aabb..aabbcc"
+          a = s0.replaceAll("aa", "xx")
+          b = s1.replaceAll(".", "x")
+        PKL
+        node.evaluate(nil).properties[-2..].then do |(a, b)|
+          expect(a.value).to be_evaluated_string('xxbbccxxbbcc')
+          expect(b.value).to be_evaluated_string('aabbxxaabbcc')
+        end
+      end
+
+      context 'when the pattern does not occur in this string' do
+        it 'should return this string unchanged' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = "aabbccaabbcc"
+            s1 = "aabb..aabbcc"
+            a = s0.replaceAll("xx", "yy")
+            b = s1.replaceAll("-", "x")
+          PKL
+          node.evaluate(nil).properties[-2..].then do |(a, b)|
+            expect(a.value).to be_evaluated_string('aabbccaabbcc')
+            expect(b.value).to be_evaluated_string('aabb..aabbcc')
+          end
+        end
+      end
+    end
+
+    describe 'replaceRange' do
+      it 'should replace the characters between start and exclusiveEnd with replacement' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "aabbccaabbcc"
+          a = s0.replaceRange(5, 10, "XXX")
+          b = s0.replaceRange(10, 12, "extend beyond string end")
+        PKL
+        node.evaluate(nil).properties[-2..].then do |(a, b)|
+          expect(a.value).to be_evaluated_string('aabbcXXXcc')
+          expect(b.value).to be_evaluated_string('aabbccaabbextend beyond string end')
+        end
+      end
+
+      context 'when the given range is outside of the range of this string' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "aabbccaabbcc"
+            a = s.replaceRange(0, 100, "_")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'index 100 is out of range 0..12: "aabbccaabbcc"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "aabbccaabbcc"
+            a = s.replaceRange(-10, 5, "_")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'index -10 is out of range 0..12: "aabbccaabbcc"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "aabbccaabbcc"
+            a = s.replaceRange(3, 2, "_")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'index 2 is out of range 3..12: "aabbccaabbcc"'
+        end
+      end
+    end
+
+    describe 'toUpperCase' do
+      it 'should perform a locale-independent character-by-character conversion of this string to uppercase' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = "abcABCabc"
+          a = s.toUpperCase()
+        PKL
+        node.evaluate(nil).properties[-1].then do |a|
+          expect(a.value).to be_evaluated_string('ABCABCABC')
+        end
+      end
+    end
+
+    describe 'toLowerCase' do
+      it 'should performs  locale-independent character-by-character conversion of this string to lowercase' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = "abcABCabc"
+          a = s.toLowerCase()
+        PKL
+        node.evaluate(nil).properties[-1].then do |a|
+          expect(a.value).to be_evaluated_string('abcabcabc')
+        end
+      end
+    end
+
+    describe 'reverse' do
+      it 'should reverse the order of characters in this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = "abcdefg"
+          a = s.reverse()
+        PKL
+        node.evaluate(nil).properties[-1].then do |a|
+          expect(a.value).to be_evaluated_string('gfedcba')
+        end
+      end
+    end
+
+    describe 'trim' do
+      it 'should remove any leading and trailing characters with Unicode property "White_Space" from this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = " \t abcdefg \t \n"
+          s1 = " \t  \t \n"
+          s2 = "　あいう　"
+          a = s0.trim()
+          b = s1.trim()
+          c = s2.trim()
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_evaluated_string('abcdefg')
+          expect(b.value).to be_evaluated_string('')
+          expect(c.value).to be_evaluated_string('あいう')
+        end
+      end
+    end
+
+    describe 'trimStart' do
+      it 'should remove any leading characters with Unicode property "White_Space" from this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = " \t abcdefg \t \n"
+          s1 = " \t  \t \n"
+          s2 = "　あいう　"
+          a = s0.trimStart()
+          b = s1.trimStart()
+          c = s2.trimStart()
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_evaluated_string("abcdefg \t \n")
+          expect(b.value).to be_evaluated_string('')
+          expect(c.value).to be_evaluated_string('あいう　')
+        end
+      end
+    end
+
+    describe 'trimEnd' do
+      it 'should remove any trailing characters with Unicode property "White_Space" from this string' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = " \t abcdefg \t \n"
+          s1 = " \t  \t \n"
+          s2 = "　あいう　"
+          a = s0.trimEnd()
+          b = s1.trimEnd()
+          c = s2.trimEnd()
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_evaluated_string(" \t abcdefg")
+          expect(b.value).to be_evaluated_string('')
+          expect(c.value).to be_evaluated_string('　あいう')
+        end
+      end
+    end
   end
 end

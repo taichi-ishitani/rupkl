@@ -207,6 +207,76 @@ module RuPkl
         String.new(nil, result, nil, position)
       end
 
+      define_builtin_method(
+        :replaceFirst,
+        pattern: String, replacement: String
+      ) do |pattern, replacement|
+        result = value.sub(pattern.value, replacement.value)
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(
+        :replaceLast,
+        pattern: String, replacement: String
+      ) do |pattern, replacement|
+        result =
+          if (index = value.rindex(pattern.value))
+            value
+              .dup
+              .tap { |s| s[index, replacement.value.size] = replacement.value }
+          else
+            value
+          end
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(
+        :replaceAll,
+        pattern: String, replacement: String
+      ) do |pattern, replacement|
+        result = value.gsub(pattern.value, replacement.value)
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(
+        :replaceRange,
+        start: Int, exclusive_end: Int, replacement: String
+      ) do |start, exclusive_end, replacement|
+        check_range(start.value, 0)
+        check_range(exclusive_end.value, start.value)
+
+        range = start.value...exclusive_end.value
+        result = value.dup.tap { |s| s[range] = replacement.value }
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(:toUpperCase) do
+        String.new(nil, value.upcase, nil, position)
+      end
+
+      define_builtin_method(:toLowerCase) do
+        String.new(nil, value.downcase, nil, position)
+      end
+
+      define_builtin_method(:reverse) do
+        String.new(nil, value.reverse, nil, position)
+      end
+
+      define_builtin_method(:trim) do
+        pattern = /(?:\A\p{White_Space}+)|(?:\p{White_Space}+\z)/
+        String.new(nil, value.gsub(pattern, ''), nil, position)
+      end
+
+      define_builtin_method(:trimStart) do
+        pattern = /\A\p{White_Space}+/
+        String.new(nil, value.sub(pattern, ''), nil, position)
+      end
+
+      define_builtin_method(:trimEnd) do
+        pattern = /\p{White_Space}+\z/
+        String.new(nil, value.sub(pattern, ''), nil, position)
+      end
+
       private
 
       def evaluate_portions(context)
