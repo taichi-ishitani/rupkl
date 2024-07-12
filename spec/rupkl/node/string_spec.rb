@@ -1183,5 +1183,250 @@ RSpec.describe RuPkl::Node::String do
         end
       end
     end
+
+    describe 'padStart' do
+      it 'should increase the length of this string to width by adding leading chars' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = ""
+          s1 = "abcdefg"
+          a = s0.padStart(1, "x")
+          b = s0.padStart(3, "x")
+          c = s1.padStart(10, " ")
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_evaluated_string('x')
+          expect(b.value).to be_evaluated_string('xxx')
+          expect(c.value).to be_evaluated_string('   abcdefg')
+        end
+      end
+
+      context 'when its length is already equal or greater than the given width' do
+        it 'should return this string' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = ""
+            s1 = "abcdefg"
+            a = s0.padStart(0, "x")
+            b = s0.padStart(-1, "x")
+            c = s1.padStart(1, " ")
+            d = s1.padStart(7, " ")
+            e = s1.padStart(-1, " ")
+          PKL
+          node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+            expect(a.value).to be_evaluated_string('')
+            expect(b.value).to be_evaluated_string('')
+            expect(c.value).to be_evaluated_string('abcdefg')
+            expect(d.value).to be_evaluated_string('abcdefg')
+            expect(e.value).to be_evaluated_string('abcdefg')
+          end
+        end
+      end
+
+      context 'when the length of the given char is not 1' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = ""
+            a = s.padStart(1, "")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a char, but got ""'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = ""
+            a = s.padStart(3, "xx")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a char, but got "xx"'
+        end
+      end
+    end
+
+    describe 'padEnd' do
+      it 'should increase the length of this string to width by adding trailing chars' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = ""
+          s1 = "abcdefg"
+          a = s0.padEnd(1, "x")
+          b = s0.padEnd(3, "x")
+          c = s1.padEnd(10, " ")
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_evaluated_string('x')
+          expect(b.value).to be_evaluated_string('xxx')
+          expect(c.value).to be_evaluated_string('abcdefg   ')
+        end
+      end
+
+      context 'when its length is already equal or greater than the given width' do
+        it 'should return this string' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = ""
+            s1 = "abcdefg"
+            a = s0.padEnd(0, "x")
+            b = s0.padEnd(-1, "x")
+            c = s1.padEnd(1, " ")
+            d = s1.padEnd(7, " ")
+            e = s1.padEnd(-1, " ")
+          PKL
+          node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+            expect(a.value).to be_evaluated_string('')
+            expect(b.value).to be_evaluated_string('')
+            expect(c.value).to be_evaluated_string('abcdefg')
+            expect(d.value).to be_evaluated_string('abcdefg')
+            expect(e.value).to be_evaluated_string('abcdefg')
+          end
+        end
+      end
+
+      context 'when the length of the given char is not 1' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = ""
+            a = s.padEnd(1, "")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a char, but got ""'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = ""
+            a = s.padEnd(3, "xx")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a char, but got "xx"'
+        end
+      end
+    end
+
+    describe 'capitalize' do
+      it 'should convert the first character of this string to title case' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = ""
+          s1 = "pigeon"
+          s2 = "Pigeon"
+          s3 = "pigeon bird"
+          s4 = "pigeon Bird"
+          a = s0.capitalize()
+          b = s1.capitalize()
+          c = s2.capitalize()
+          d = s3.capitalize()
+          e = s4.capitalize()
+        PKL
+        node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('Pigeon')
+          expect(c.value).to be_evaluated_string('Pigeon')
+          expect(d.value).to be_evaluated_string('Pigeon bird')
+          expect(e.value).to be_evaluated_string('Pigeon Bird')
+        end
+      end
+    end
+
+    describe 'decapitalize' do
+      it 'should convert the first character of this string to lower case' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = ""
+          s1 = "pigeon"
+          s2 = "Pigeon"
+          s3 = "pigeon bird"
+          s4 = "pigeon Bird"
+          a = s0.decapitalize()
+          b = s1.decapitalize()
+          c = s2.decapitalize()
+          d = s3.decapitalize()
+          e = s4.decapitalize()
+        PKL
+        node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('pigeon')
+          expect(c.value).to be_evaluated_string('pigeon')
+          expect(d.value).to be_evaluated_string('pigeon bird')
+          expect(e.value).to be_evaluated_string('pigeon Bird')
+        end
+      end
+    end
+
+    describe 'toInt' do
+      it 'should parse this string as a signed decimal integer' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "0"
+          s1 = "-0"
+          s2 = "123"
+          s3 = "-123"
+          a = s0.toInt()
+          b = s1.toInt()
+          c = s2.toInt()
+          d = s3.toInt()
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(0)
+          expect(c.value).to be_int(123)
+          expect(d.value).to be_int(-123)
+        end
+      end
+
+      context 'when this string cannot be parsed as a signed decimal integer' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = ""
+            a = s.toInt()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Int ""'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "abc"
+            a = s.toInt()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Int "abc"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "0xabc"
+            a = s.toInt()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Int "0xabc"'
+        end
+      end
+    end
+
+    describe 'toIntOrNull' do
+      it 'should parse this string as a signed decimal integer' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "0"
+          s1 = "-0"
+          s2 = "123"
+          s3 = "-123"
+          a = s0.toIntOrNull()
+          b = s1.toIntOrNull()
+          c = s2.toIntOrNull()
+          d = s3.toIntOrNull()
+        PKL
+        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(0)
+          expect(c.value).to be_int(123)
+          expect(d.value).to be_int(-123)
+        end
+      end
+
+      context 'when this string cannot be parsed as a signed decimal integer' do
+        it 'should return a null value' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = ""
+            s1 = "abc"
+            s2 = "0xabc"
+            a = s0.toIntOrNull()
+            b = s1.toIntOrNull()
+            c = s2.toIntOrNull()
+          PKL
+          node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+            expect(a.value).to be_null
+            expect(b.value).to be_null
+            expect(c.value).to be_null
+          end
+        end
+      end
+    end
   end
 end

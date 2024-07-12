@@ -221,9 +221,7 @@ module RuPkl
       ) do |pattern, replacement|
         result =
           if (index = value.rindex(pattern.value))
-            value
-              .dup
-              .tap { |s| s[index, replacement.value.size] = replacement.value }
+            value.dup.tap { |s| s[index, replacement.value.size] = replacement.value }
           else
             value
           end
@@ -277,6 +275,39 @@ module RuPkl
         String.new(nil, value.sub(pattern, ''), nil, position)
       end
 
+      define_builtin_method(:padStart, width: Int, char: String) do |width, char|
+        pad(width, char, :pre)
+      end
+
+      define_builtin_method(:padEnd, width: Int, char: String) do |width, char|
+        pad(width, char, :post)
+      end
+
+      define_builtin_method(:capitalize) do
+        result =
+          value.dup.tap { |s| s[0] = s[0].upcase if s.length.positive? }
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(:decapitalize) do
+        result =
+          value.dup.tap { |s| s[0] = s[0].downcase if s.length.positive? }
+        String.new(nil, result, nil, position)
+      end
+
+      define_builtin_method(:toInt) do
+        Int.new(nil, Integer(value, 10), position)
+      rescue ArgumentError
+        message = "cannot parse string as Int \"#{value}\""
+        raise EvaluationError.new(message, position)
+      end
+
+      define_builtin_method(:toIntOrNull) do
+        Int.new(nil, Integer(value, 10), position)
+      rescue ArgumentError
+        Null.new(nil, position)
+      end
+
       private
 
       def evaluate_portions(context)
@@ -314,6 +345,29 @@ module RuPkl
 
       def inside_range?(index, start_index)
         (start_index..value.size).include?(index)
+      end
+
+      def pad(width, char, pre_post)
+        unless char.value.length == 1
+          message = "expected a char, but got \"#{char.value}\""
+          raise EvaluationError.new(message, position)
+        end
+
+        result =
+          pad_prefix_postfix(width, char, pre_post)
+            .then { |pre, post| [pre, value, post].join }
+        String.new(nil, result, nil, position)
+      end
+
+      def pad_prefix_postfix(width, char, pre_post)
+        pad_width = width.value - value.length
+        if pad_width <= 0
+          [nil, nil]
+        elsif pre_post == :pre
+          [char.value * pad_width, nil]
+        else
+          [nil, char.value * pad_width]
+        end
       end
     end
   end
