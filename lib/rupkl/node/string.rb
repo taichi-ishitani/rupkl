@@ -285,13 +285,13 @@ module RuPkl
 
       define_builtin_method(:capitalize) do
         result =
-          value.dup.tap { |s| s[0] = s[0].upcase if s.length.positive? }
+          value.empty? && value || value.dup.tap { |s| s[0] = s[0].upcase }
         String.new(nil, result, nil, position)
       end
 
       define_builtin_method(:decapitalize) do
         result =
-          value.dup.tap { |s| s[0] = s[0].downcase if s.length.positive? }
+          value.empty? && value || value.dup.tap { |s| s[0] = s[0].downcase }
         String.new(nil, result, nil, position)
       end
 
