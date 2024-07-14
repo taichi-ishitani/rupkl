@@ -49,37 +49,38 @@ module RuPkl
         ].inject(:|)
       end
 
-      rule(:qualified_members) do
-        (
-          ws? >> (str('?.') | str('.')).as(:dot) >> ws? >> id.as(:name)
-        ).as(:qualified_member).repeat(1)
+      rule(:qualifier) do
+        (str('?.') | str('.'))
       end
 
       rule(:qualified_member_ref) do
         (
-          primary.as(:receiver) >>
-            (
-              qualified_members.as(:members) >>
-                (pure_ws? >> argument_list.as(:arguments)).maybe
-            ).repeat(1).as(:member_refs)
-        ).as(:qualified_member_ref) | primary
+          ws? >> qualifier.as(:qualifier) >> ws? >>
+            id.as(:member) >> (pure_ws? >> argument_list.as(:arguments)).maybe
+        ).as(:qualified_member_ref)
       end
 
-      rule(:subscript_operation) do
+      rule(:subscript_key) do
         (
-          qualified_member_ref.as(:receiver) >>
+          pure_ws? >> bracketed(expression, '[', ']') >>
+            (ws? >> str('=')).absent?
+        ).as(:subscript_key)
+      end
+
+      rule(:qualified_member_ref_or_subscript_operation) do
+        (
+          primary.as(:receiver) >>
             (
-              pure_ws? >> bracketed(expression, '[', ']') >>
-                (ws? >> str('=')).absent?
-            ).repeat(1).as(:key)
-        ).as(:subscript_operation) | qualified_member_ref
+              qualified_member_ref | subscript_key
+            ).repeat(1).as(:member_ref_or_subscript_key)
+        ).as(:qualified_member_ref_or_subscript_operation) | primary
       end
 
       rule(:non_null_operation) do
         (
-          subscript_operation.as(:operand) >>
+          qualified_member_ref_or_subscript_operation.as(:operand) >>
             ws? >> str(:'!!').as(:non_null_operator)
-        ) | subscript_operation
+        ) | qualified_member_ref_or_subscript_operation
       end
 
       rule(:unary_operation) do
@@ -150,39 +151,36 @@ module RuPkl
       end
 
       rule(
-        qualified_member:
-          { dot: simple(:dot), name: simple(:name) }
-      ) do
-        [name, dot == '?.']
-      end
-
-      rule(
-        qualified_member_ref:
+        qualified_member_ref_or_subscript_operation:
           {
-            receiver: simple(:receiver), member_refs: subtree(:member_refs)
+            receiver: simple(:receiver),
+            member_ref_or_subscript_key: subtree(:member_ref_or_subscript_key)
           }
       ) do
-        member_refs.inject(receiver) do |r, refs|
-          if refs.key?(:arguments)
-            process_method_call(r, refs[:members], refs[:arguments])
+        member_ref_or_subscript_key.inject(receiver) do |r, ref_or_key|
+          if ref_or_key.key?(:subscript_key)
+            process_subscript_operation(r, ref_or_key[:subscript_key])
           else
-            process_member_ref(r, refs[:members])
+            process_member_ref(r, ref_or_key[:qualified_member_ref])
           end
         end
       end
 
-      define_helper(:process_member_ref) do |receiver, members|
-        members.inject(receiver) do |r, m|
-          name, nullable = m
-          Node::MemberReference.new(nil, r, name, nullable, r.position)
-        end
+      define_helper(:process_subscript_operation) do |receiver, key|
+        Node::SubscriptOperation.new(nil, :[], receiver, key, receiver.position)
       end
 
-      define_helper(:process_method_call) do |receiver, members, arguments|
-        r_node = process_member_ref(receiver, members[..-2])
-        [r_node, members[-1]].then do |r, m|
-          name, nullable = m
-          Node::MethodCall.new(nil, r, name, arguments, nullable, name.position)
+      define_helper(:process_member_ref) do |receiver, member_ref|
+        nullable = member_ref[:qualifier] == '?.'
+        if member_ref.key?(:arguments)
+          Node::MethodCall.new(
+            nil, receiver, member_ref[:member], member_ref[:arguments],
+            nullable, receiver.position
+          )
+        else
+          Node::MemberReference.new(
+            nil, receiver, member_ref[:member], nullable, receiver.position
+          )
         end
       end
 
@@ -213,15 +211,6 @@ module RuPkl
           { target: simple(:t), bodies: subtree(:b) }
       ) do
         Node::AmendExpression.new(nil, t, Array(b), t.position)
-      end
-
-      rule(
-        subscript_operation:
-          { receiver: simple(:receiver), key: sequence(:key) }
-      ) do
-        key.inject(receiver) do |r, k|
-          Node::SubscriptOperation.new(nil, :[], r, k, r.position)
-        end
       end
 
       rule(operand: simple(:operand), non_null_operator: simple(:operator)) do
