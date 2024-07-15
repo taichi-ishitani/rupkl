@@ -150,31 +150,29 @@ module RuPkl
       end
 
       define_builtin_method(:indexOf, pattern: String) do |pattern|
-        result = value.index(pattern.value)
-        result && Int.new(nil, result, position) ||
-          begin
-            message = "\"#{pattern.value}\" does not occur in \"#{value}\""
-            raise EvaluationError.new(message, position)
-          end
+        index_of(:index, pattern) do
+          message = "\"#{pattern.value}\" does not occur in \"#{value}\""
+          raise EvaluationError.new(message, position)
+        end
       end
 
       define_builtin_method(:indexOfOrNull, pattern: String) do |pattern|
-        result = value.index(pattern.value)
-        result && Int.new(nil, result, position) || Null.new(nil, position)
+        index_of(:index, pattern) do
+          Null.new(nil, position)
+        end
       end
 
       define_builtin_method(:lastIndexOf, pattern: String) do |pattern|
-        result = value.rindex(pattern.value)
-        result && Int.new(nil, result, position) ||
-          begin
-            message = "\"#{pattern.value}\" does not occur in \"#{value}\""
-            raise EvaluationError.new(message, position)
-          end
+        index_of(:rindex, pattern) do
+          message = "\"#{pattern.value}\" does not occur in \"#{value}\""
+          raise EvaluationError.new(message, position)
+        end
       end
 
       define_builtin_method(:lastIndexOfOrNull, pattern: String) do |pattern|
-        result = value.rindex(pattern.value)
-        result && Int.new(nil, result, position) || Null.new(nil, position)
+        index_of(:rindex, pattern) do
+          Null.new(nil, position)
+        end
       end
 
       define_builtin_method(:take, n: Int) do |n|
@@ -296,16 +294,42 @@ module RuPkl
       end
 
       define_builtin_method(:toInt) do
-        Int.new(nil, Integer(value, 10), position)
-      rescue ArgumentError
-        message = "cannot parse string as Int \"#{value}\""
-        raise EvaluationError.new(message, position)
+        to_int do
+          message = "cannot parse string as Int \"#{value}\""
+          raise EvaluationError.new(message, position)
+        end
       end
 
       define_builtin_method(:toIntOrNull) do
-        Int.new(nil, Integer(value, 10), position)
-      rescue ArgumentError
-        Null.new(nil, position)
+        to_int do
+          Null.new(nil, position)
+        end
+      end
+
+      define_builtin_method(:toFloat) do
+        to_float do
+          message = "cannot parse string as Float \"#{value}\""
+          raise EvaluationError.new(message, position)
+        end
+      end
+
+      define_builtin_method(:toFloatOrNull) do
+        to_float do
+          Null.new(nil, position)
+        end
+      end
+
+      define_builtin_method(:toBoolean) do
+        to_boolean do
+          message = "cannot parse string as Boolean \"#{value}\""
+          raise EvaluationError.new(message, position)
+        end
+      end
+
+      define_builtin_method(:toBooleanOrNull) do
+        to_boolean do
+          Null.new(nil, position)
+        end
       end
 
       private
@@ -347,6 +371,11 @@ module RuPkl
         (start_index..value.size).include?(index)
       end
 
+      def index_of(method, pattern)
+        result = value.__send__(method, pattern.value)
+        result && Int.new(nil, result, position) || yield
+      end
+
       def pad(width, char, pre_post)
         unless char.value.length == 1
           message = "expected a char, but got \"#{char.value}\""
@@ -368,6 +397,35 @@ module RuPkl
         else
           [nil, char.value * pad_width]
         end
+      end
+
+      def to_int
+        Int.new(nil, Integer(value.gsub('_', ''), 10), position)
+      rescue ArgumentError
+        yield
+      end
+
+      def to_float
+        result =
+          case value
+          when 'NaN' then ::Float::NAN
+          when 'Infinity' then ::Float::INFINITY
+          when '-Infinity' then -::Float::INFINITY
+          else Float(value.gsub('_', ''))
+          end
+        Float.new(nil, result, position)
+      rescue ArgumentError
+        yield
+      end
+
+      def to_boolean
+        result =
+          case value
+          when /\Atrue\z/i then true
+          when /\Afalse\z/i then false
+          else return yield
+          end
+        Boolean.new(nil, result, position)
       end
     end
   end

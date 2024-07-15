@@ -1351,16 +1351,22 @@ RSpec.describe RuPkl::Node::String do
           s1 = "-0"
           s2 = "123"
           s3 = "-123"
+          s4 = "1_2__3___"
+          s5 = "-1_2__3__"
           a = s0.toInt()
           b = s1.toInt()
           c = s2.toInt()
           d = s3.toInt()
+          e = s4.toInt()
+          f = s5.toInt()
         PKL
-        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+        node.evaluate(nil).properties[-6..].then do |(a, b, c, d, e, f)|
           expect(a.value).to be_int(0)
           expect(b.value).to be_int(0)
           expect(c.value).to be_int(123)
           expect(d.value).to be_int(-123)
+          expect(e.value).to be_int(123)
+          expect(f.value).to be_int(-123)
         end
       end
 
@@ -1397,16 +1403,22 @@ RSpec.describe RuPkl::Node::String do
           s1 = "-0"
           s2 = "123"
           s3 = "-123"
+          s4 = "1_2__3___"
+          s5 = "-1_2__3__"
           a = s0.toIntOrNull()
           b = s1.toIntOrNull()
           c = s2.toIntOrNull()
           d = s3.toIntOrNull()
+          e = s4.toIntOrNull()
+          f = s5.toIntOrNull()
         PKL
-        node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+        node.evaluate(nil).properties[-6..].then do |(a, b, c, d, e, f)|
           expect(a.value).to be_int(0)
           expect(b.value).to be_int(0)
           expect(c.value).to be_int(123)
           expect(d.value).to be_int(-123)
+          expect(e.value).to be_int(123)
+          expect(f.value).to be_int(-123)
         end
       end
 
@@ -1424,6 +1436,368 @@ RSpec.describe RuPkl::Node::String do
             expect(a.value).to be_null
             expect(b.value).to be_null
             expect(c.value).to be_null
+          end
+        end
+      end
+    end
+
+    describe 'toFloat' do
+      it 'should parse this string as a floating point number' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = new Listing {
+            "0"
+            "-0"
+            ".0"
+            "-.0"
+            "0.00"
+            "-0.00"
+            "123"
+            "-123"
+            "0.45"
+            "-0.45"
+            ".45"
+            "-.45"
+            "123.45"
+            "-123.45"
+            "123e9"
+            "123E9"
+            "-123e9"
+            "123.45e9"
+            "-123.45e9"
+            ".45e9"
+            "-.45e9"
+            "123.45e+9"
+            "-123.45e+9"
+            "-123.45E+9"
+            "-.45e+9"
+            ".45e+9"
+            "123.45e-9"
+            "-123.45e-9"
+            "-123.45E-9"
+            ".45e-9"
+            "-.45e-9"
+            "9e1024"
+            "-9e1024"
+            "NaN"
+            "Infinity"
+            "-Infinity"
+          }
+          f = new Listing {
+            s[0x00].toFloat(); s[0x01].toFloat(); s[0x02].toFloat(); s[0x03].toFloat()
+            s[0x04].toFloat(); s[0x05].toFloat(); s[0x06].toFloat(); s[0x07].toFloat()
+            s[0x08].toFloat(); s[0x09].toFloat(); s[0x0A].toFloat(); s[0x0B].toFloat()
+            s[0x0C].toFloat(); s[0x0D].toFloat(); s[0x0E].toFloat(); s[0x0F].toFloat()
+            s[0x10].toFloat(); s[0x11].toFloat(); s[0x12].toFloat(); s[0x13].toFloat()
+            s[0x14].toFloat(); s[0x15].toFloat(); s[0x16].toFloat(); s[0x17].toFloat()
+            s[0x18].toFloat(); s[0x19].toFloat(); s[0x1A].toFloat(); s[0x1B].toFloat()
+            s[0x1C].toFloat(); s[0x1D].toFloat(); s[0x1E].toFloat(); s[0x1F].toFloat()
+            s[0x20].toFloat(); s[0x21].toFloat(); s[0x22].toFloat(); s[0x23].toFloat()
+          }
+        PKL
+        node.evaluate(nil).properties[-1].then do |f|
+          expect(f.value).to (be_listing do |l|
+            l << be_float(0.0)
+            l << be_float(-0.0)
+            l << be_float(0.0)
+            l << be_float(-0.0)
+            l << be_float(0.0)
+            l << be_float(-0.0)
+            l << be_float(123.0)
+            l << be_float(-123.0)
+            l << be_float(0.45)
+            l << be_float(-0.45)
+            l << be_float(0.45)
+            l << be_float(-0.45)
+            l << be_float(123.45)
+            l << be_float(-123.45)
+            l << be_float(1.23E11)
+            l << be_float(1.23E11)
+            l << be_float(-1.23E11)
+            l << be_float(1.2345E11)
+            l << be_float(-1.2345E11)
+            l << be_float(4.5E8)
+            l << be_float(-4.5E8)
+            l << be_float(1.2345E11)
+            l << be_float(-1.2345E11)
+            l << be_float(-1.2345E11)
+            l << be_float(-4.5E8)
+            l << be_float(4.5E8)
+            l << be_float(1.2345E-7)
+            l << be_float(-1.2345E-7)
+            l << be_float(-1.2345E-7)
+            l << be_float(4.5E-10)
+            l << be_float(-4.5E-10)
+            l << be_float(Float::INFINITY)
+            l << be_float(-Float::INFINITY)
+            l << be_float(Float::NAN)
+            l << be_float(Float::INFINITY)
+            l << be_float(-Float::INFINITY)
+          end)
+        end
+      end
+
+      context 'when this string cannot be parsed as a floating point number' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = ""
+            a = s.toFloat()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Float ""'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "abc"
+            a = s.toFloat()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Float "abc"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "NAN"
+            a = s.toFloat()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Float "NAN"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "INFINITY"
+            a = s.toFloat()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Float "INFINITY"'
+        end
+      end
+    end
+
+    describe 'toFloatOrNull' do
+      it 'should parse this string as a floating point number' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s = new Listing {
+            "0"
+            "-0"
+            ".0"
+            "-.0"
+            "0.00"
+            "-0.00"
+            "123"
+            "-123"
+            "0.45"
+            "-0.45"
+            ".45"
+            "-.45"
+            "123.45"
+            "-123.45"
+            "123e9"
+            "123E9"
+            "-123e9"
+            "123.45e9"
+            "-123.45e9"
+            ".45e9"
+            "-.45e9"
+            "123.45e+9"
+            "-123.45e+9"
+            "-123.45E+9"
+            "-.45e+9"
+            ".45e+9"
+            "123.45e-9"
+            "-123.45e-9"
+            "-123.45E-9"
+            ".45e-9"
+            "-.45e-9"
+            "9e1024"
+            "-9e1024"
+            "NaN"
+            "Infinity"
+            "-Infinity"
+          }
+          f = new Listing {
+            s[0x00].toFloatOrNull(); s[0x01].toFloatOrNull(); s[0x02].toFloatOrNull(); s[0x03].toFloatOrNull()
+            s[0x04].toFloatOrNull(); s[0x05].toFloatOrNull(); s[0x06].toFloatOrNull(); s[0x07].toFloatOrNull()
+            s[0x08].toFloatOrNull(); s[0x09].toFloatOrNull(); s[0x0A].toFloatOrNull(); s[0x0B].toFloatOrNull()
+            s[0x0C].toFloatOrNull(); s[0x0D].toFloatOrNull(); s[0x0E].toFloatOrNull(); s[0x0F].toFloatOrNull()
+            s[0x10].toFloatOrNull(); s[0x11].toFloatOrNull(); s[0x12].toFloatOrNull(); s[0x13].toFloatOrNull()
+            s[0x14].toFloatOrNull(); s[0x15].toFloatOrNull(); s[0x16].toFloatOrNull(); s[0x17].toFloatOrNull()
+            s[0x18].toFloatOrNull(); s[0x19].toFloatOrNull(); s[0x1A].toFloatOrNull(); s[0x1B].toFloatOrNull()
+            s[0x1C].toFloatOrNull(); s[0x1D].toFloatOrNull(); s[0x1E].toFloatOrNull(); s[0x1F].toFloatOrNull()
+            s[0x20].toFloatOrNull(); s[0x21].toFloatOrNull(); s[0x22].toFloatOrNull(); s[0x23].toFloatOrNull()
+          }
+        PKL
+        node.evaluate(nil).properties[-1].then do |f|
+          expect(f.value).to (be_listing do |l|
+            l << be_float(0.0)
+            l << be_float(-0.0)
+            l << be_float(0.0)
+            l << be_float(-0.0)
+            l << be_float(0.0)
+            l << be_float(-0.0)
+            l << be_float(123.0)
+            l << be_float(-123.0)
+            l << be_float(0.45)
+            l << be_float(-0.45)
+            l << be_float(0.45)
+            l << be_float(-0.45)
+            l << be_float(123.45)
+            l << be_float(-123.45)
+            l << be_float(1.23E11)
+            l << be_float(1.23E11)
+            l << be_float(-1.23E11)
+            l << be_float(1.2345E11)
+            l << be_float(-1.2345E11)
+            l << be_float(4.5E8)
+            l << be_float(-4.5E8)
+            l << be_float(1.2345E11)
+            l << be_float(-1.2345E11)
+            l << be_float(-1.2345E11)
+            l << be_float(-4.5E8)
+            l << be_float(4.5E8)
+            l << be_float(1.2345E-7)
+            l << be_float(-1.2345E-7)
+            l << be_float(-1.2345E-7)
+            l << be_float(4.5E-10)
+            l << be_float(-4.5E-10)
+            l << be_float(Float::INFINITY)
+            l << be_float(-Float::INFINITY)
+            l << be_float(Float::NAN)
+            l << be_float(Float::INFINITY)
+            l << be_float(-Float::INFINITY)
+          end)
+        end
+      end
+
+      context 'when this string cannot be parsed as a floating point number' do
+        it 'should return a null value' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = ""
+            s1 = "abc"
+            s2 = "NAN"
+            s3 = "INFINITY"
+            a = s0.toFloatOrNull()
+            b = s1.toFloatOrNull()
+            c = s2.toFloatOrNull()
+            d = s3.toFloatOrNull()
+          PKL
+          node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+            expect(a.value).to be_null
+            expect(b.value).to be_null
+            expect(c.value).to be_null
+            expect(d.value).to be_null
+          end
+        end
+      end
+    end
+
+    describe 'toBoolean' do
+      it 'should parse "true" to true and "false" to false' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "true"
+          s1 = "tRuE"
+          s2 = "TRUE"
+          s3 = "false"
+          s4 = "fAlSe"
+          s5 = "FALSE"
+          a = s0.toBoolean()
+          b = s1.toBoolean()
+          c = s2.toBoolean()
+          d = s3.toBoolean()
+          e = s4.toBoolean()
+          f = s5.toBoolean()
+        PKL
+        node.evaluate(nil).properties[-6..].then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(false)
+          expect(e.value).to be_boolean(false)
+          expect(f.value).to be_boolean(false)
+        end
+      end
+
+      context 'when this string cannot be parsed as a Boolean value' do
+        it 'should raise EvaluationError' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = ""
+            a = s.toBoolean()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Boolean ""'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "other"
+            a = s.toBoolean()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Boolean "other"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "OTHER"
+            a = s.toBoolean()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Boolean "OTHER"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "  true"
+            a = s.toBoolean()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Boolean "  true"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "false  "
+            a = s.toBoolean()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Boolean "false  "'
+        end
+      end
+    end
+
+    describe 'toBooleanOrNull' do
+      it 'should parse "true" to true and "false" to false' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          s0 = "true"
+          s1 = "tRuE"
+          s2 = "TRUE"
+          s3 = "false"
+          s4 = "fAlSe"
+          s5 = "FALSE"
+          a = s0.toBooleanOrNull()
+          b = s1.toBooleanOrNull()
+          c = s2.toBooleanOrNull()
+          d = s3.toBooleanOrNull()
+          e = s4.toBooleanOrNull()
+          f = s5.toBooleanOrNull()
+        PKL
+        node.evaluate(nil).properties[-6..].then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(false)
+          expect(e.value).to be_boolean(false)
+          expect(f.value).to be_boolean(false)
+        end
+      end
+
+      context 'when this string cannot be parsed as a Boolean value' do
+        it 'should return a null value' do
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s0 = ""
+            s1 = "other"
+            s2 = "OTHER"
+            s3 = "  true"
+            s4 = "false  "
+            a = s0.toBooleanOrNull()
+            b = s1.toBooleanOrNull()
+            c = s2.toBooleanOrNull()
+            d = s3.toBooleanOrNull()
+            e = s4.toBooleanOrNull()
+          PKL
+          node.evaluate(nil).properties[-5..].then do |(a, b, c, d, e)|
+            expect(a.value).to be_null
+            expect(b.value).to be_null
+            expect(c.value).to be_null
+            expect(d.value).to be_null
+            expect(e.value).to be_null
           end
         end
       end
