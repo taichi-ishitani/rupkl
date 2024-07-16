@@ -209,4 +209,40 @@ RSpec.describe RuPkl::Node::Boolean do
       end
     end
   end
+
+  describe 'builtin property/method' do
+    describe 'xor' do
+      it 'should tell if exactly one of this and other is true' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          a = true.xor(true)
+          b = true.xor(false)
+          c = false.xor(true)
+          d = false.xor(false)
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d)|
+          expect(a.value).to be_boolean(false)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(false)
+        end
+      end
+    end
+
+    describe 'implies' do
+      it 'should tells if this implies other' do
+        node = parser.parse(<<~'PKL', root: :pkl_module)
+          a = true.implies(true)
+          b = true.implies(false)
+          c = false.implies(true)
+          d = false.implies(false)
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(false)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(true)
+        end
+      end
+    end
+  end
 end
