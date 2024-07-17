@@ -1387,6 +1387,13 @@ RSpec.describe RuPkl::Node::String do
             .to raise_evaluation_error 'cannot parse string as Int "abc"'
 
           node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "_123"
+            a = s.toInt()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Int "_123"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
             s = "0xabc"
             a = s.toInt()
           PKL
@@ -1427,15 +1434,18 @@ RSpec.describe RuPkl::Node::String do
           node = parser.parse(<<~'PKL', root: :pkl_module)
             s0 = ""
             s1 = "abc"
-            s2 = "0xabc"
+            s2 = "_123"
+            s3 = "0xabc"
             a = s0.toIntOrNull()
             b = s1.toIntOrNull()
             c = s2.toIntOrNull()
+            d = s3.toIntOrNull()
           PKL
-          node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
             expect(a.value).to be_null
             expect(b.value).to be_null
             expect(c.value).to be_null
+            expect(d.value).to be_null
           end
         end
       end
@@ -1476,6 +1486,12 @@ RSpec.describe RuPkl::Node::String do
             "-123.45E-9"
             ".45e-9"
             "-.45e-9"
+            "1_2_3_.4_5_"
+            "-1_2_3_.4_5_"
+            "1_2_3_.4_5_e1_0_"
+            "-1_2_3_.4_5_e1_0_"
+            "1_2_3_.4_5_e-_1_0_"
+            "-1_2_3_.4_5_e-_1_0_"
             "9e1024"
             "-9e1024"
             "NaN"
@@ -1492,6 +1508,8 @@ RSpec.describe RuPkl::Node::String do
             s[0x18].toFloat(); s[0x19].toFloat(); s[0x1A].toFloat(); s[0x1B].toFloat()
             s[0x1C].toFloat(); s[0x1D].toFloat(); s[0x1E].toFloat(); s[0x1F].toFloat()
             s[0x20].toFloat(); s[0x21].toFloat(); s[0x22].toFloat(); s[0x23].toFloat()
+            s[0x24].toFloat(); s[0x25].toFloat(); s[0x26].toFloat(); s[0x27].toFloat()
+            s[0x28].toFloat(); s[0x29].toFloat()
           }
         PKL
         node.evaluate(nil).properties[-1].then do |f|
@@ -1527,6 +1545,12 @@ RSpec.describe RuPkl::Node::String do
             l << be_float(-1.2345E-7)
             l << be_float(4.5E-10)
             l << be_float(-4.5E-10)
+            l << be_float(123.45)
+            l << be_float(-123.45)
+            l << be_float(123.45E10)
+            l << be_float(-123.45E10)
+            l << be_float(123.45E-10)
+            l << be_float(-123.45E-10)
             l << be_float(Float::INFINITY)
             l << be_float(-Float::INFINITY)
             l << be_float(Float::NAN)
@@ -1565,6 +1589,27 @@ RSpec.describe RuPkl::Node::String do
           PKL
           expect { node.evaluate(nil) }
             .to raise_evaluation_error 'cannot parse string as Float "INFINITY"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "_123.45"
+            a = s.toFloat()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Float "_123.45"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "123._45"
+            a = s.toFloat()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Float "123._45"'
+
+          node = parser.parse(<<~'PKL', root: :pkl_module)
+            s = "123.45E_9"
+            a = s.toFloat()
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'cannot parse string as Float "123.45E_9"'
         end
       end
     end
@@ -1604,6 +1649,12 @@ RSpec.describe RuPkl::Node::String do
             "-123.45E-9"
             ".45e-9"
             "-.45e-9"
+            "1_2_3_.4_5_"
+            "-1_2_3_.4_5_"
+            "1_2_3_.4_5_e1_0_"
+            "-1_2_3_.4_5_e1_0_"
+            "1_2_3_.4_5_e-_1_0_"
+            "-1_2_3_.4_5_e-_1_0_"
             "9e1024"
             "-9e1024"
             "NaN"
@@ -1620,6 +1671,8 @@ RSpec.describe RuPkl::Node::String do
             s[0x18].toFloatOrNull(); s[0x19].toFloatOrNull(); s[0x1A].toFloatOrNull(); s[0x1B].toFloatOrNull()
             s[0x1C].toFloatOrNull(); s[0x1D].toFloatOrNull(); s[0x1E].toFloatOrNull(); s[0x1F].toFloatOrNull()
             s[0x20].toFloatOrNull(); s[0x21].toFloatOrNull(); s[0x22].toFloatOrNull(); s[0x23].toFloatOrNull()
+            s[0x24].toFloatOrNull(); s[0x25].toFloatOrNull(); s[0x26].toFloatOrNull(); s[0x27].toFloatOrNull()
+            s[0x28].toFloatOrNull(); s[0x29].toFloatOrNull()
           }
         PKL
         node.evaluate(nil).properties[-1].then do |f|
@@ -1655,6 +1708,12 @@ RSpec.describe RuPkl::Node::String do
             l << be_float(-1.2345E-7)
             l << be_float(4.5E-10)
             l << be_float(-4.5E-10)
+            l << be_float(123.45)
+            l << be_float(-123.45)
+            l << be_float(123.45E10)
+            l << be_float(-123.45E10)
+            l << be_float(123.45E-10)
+            l << be_float(-123.45E-10)
             l << be_float(Float::INFINITY)
             l << be_float(-Float::INFINITY)
             l << be_float(Float::NAN)
@@ -1671,16 +1730,25 @@ RSpec.describe RuPkl::Node::String do
             s1 = "abc"
             s2 = "NAN"
             s3 = "INFINITY"
+            s4 = "_123.45"
+            s5 = "123._45"
+            s6 = "123.45E_9"
             a = s0.toFloatOrNull()
             b = s1.toFloatOrNull()
             c = s2.toFloatOrNull()
             d = s3.toFloatOrNull()
+            e = s4.toFloatOrNull()
+            f = s5.toFloatOrNull()
+            g = s6.toFloatOrNull()
           PKL
-          node.evaluate(nil).properties[-4..].then do |(a, b, c, d)|
+          node.evaluate(nil).properties[-7..].then do |(a, b, c, d, e, f, g)|
             expect(a.value).to be_null
             expect(b.value).to be_null
             expect(c.value).to be_null
             expect(d.value).to be_null
+            expect(e.value).to be_null
+            expect(f.value).to be_null
+            expect(g.value).to be_null
           end
         end
       end

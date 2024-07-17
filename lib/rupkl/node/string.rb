@@ -400,7 +400,7 @@ module RuPkl
       end
 
       def to_int
-        Int.new(nil, Integer(value.gsub('_', ''), 10), position)
+        Int.new(nil, Integer(remove_underscore_from_number(value), 10), position)
       rescue ArgumentError
         yield
       end
@@ -411,11 +411,15 @@ module RuPkl
           when 'NaN' then ::Float::NAN
           when 'Infinity' then ::Float::INFINITY
           when '-Infinity' then -::Float::INFINITY
-          else Float(value.gsub('_', ''))
+          else Float(remove_underscore_from_number(value))
           end
         Float.new(nil, result, position)
       rescue ArgumentError
         yield
+      end
+
+      def remove_underscore_from_number(string)
+        string.gsub(/(?:(?<=\d)|(?<=.[eE][+-]))_+/, '')
       end
 
       def to_boolean
