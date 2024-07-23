@@ -61,6 +61,9 @@ Style/Alias:
 Style/EmptyMethod:
   EnforcedStyle: expanded
 
+Style/HashAsLastArrayItem:
+  EnforcedStyle: no_braces
+
 Style/RaiseArgs:
   EnforcedStyle: compact
 

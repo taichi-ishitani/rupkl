@@ -17,6 +17,20 @@ module RuPkl
       def check_type(value, context, position)
         type&.check_type(value, context, position)
       end
+
+      def varparam?
+        false
+      end
+    end
+
+    class VariadicMethodParam < MethodParam
+      def check_type(values, context, position)
+        values.each { |v| super(v, context, position) }
+      end
+
+      def varparam?
+        true
+      end
     end
 
     class MethodDefinition
@@ -38,6 +52,7 @@ module RuPkl
       def call(receiver, arguments, context, position)
         args = evaluate_arguments(arguments, context, position)
         execute_method(receiver, args)
+          .tap { |result| overwrite_position(result, position) }
       end
 
       private
@@ -45,24 +60,40 @@ module RuPkl
       def evaluate_arguments(arguments, context, position)
         check_arity(arguments, position)
 
-        arguments&.zip(params)&.map do |arg, param|
-          evaluate_argument(arg, param, context)
+        params&.map&.with_index do |param, i|
+          arg =
+            if param.varparam?
+              Array(arguments&.[](i..))
+            else
+              arguments&.[](i)
+            end
+          evaluate_argument(param, arg, context)
         end
-      end
-
-      def evaluate_argument(arg, param, context)
-        value = arg.evaluate(context)
-        param.check_type(value, context, position)
-        [param.name, value]
       end
 
       def check_arity(arguments, position)
         n_args = arguments&.size || 0
-        n_params = params&.size || 0
-        return if n_args == n_params
+        n_params = n_params_range
+        return if n_args in ^n_params
 
         m = "expected #{n_params} method arguments but got #{n_args}"
         raise EvaluationError.new(m, position)
+      end
+
+      def n_params_range
+        n_params = params&.size || 0
+        params&.last&.varparam? && (n_params - 1..) || n_params
+      end
+
+      def evaluate_argument(param, arg, context)
+        value =
+          if param.varparam?
+            arg.map { _1.evaluate(context) }
+          else
+            arg.evaluate(context)
+          end
+        param.check_type(value, context, position)
+        [param.name, value]
       end
 
       def execute_method(receiver, arguments)
@@ -84,6 +115,10 @@ module RuPkl
         body
           .evaluate(context)
           .tap { type&.check_type(_1, context, position) }
+      end
+
+      def overwrite_position(result, position)
+        result.instance_exec(position) { @position = _1 }
       end
     end
 
@@ -125,15 +160,34 @@ module RuPkl
       end
     end
 
+    class BuiltinVariadicMethodParam < VariadicMethodParam
+      def initialize(name, klass)
+        id = Identifier.new(nil, name, nil)
+        type = BuiltinMethodTypeChecker.new(klass)
+        super(nil, id, type, nil)
+      end
+    end
+
     class BuiltinMethodDefinition < MethodDefinition
       def initialize(name, **params, &body)
-        param_list = params.map { |n, t| BuiltinMethodParams.new(n, t) }
         id = Identifier.new(nil, name, nil)
-        super(nil, id, param_list, nil, nil, nil)
+        list = param_list(params)
+        super(nil, id, list, nil, nil, nil)
         @body = body
       end
 
       private
+
+      def param_list(params)
+        params.map do |name, type|
+          case type
+          in [klass, { varparams: true }]
+            BuiltinVariadicMethodParam.new(name, klass)
+          else
+            BuiltinMethodParams.new(name, type)
+          end
+        end
+      end
 
       def execute_method(receiver, arguments)
         receiver.instance_exec(*arguments&.map(&:last), &body)

@@ -34,11 +34,15 @@ module RuPkl
       add_builtin_class PklModule
 
       define_builtin_property(:NaN) do
-        Float.new(parent, ::Float::NAN, position)
+        Float.new(self, ::Float::NAN, position)
       end
 
       define_builtin_property(:Infinity) do
-        Float.new(parent, ::Float::INFINITY, position)
+        Float.new(self, ::Float::INFINITY, position)
+      end
+
+      define_builtin_method(:List, elements: [Any, varparams: true]) do |elements|
+        List.new(nil, elements, nil)
       end
     end
   end

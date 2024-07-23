@@ -30,11 +30,11 @@ module RuPkl
 
       define_builtin_method(:containsKey, key: Any) do |key|
         result = find_entry(key) && true || false
-        Boolean.new(nil, result, position)
+        Boolean.new(nil, result, nil)
       end
 
       define_builtin_method(:getOrNull, key: Any) do |key|
-        find_entry(key) || Null.new(nil, position)
+        find_entry(key) || Null.new(nil, nil)
       end
 
       private

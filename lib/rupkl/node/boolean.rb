@@ -17,12 +17,12 @@ module RuPkl
 
       define_builtin_method(:xor, other: Boolean) do |other|
         result = value ^ other.value
-        Boolean.new(nil, result, position)
+        Boolean.new(nil, result, nil)
       end
 
       define_builtin_method(:implies, other: Boolean) do |other|
         result = !value || other.value
-        Boolean.new(nil, result, position)
+        Boolean.new(nil, result, nil)
       end
     end
   end

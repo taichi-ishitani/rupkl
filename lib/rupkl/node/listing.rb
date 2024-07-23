@@ -48,7 +48,7 @@ module RuPkl
           elements
             &.map { _1.value.to_string }
             &.join(separator.value)
-        String.new(nil, result || '', nil, position)
+        String.new(nil, result || '', nil, nil)
       end
 
       private

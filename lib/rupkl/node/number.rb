@@ -77,32 +77,32 @@ module RuPkl
       end
 
       define_builtin_method(:toString) do
-        String.new(nil, value.to_s, nil, position)
+        String.new(nil, value.to_s, nil, nil)
       end
 
       define_builtin_method(:toInt) do
-        Int.new(nil, value.to_i, position)
+        Int.new(nil, value.to_i, nil)
       end
 
       define_builtin_method(:toFloat) do
-        Float.new(nil, value.to_f, position)
+        Float.new(nil, value.to_f, nil)
       end
 
       define_builtin_method(:round) do
         result = value.finite? && value.round || value
-        self.class.new(nil, result, position)
+        self.class.new(nil, result, nil)
       end
 
       define_builtin_method(:truncate) do
         result = value.finite? && value.truncate || value
-        self.class.new(nil, result, position)
+        self.class.new(nil, result, nil)
       end
 
       define_builtin_method(:isBetween, first: Number, last: Number) do |f, l|
         result =
           [f.value, l.value, value].all? { _1.finite? || _1.infinite? } &&
           (f.value..l.value).include?(value)
-        Boolean.new(nil, result, position)
+        Boolean.new(nil, result, nil)
       end
     end
 
@@ -127,12 +127,12 @@ module RuPkl
 
       define_builtin_method(:shl, n: Int) do |n|
         result = value << n.value
-        self.class.new(self, result, position)
+        self.class.new(self, result, nil)
       end
 
       define_builtin_method(:shr, n: Int) do |n|
         result = value >> n.value
-        self.class.new(self, result, position)
+        self.class.new(self, result, nil)
       end
 
       define_builtin_method(:ushr, n: Int) do |n|
@@ -143,19 +143,19 @@ module RuPkl
           else
             value >> n.value
           end
-        self.class.new(self, result, position)
+        self.class.new(self, result, nil)
       end
 
       define_builtin_method(:and, n: Int) do |n|
-        self.class.new(nil, value & n.value, position)
+        self.class.new(nil, value & n.value, nil)
       end
 
       define_builtin_method(:or, n: Int) do |n|
-        self.class.new(nil, value | n.value, position)
+        self.class.new(nil, value | n.value, nil)
       end
 
       define_builtin_method(:xor, n: Int) do |n|
-        self.class.new(nil, value ^ n.value, position)
+        self.class.new(nil, value ^ n.value, nil)
       end
     end
 

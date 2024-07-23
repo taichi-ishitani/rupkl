@@ -30,24 +30,24 @@ module RuPkl
 
       define_builtin_method(:length) do
         result = elements&.size || 0
-        Int.new(nil, result, position)
+        Int.new(nil, result, nil)
       end
 
       define_builtin_method(:hasProperty, name: String) do |name|
         result = find_property(name.value.to_sym) && true || false
-        Boolean.new(nil, result, position)
+        Boolean.new(nil, result, nil)
       end
 
       define_builtin_method(:getProperty, name: String) do |name|
         find_property(name.value.to_sym) ||
           begin
             m = "cannot find property '#{name.value}'"
-            raise EvaluationError.new(m, position)
+            raise EvaluationError.new(m, nil)
           end
       end
 
       define_builtin_method(:getPropertyOrNull, name: String) do |name|
-        find_property(name.value.to_sym) || Null.new(nil, position)
+        find_property(name.value.to_sym) || Null.new(nil, nil)
       end
 
       private

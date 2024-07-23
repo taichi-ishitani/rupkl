@@ -110,6 +110,19 @@ module RuPkl
         )
     end
 
+    def list(*elements)
+      elements_matcher =
+        if elements.empty?
+          be_nil
+        else
+          match(elements.map { |e| expression_matcher(e) })
+        end
+      be_instance_of(Node::List)
+        .and have_attributes(elements: elements_matcher)
+    end
+
+    alias_method :be_list, :list
+
     def expression_matcher(expression)
       case expression
       when NilClass then be_nil
