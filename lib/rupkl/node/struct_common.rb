@@ -52,7 +52,7 @@ module RuPkl
         true
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         self.class.new(parent, @body&.copy, position)
       end
 

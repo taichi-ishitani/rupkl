@@ -43,7 +43,7 @@ module RuPkl
           (@children ||= []) << child
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         copied_children = children&.map(&:copy)
         self.class.new(parent, *copied_children, position)
       end

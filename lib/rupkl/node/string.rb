@@ -31,7 +31,7 @@ module RuPkl
         end
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         copied_portions =
           portions&.map do |portion|
             portion.is_a?(NodeCommon) && portion.copy || portion
@@ -104,231 +104,247 @@ module RuPkl
         raise EvaluationError.new(message, position)
       end
 
-      define_builtin_method(:getOrNull, index: Int) do |index|
-        if (0...value.size).include?(index.value)
-          String.new(nil, value[index.value], nil, nil)
+      define_builtin_method(:getOrNull, index: Int) do |args, parent, position|
+        index = args[:index].value
+        if (0...value.size).include?(index)
+          String.new(parent, value[index], nil, position)
         else
-          Null.new(nil, nil)
+          Null.new(parent, position)
         end
       end
 
-      define_builtin_method(:substring, start: Int, exclusive_end: Int) do |s, e|
-        check_range(s.value, 0)
-        check_range(e.value, s.value)
+      define_builtin_method(
+        :substring, start: Int, exclusive_end: Int
+      ) do |args, parent, position|
+        s = args[:start].value
+        e = args[:exclusive_end].value
+        check_range(s, 0, position)
+        check_range(e, s, position)
 
-        String.new(nil, value[s.value...e.value], nil, nil)
+        String.new(parent, value[s...e], nil, position)
       end
 
-      define_builtin_method(:substringOrNull, start: Int, exclusive_end: Int) do |s, e|
-        if inside_range?(s.value, 0) && inside_range?(e.value, s.value)
-          String.new(nil, value[s.value...e.value], nil, nil)
+      define_builtin_method(
+        :substringOrNull, start: Int, exclusive_end: Int
+      ) do |args, parent, position|
+        s = args[:start].value
+        e = args[:exclusive_end].value
+        if inside_range?(s, 0) && inside_range?(e, s)
+          String.new(parent, value[s...e], nil, position)
         else
-          Null.new(nil, nil)
+          Null.new(parent, position)
         end
       end
 
-      define_builtin_method(:repeat, count: Int) do |count|
-        check_positive_number(count)
+      define_builtin_method(:repeat, count: Int) do |args, parent, position|
+        check_positive_number(args[:count], position)
 
-        result = value * count.value
-        String.new(nil, result, nil, nil)
+        result = value * args[:count].value
+        String.new(parent, result, nil, position)
       end
 
-      define_builtin_method(:contains, pattern: String) do |pattern|
-        result = value.include?(pattern.value)
-        Boolean.new(nil, result, nil)
+      define_builtin_method(:contains, pattern: String) do |args, parent, position|
+        result = value.include?(args[:pattern].value)
+        Boolean.new(parent, result, position)
       end
 
-      define_builtin_method(:startsWith, pattern: String) do |pattern|
-        result = value.start_with?(pattern.value)
-        Boolean.new(nil, result, nil)
+      define_builtin_method(:startsWith, pattern: String) do |args, parent, position|
+        result = value.start_with?(args[:pattern].value)
+        Boolean.new(parent, result, position)
       end
 
-      define_builtin_method(:endsWith, pattern: String) do |pattern|
-        result = value.end_with?(pattern.value)
-        Boolean.new(nil, result, nil)
+      define_builtin_method(:endsWith, pattern: String) do |args, parent, position|
+        result = value.end_with?(args[:pattern].value)
+        Boolean.new(parent, result, position)
       end
 
-      define_builtin_method(:indexOf, pattern: String) do |pattern|
-        index_of(:index, pattern) do
-          message = "\"#{pattern.value}\" does not occur in \"#{value}\""
-          raise EvaluationError.new(message, nil)
+      define_builtin_method(:indexOf, pattern: String) do |args, parent, position|
+        index_of(:index, args[:pattern], parent, position) do
+          message = "\"#{args[:pattern].value}\" does not occur in \"#{value}\""
+          raise EvaluationError.new(message, position)
         end
       end
 
-      define_builtin_method(:indexOfOrNull, pattern: String) do |pattern|
-        index_of(:index, pattern) do
-          Null.new(nil, nil)
+      define_builtin_method(:indexOfOrNull, pattern: String) do |args, parent, position|
+        index_of(:index, args[:pattern], parent, position) do
+          Null.new(parent, position)
         end
       end
 
-      define_builtin_method(:lastIndexOf, pattern: String) do |pattern|
-        index_of(:rindex, pattern) do
-          message = "\"#{pattern.value}\" does not occur in \"#{value}\""
-          raise EvaluationError.new(message, nil)
+      define_builtin_method(:lastIndexOf, pattern: String) do |args, parent, position|
+        index_of(:rindex, args[:pattern], parent, position) do
+          message = "\"#{args[:pattern].value}\" does not occur in \"#{value}\""
+          raise EvaluationError.new(message, position)
         end
       end
 
-      define_builtin_method(:lastIndexOfOrNull, pattern: String) do |pattern|
-        index_of(:rindex, pattern) do
-          Null.new(nil, nil)
+      define_builtin_method(
+        :lastIndexOfOrNull, pattern: String
+      ) do |args, parent, position|
+        index_of(:rindex, args[:pattern], parent, position) do
+          Null.new(parent, position)
         end
       end
 
-      define_builtin_method(:take, n: Int) do |n|
-        check_positive_number(n)
+      define_builtin_method(:take, n: Int) do |args, parent, position|
+        check_positive_number(args[:n], position)
 
-        result = value[0, n.value] || value
-        String.new(nil, result, nil, nil)
+        result = value[0, args[:n].value] || value
+        String.new(parent, result, nil, position)
       end
 
-      define_builtin_method(:takeLast, n: Int) do |n|
-        check_positive_number(n)
+      define_builtin_method(:takeLast, n: Int) do |args, parent, position|
+        check_positive_number(args[:n], position)
 
-        pos = value.size - n.value
+        pos = value.size - args[:n].value
         result = pos.negative? && value || value[pos..]
-        String.new(nil, result, nil, nil)
+        String.new(parent, result, nil, position)
       end
 
-      define_builtin_method(:drop, n: Int) do |n|
-        check_positive_number(n)
+      define_builtin_method(:drop, n: Int) do |args, parent, position|
+        check_positive_number(args[:n], position)
 
-        result = value[n.value..] || ''
-        String.new(nil, result, nil, nil)
+        result = value[args[:n].value..] || ''
+        String.new(parent, result, nil, position)
       end
 
-      define_builtin_method(:dropLast, n: Int) do |n|
-        check_positive_number(n)
+      define_builtin_method(:dropLast, n: Int) do |args, parent, position|
+        check_positive_number(args[:n], position)
 
-        length = value.size - n.value
+        length = value.size - args[:n].value
         result = length.negative? && '' || value[0, length]
-        String.new(nil, result, nil, nil)
+        String.new(parent, result, nil, position)
       end
 
       define_builtin_method(
-        :replaceFirst,
-        pattern: String, replacement: String
-      ) do |pattern, replacement|
-        result = value.sub(pattern.value, replacement.value)
-        String.new(nil, result, nil, nil)
+        :replaceFirst, pattern: String, replacement: String
+      ) do |args, parent, position|
+        result = value.sub(args[:pattern].value, args[:replacement].value)
+        String.new(parent, result, nil, position)
       end
 
       define_builtin_method(
-        :replaceLast,
-        pattern: String, replacement: String
-      ) do |pattern, replacement|
+        :replaceLast, pattern: String, replacement: String
+      ) do |args, parent, position|
+        pattern = args[:pattern].value
+        replacement = args[:replacement].value
         result =
-          if (index = value.rindex(pattern.value))
-            value.dup.tap { |s| s[index, replacement.value.size] = replacement.value }
+          if (index = value.rindex(pattern))
+            value.dup.tap { |s| s[index, replacement.size] = replacement }
           else
             value
           end
-        String.new(nil, result, nil, nil)
+        String.new(parent, result, nil, position)
       end
 
       define_builtin_method(
-        :replaceAll,
-        pattern: String, replacement: String
-      ) do |pattern, replacement|
-        result = value.gsub(pattern.value, replacement.value)
-        String.new(nil, result, nil, nil)
+        :replaceAll, pattern: String, replacement: String
+      ) do |args, parent, position|
+        result = value.gsub(args[:pattern].value, args[:replacement].value)
+        String.new(parent, result, nil, position)
       end
 
       define_builtin_method(
-        :replaceRange,
-        start: Int, exclusive_end: Int, replacement: String
-      ) do |start, exclusive_end, replacement|
-        check_range(start.value, 0)
-        check_range(exclusive_end.value, start.value)
+        :replaceRange, start: Int, exclusive_end: Int, replacement: String
+      ) do |args, parent, position|
+        s = args[:start].value
+        e = args[:exclusive_end].value
+        r = args[:replacement].value
 
-        range = start.value...exclusive_end.value
-        result = value.dup.tap { |s| s[range] = replacement.value }
-        String.new(nil, result, nil, nil)
+        check_range(s, 0, position)
+        check_range(e, s, position)
+
+        result = value.dup.tap { _1[s...e] = r }
+        String.new(parent, result, nil, position)
       end
 
-      define_builtin_method(:toUpperCase) do
-        String.new(nil, value.upcase, nil, nil)
+      define_builtin_method(:toUpperCase) do |_, parent, position|
+        String.new(parent, value.upcase, nil, position)
       end
 
-      define_builtin_method(:toLowerCase) do
-        String.new(nil, value.downcase, nil, nil)
+      define_builtin_method(:toLowerCase) do |_, parent, position|
+        String.new(parent, value.downcase, nil, position)
       end
 
-      define_builtin_method(:reverse) do
-        String.new(nil, value.reverse, nil, nil)
+      define_builtin_method(:reverse) do |_, parent, position|
+        String.new(parent, value.reverse, nil, position)
       end
 
-      define_builtin_method(:trim) do
+      define_builtin_method(:trim) do |_, parent, position|
         pattern = /(?:\A\p{White_Space}+)|(?:\p{White_Space}+\z)/
-        String.new(nil, value.gsub(pattern, ''), nil, nil)
+        String.new(parent, value.gsub(pattern, ''), nil, position)
       end
 
-      define_builtin_method(:trimStart) do
+      define_builtin_method(:trimStart) do |_, parent, position|
         pattern = /\A\p{White_Space}+/
-        String.new(nil, value.sub(pattern, ''), nil, nil)
+        String.new(parent, value.sub(pattern, ''), nil, position)
       end
 
-      define_builtin_method(:trimEnd) do
+      define_builtin_method(:trimEnd) do |_, parent, position|
         pattern = /\p{White_Space}+\z/
-        String.new(nil, value.sub(pattern, ''), nil, nil)
+        String.new(parent, value.sub(pattern, ''), nil, position)
       end
 
-      define_builtin_method(:padStart, width: Int, char: String) do |width, char|
-        pad(width, char, :pre)
+      define_builtin_method(
+        :padStart, width: Int, char: String
+      ) do |args, parent, position|
+        pad(args[:width], args[:char], :pre, parent, position)
       end
 
-      define_builtin_method(:padEnd, width: Int, char: String) do |width, char|
-        pad(width, char, :post)
+      define_builtin_method(
+        :padEnd, width: Int, char: String
+      ) do |args, parent, position|
+        pad(args[:width], args[:char], :post, parent, position)
       end
 
-      define_builtin_method(:capitalize) do
+      define_builtin_method(:capitalize) do |_, parent, position|
         result =
           value.empty? && value || value.dup.tap { |s| s[0] = s[0].upcase }
-        String.new(nil, result, nil, nil)
+        String.new(parent, result, nil, position)
       end
 
-      define_builtin_method(:decapitalize) do
+      define_builtin_method(:decapitalize) do |_, parent, position|
         result =
           value.empty? && value || value.dup.tap { |s| s[0] = s[0].downcase }
-        String.new(nil, result, nil, nil)
+        String.new(parent, result, nil, position)
       end
 
-      define_builtin_method(:toInt) do
-        to_int do
+      define_builtin_method(:toInt) do |_, parent, position|
+        to_int(parent, position) do
           message = "cannot parse string as Int \"#{value}\""
-          raise EvaluationError.new(message, nil)
+          raise EvaluationError.new(message, position)
         end
       end
 
-      define_builtin_method(:toIntOrNull) do
-        to_int do
-          Null.new(nil, nil)
+      define_builtin_method(:toIntOrNull) do |_, parent, position|
+        to_int(parent, position) do
+          Null.new(parent, position)
         end
       end
 
-      define_builtin_method(:toFloat) do
-        to_float do
+      define_builtin_method(:toFloat) do |_, parent, position|
+        to_float(parent, position) do
           message = "cannot parse string as Float \"#{value}\""
-          raise EvaluationError.new(message, nil)
+          raise EvaluationError.new(message, position)
         end
       end
 
-      define_builtin_method(:toFloatOrNull) do
-        to_float do
-          Null.new(nil, nil)
+      define_builtin_method(:toFloatOrNull) do |_, parent, position|
+        to_float(parent, position) do
+          Null.new(parent, position)
         end
       end
 
-      define_builtin_method(:toBoolean) do
-        to_boolean do
+      define_builtin_method(:toBoolean) do |_, parent, position|
+        to_boolean(parent, position) do
           message = "cannot parse string as Boolean \"#{value}\""
-          raise EvaluationError.new(message, nil)
+          raise EvaluationError.new(message, position)
         end
       end
 
-      define_builtin_method(:toBooleanOrNull) do
-        to_boolean do
-          Null.new(nil, nil)
+      define_builtin_method(:toBooleanOrNull) do |_, parent, position|
+        to_boolean(parent, position) do
+          Null.new(parent, position)
         end
       end
 
@@ -359,7 +375,7 @@ module RuPkl
         string.gsub(/([\t\n\r"\\])/) { replace[_1] }
       end
 
-      def check_range(index, start_index)
+      def check_range(index, start_index, position)
         return if inside_range?(index, start_index)
 
         message = "index #{index} is out of range " \
@@ -371,12 +387,12 @@ module RuPkl
         (start_index..value.size).include?(index)
       end
 
-      def index_of(method, pattern)
+      def index_of(method, pattern, parent, position)
         result = value.__send__(method, pattern.value)
-        result && Int.new(nil, result, position) || yield
+        result && Int.new(parent, result, position) || yield
       end
 
-      def pad(width, char, pre_post)
+      def pad(width, char, pre_post, parent, position)
         unless char.value.length == 1
           message = "expected a char, but got \"#{char.value}\""
           raise EvaluationError.new(message, position)
@@ -385,7 +401,7 @@ module RuPkl
         result =
           pad_prefix_postfix(width, char, pre_post)
             .then { |pre, post| [pre, value, post].join }
-        String.new(nil, result, nil, position)
+        String.new(parent, result, nil, position)
       end
 
       def pad_prefix_postfix(width, char, pre_post)
@@ -399,13 +415,13 @@ module RuPkl
         end
       end
 
-      def to_int
-        Int.new(nil, Integer(remove_underscore_from_number(value), 10), position)
+      def to_int(parent, position)
+        Int.new(parent, Integer(remove_underscore_from_number(value), 10), position)
       rescue ArgumentError
         yield
       end
 
-      def to_float
+      def to_float(parent, position)
         result =
           case value
           when 'NaN' then ::Float::NAN
@@ -413,7 +429,7 @@ module RuPkl
           when '-Infinity' then -::Float::INFINITY
           else Float(remove_underscore_from_number(value))
           end
-        Float.new(nil, result, position)
+        Float.new(parent, result, position)
       rescue ArgumentError
         yield
       end
@@ -422,14 +438,14 @@ module RuPkl
         string.gsub(/(?:(?<=\d)|(?<=.[eE][+-]))_+/, '')
       end
 
-      def to_boolean
+      def to_boolean(parent, position)
         result =
           case value
           when /\Atrue\z/i then true
           when /\Afalse\z/i then false
           else return yield
           end
-        Boolean.new(nil, result, position)
+        Boolean.new(parent, result, position)
       end
     end
   end

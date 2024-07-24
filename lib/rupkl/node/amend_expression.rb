@@ -31,7 +31,7 @@ module RuPkl
         do_amend(t.copy(parent))
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         self.class.new(parent, target.copy, bodies.each(&:copy), position)
       end
 

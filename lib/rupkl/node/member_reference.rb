@@ -32,7 +32,7 @@ module RuPkl
         end
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         self
           .class.new(parent, receiver&.copy, member&.copy, nullable?, position)
           .tap { copy_scope_index(_1) }

@@ -49,10 +49,9 @@ module RuPkl
       attr_reader :type
       attr_reader :body
 
-      def call(receiver, arguments, context, position)
+      def call(receiver, arguments, context, parent, position)
         args = evaluate_arguments(arguments, context, position)
-        execute_method(receiver, args)
-          .tap { |result| overwrite_position(result, position) }
+        execute_method(receiver, args, parent, position)
       end
 
       private
@@ -60,7 +59,7 @@ module RuPkl
       def evaluate_arguments(arguments, context, position)
         check_arity(arguments, position)
 
-        params&.map&.with_index do |param, i|
+        params&.each_with_index&.to_h do |param, i|
           arg =
             if param.varparam?
               Array(arguments&.[](i..))
@@ -96,9 +95,10 @@ module RuPkl
         [param.name, value]
       end
 
-      def execute_method(receiver, arguments)
+      def execute_method(receiver, arguments, parent, position)
         context = create_call_context(receiver, arguments)
         execute_body(context)
+          .copy(parent, position) # set parent and position given from the caller
       end
 
       def create_call_context(receiver, arguments)
@@ -115,10 +115,6 @@ module RuPkl
         body
           .evaluate(context)
           .tap { type&.check_type(_1, context, position) }
-      end
-
-      def overwrite_position(result, position)
-        result.instance_exec(position) { @position = _1 }
       end
     end
 
@@ -189,8 +185,10 @@ module RuPkl
         end
       end
 
-      def execute_method(receiver, arguments)
-        receiver.instance_exec(*arguments&.map(&:last), &body)
+      def execute_method(receiver, arguments, parent, position)
+        args = arguments&.transform_keys(&:id)
+        receiver
+          .instance_exec(args, parent, position, &body)
       end
     end
   end

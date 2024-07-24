@@ -28,7 +28,7 @@ module RuPkl
         to_string(context)
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         self.class.new(parent, @value, position)
       end
 

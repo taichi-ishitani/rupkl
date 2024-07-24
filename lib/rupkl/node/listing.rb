@@ -43,12 +43,12 @@ module RuPkl
         Listing.new(self, body, position)
       end
 
-      define_builtin_method(:join, separator: String) do |separator|
+      define_builtin_method(:join, separator: String) do |args, parent, position|
         result =
           elements
             &.map { _1.value.to_string }
-            &.join(separator.value)
-        String.new(nil, result || '', nil, nil)
+            &.join(args[:separator].value)
+        String.new(parent, result || '', nil, position)
       end
 
       private

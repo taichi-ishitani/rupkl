@@ -15,14 +15,14 @@ module RuPkl
         [operator, value] in [:'&&', false] | [:'||', true]
       end
 
-      define_builtin_method(:xor, other: Boolean) do |other|
-        result = value ^ other.value
-        Boolean.new(nil, result, nil)
+      define_builtin_method(:xor, other: Boolean) do |args, parent, position|
+        result = value ^ args[:other].value
+        Boolean.new(parent, result, position)
       end
 
-      define_builtin_method(:implies, other: Boolean) do |other|
-        result = !value || other.value
-        Boolean.new(nil, result, nil)
+      define_builtin_method(:implies, other: Boolean) do |args, parent, position|
+        result = !value || args[:other].value
+        Boolean.new(parent, result, position)
       end
     end
   end

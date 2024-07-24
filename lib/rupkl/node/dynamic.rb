@@ -28,26 +28,29 @@ module RuPkl
         find_entry(key) || find_element(key)
       end
 
-      define_builtin_method(:length) do
+      define_builtin_method(:length) do |_, parent, position|
         result = elements&.size || 0
-        Int.new(nil, result, nil)
+        Int.new(parent, result, position)
       end
 
-      define_builtin_method(:hasProperty, name: String) do |name|
-        result = find_property(name.value.to_sym) && true || false
-        Boolean.new(nil, result, nil)
+      define_builtin_method(:hasProperty, name: String) do |args, parent, position|
+        name = args[:name].value.to_sym
+        result = find_property(name) && true || false
+        Boolean.new(parent, result, position)
       end
 
-      define_builtin_method(:getProperty, name: String) do |name|
-        find_property(name.value.to_sym) ||
+      define_builtin_method(:getProperty, name: String) do |args, _, position|
+        name = args[:name].value.to_sym
+        find_property(name) ||
           begin
-            m = "cannot find property '#{name.value}'"
-            raise EvaluationError.new(m, nil)
+            m = "cannot find property '#{name}'"
+            raise EvaluationError.new(m, position)
           end
       end
 
-      define_builtin_method(:getPropertyOrNull, name: String) do |name|
-        find_property(name.value.to_sym) || Null.new(nil, nil)
+      define_builtin_method(:getPropertyOrNull, name: String) do |args, parent, position|
+        name = args[:name].value.to_sym
+        find_property(name) || Null.new(parent, position)
       end
 
       private

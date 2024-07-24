@@ -41,8 +41,10 @@ module RuPkl
         Float.new(self, ::Float::INFINITY, position)
       end
 
-      define_builtin_method(:List, elements: [Any, varparams: true]) do |elements|
-        List.new(nil, elements, nil)
+      define_builtin_method(
+        :List, elements: [Any, varparams: true]
+      ) do |args, parent, position|
+        List.new(parent, args[:elements], position)
       end
     end
   end

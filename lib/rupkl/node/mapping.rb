@@ -28,13 +28,13 @@ module RuPkl
         Int.new(self, result, position)
       end
 
-      define_builtin_method(:containsKey, key: Any) do |key|
-        result = find_entry(key) && true || false
-        Boolean.new(nil, result, nil)
+      define_builtin_method(:containsKey, key: Any) do |args, parent, position|
+        result = find_entry(args[:key]) && true || false
+        Boolean.new(parent, result, position)
       end
 
-      define_builtin_method(:getOrNull, key: Any) do |key|
-        find_entry(key) || Null.new(nil, nil)
+      define_builtin_method(:getOrNull, key: Any) do |args, parent, position|
+        find_entry(args[:key]) || Null.new(parent, position)
       end
 
       private

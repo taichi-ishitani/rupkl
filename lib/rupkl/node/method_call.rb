@@ -30,7 +30,7 @@ module RuPkl
         end
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         copied_args = arguments&.map(&:copy)
         self.class
           .new(parent, receiver&.copy, method_name, copied_args, nullable?, position)
@@ -56,8 +56,7 @@ module RuPkl
 
       def execute_method(pkl_method, receiver, context)
         pkl_method
-          .call(receiver, arguments, context, position)
-          .tap { parent&.add_child(_1) }
+          .call(receiver, arguments, context, parent, position)
       end
     end
   end

@@ -76,33 +76,37 @@ module RuPkl
         Boolean.new(self, !value.zero?, position)
       end
 
-      define_builtin_method(:toString) do
-        String.new(nil, value.to_s, nil, nil)
+      define_builtin_method(:toString) do |_, parent, position|
+        String.new(parent, value.to_s, nil, position)
       end
 
-      define_builtin_method(:toInt) do
-        Int.new(nil, value.to_i, nil)
+      define_builtin_method(:toInt) do |_, parent, position|
+        Int.new(parent, value.to_i, position)
       end
 
-      define_builtin_method(:toFloat) do
-        Float.new(nil, value.to_f, nil)
+      define_builtin_method(:toFloat) do |_, parent, position|
+        Float.new(parent, value.to_f, position)
       end
 
-      define_builtin_method(:round) do
+      define_builtin_method(:round) do |_, parent, position|
         result = value.finite? && value.round || value
-        self.class.new(nil, result, nil)
+        self.class.new(parent, result, position)
       end
 
-      define_builtin_method(:truncate) do
+      define_builtin_method(:truncate) do |_, parent, position|
         result = value.finite? && value.truncate || value
-        self.class.new(nil, result, nil)
+        self.class.new(parent, result, position)
       end
 
-      define_builtin_method(:isBetween, first: Number, last: Number) do |f, l|
+      define_builtin_method(
+        :isBetween, first: Number, last: Number
+      ) do |args, parent, position|
+        f = args[:first].value
+        l = args[:last].value
         result =
-          [f.value, l.value, value].all? { _1.finite? || _1.infinite? } &&
-          (f.value..l.value).include?(value)
-        Boolean.new(nil, result, nil)
+          [f, l, value].all? { _1.finite? || _1.infinite? } &&
+          (f..l).include?(value)
+        Boolean.new(parent, result, position)
       end
     end
 
@@ -125,37 +129,37 @@ module RuPkl
         self.class.new(self, ~value, position)
       end
 
-      define_builtin_method(:shl, n: Int) do |n|
-        result = value << n.value
-        self.class.new(self, result, nil)
+      define_builtin_method(:shl, n: Int) do |args, parent, position|
+        result = value << args[:n].value
+        self.class.new(parent, result, position)
       end
 
-      define_builtin_method(:shr, n: Int) do |n|
-        result = value >> n.value
-        self.class.new(self, result, nil)
+      define_builtin_method(:shr, n: Int) do |args, parent, position|
+        result = value >> args[:n].value
+        self.class.new(parent, result, position)
       end
 
-      define_builtin_method(:ushr, n: Int) do |n|
+      define_builtin_method(:ushr, n: Int) do |args, parent, position|
         result =
           if value.negative?
             mask = (1 << 63) - 1
-            n.value.times.inject(value) { |v, _| (v >> 1) & mask }
+            args[:n].value.times.inject(value) { |v, _| (v >> 1) & mask }
           else
-            value >> n.value
+            value >> args[:n].value
           end
-        self.class.new(self, result, nil)
+        self.class.new(parent, result, position)
       end
 
-      define_builtin_method(:and, n: Int) do |n|
-        self.class.new(nil, value & n.value, nil)
+      define_builtin_method(:and, n: Int) do |args, parent, position|
+        self.class.new(parent, value & args[:n].value, position)
       end
 
-      define_builtin_method(:or, n: Int) do |n|
-        self.class.new(nil, value | n.value, nil)
+      define_builtin_method(:or, n: Int) do |args, parent, position|
+        self.class.new(parent, value | args[:n].value, position)
       end
 
-      define_builtin_method(:xor, n: Int) do |n|
-        self.class.new(nil, value ^ n.value, nil)
+      define_builtin_method(:xor, n: Int) do |args, parent, position|
+        self.class.new(parent, value ^ args[:n].value, position)
       end
     end
 

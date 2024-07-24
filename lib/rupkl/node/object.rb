@@ -27,14 +27,6 @@ module RuPkl
         @value_evaluated = value.__send__(evaluator, context)
         value
       end
-
-      def copy_value
-        if @value_evaluated.respond_to?(:body)
-          @value_evaluated.copy
-        else
-          @value.copy
-        end
-      end
     end
 
     class ObjectProperty < ObjectMember
@@ -74,8 +66,8 @@ module RuPkl
         name.id == other.name.id && value == other.value
       end
 
-      def copy(parent = nil)
-        self.class.new(parent, name.copy, copy_value, position)
+      def copy(parent = nil, position = @position)
+        self.class.new(parent, name.copy, value.copy, position)
       end
 
       private
@@ -128,8 +120,8 @@ module RuPkl
         key == other.key && value == other.value
       end
 
-      def copy(parent = nil)
-        self.class.new(parent, key, copy_value, position)
+      def copy(parent = nil, position = @position)
+        self.class.new(parent, key, value.copy, position)
       end
 
       private
@@ -175,8 +167,8 @@ module RuPkl
         value == other.value
       end
 
-      def copy(parent = nil)
-        self.class.new(parent, copy_value, position)
+      def copy(parent = nil, position = @position)
+        self.class.new(parent, value.copy, position)
       end
 
       private
@@ -229,7 +221,7 @@ module RuPkl
         do_evaluation(__method__, context)
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         copied_members = members.map(&:copy)
         self.class.new(parent, copied_members, position)
       end
@@ -398,7 +390,7 @@ module RuPkl
         true
       end
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         self.class.new(parent, type, bodies, position)
       end
 

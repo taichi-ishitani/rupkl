@@ -12,7 +12,7 @@ module RuPkl
 
       attr_reader :id
 
-      def copy(parent = nil)
+      def copy(parent = nil, position = @position)
         self.class.new(parent, id, position)
       end
 
