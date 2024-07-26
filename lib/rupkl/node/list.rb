@@ -39,7 +39,7 @@ module RuPkl
         [:[], :==, :'!=', :+].none?(operator)
       end
 
-      def invalid_r_operand(_operator, operand)
+      def invalid_r_operand?(_operator, operand)
         !operand.is_a?(List)
       end
 
