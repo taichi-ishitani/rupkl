@@ -15,7 +15,7 @@ module RuPkl
       end
 
       def find_by_key(key)
-        find_entry(key)
+        find_entry(key)&.value
       end
 
       define_builtin_property(:isEmpty) do
@@ -34,7 +34,7 @@ module RuPkl
       end
 
       define_builtin_method(:getOrNull, key: Any) do |args, parent, position|
-        find_entry(args[:key]) || Null.new(parent, position)
+        find_entry(args[:key])&.value || Null.new(parent, position)
       end
 
       private

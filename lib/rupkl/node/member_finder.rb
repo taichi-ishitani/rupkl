@@ -4,7 +4,7 @@ module RuPkl
   module Node
     module MemberFinder
       def property(name)
-        value = find_property(name)
+        value = find_property(name)&.value
         return value if value
 
         super if self.class <= Any
@@ -22,17 +22,13 @@ module RuPkl
       def find_property(name)
         return unless respond_to?(:properties)
 
-        properties
-          &.find { _1.name == name }
-          &.value
+        properties&.find { _1.name == name }
       end
 
       def find_entry(key)
         return unless respond_to?(:entries)
 
-        entries
-          &.find { _1.key == key }
-          &.value
+        entries&.find { _1.key == key }
       end
 
       def find_element(index)
@@ -40,9 +36,7 @@ module RuPkl
         return unless elements
         return unless index.value.is_a?(::Integer)
 
-        elements
-          .find.with_index { |_, i| i == index.value }
-          &.value
+        elements.find.with_index { |_, i| i == index.value }
       end
 
       def find_pkl_method(name)

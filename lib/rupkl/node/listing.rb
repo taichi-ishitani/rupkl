@@ -15,7 +15,7 @@ module RuPkl
       end
 
       def find_by_key(key)
-        find_element(key)
+        find_element(key)&.value
       end
 
       define_builtin_property(:isEmpty) do

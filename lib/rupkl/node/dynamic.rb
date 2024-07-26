@@ -25,7 +25,7 @@ module RuPkl
       end
 
       def find_by_key(key)
-        find_entry(key) || find_element(key)
+        (find_entry(key) || find_element(key))&.value
       end
 
       define_builtin_method(:length) do |_, parent, position|
@@ -41,7 +41,7 @@ module RuPkl
 
       define_builtin_method(:getProperty, name: String) do |args, _, position|
         name = args[:name].value.to_sym
-        find_property(name) ||
+        find_property(name)&.value ||
           begin
             m = "cannot find property '#{name}'"
             raise EvaluationError.new(m, position)
@@ -50,7 +50,7 @@ module RuPkl
 
       define_builtin_method(:getPropertyOrNull, name: String) do |args, parent, position|
         name = args[:name].value.to_sym
-        find_property(name) || Null.new(parent, position)
+        find_property(name)&.value || Null.new(parent, position)
       end
 
       private

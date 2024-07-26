@@ -9,7 +9,7 @@ module RuPkl
         [:[], :!, :'&&', :'||'].include?(operator)
       end
 
-      def invalid_r_operand?(operand)
+      def invalid_r_operand?(_operator, operand)
         !operand.is_a?(Number)
       end
 

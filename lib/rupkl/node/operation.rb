@@ -67,8 +67,7 @@ module RuPkl
         check_r_operand(l, r)
           .then { return _1 if _1 }
 
-        l, r = l.coerce(operator, r)
-        create_op_result(l.__send__(ruby_op, r))
+        do_b_op(l, r)
       end
 
       def null_coalescing_op(context)
@@ -123,7 +122,7 @@ module RuPkl
 
       def invalid_r_operand?(l_operand, r_operand)
         if l_operand.respond_to?(:invalid_r_operand?)
-          l_operand.invalid_r_operand?(r_operand)
+          l_operand.invalid_r_operand?(operator, r_operand)
         else
           !r_operand.is_a?(l_operand.class)
         end
@@ -132,6 +131,21 @@ module RuPkl
       def short_circuit?(l_operand)
         l_operand.respond_to?(:short_circuit?) &&
           l_operand.short_circuit?(operator)
+      end
+
+      def do_b_op(l_operand, r_operand)
+        l, r = l_operand.coerce(operator, r_operand)
+        if (op = convert_operator(l))
+          l.__send__(op, r, parent, position)
+        else
+          create_op_result(l.__send__(ruby_op, r))
+        end
+      end
+
+      def convert_operator(l_operand)
+        return unless l_operand.respond_to?(:convert_operator)
+
+        l_operand.convert_operator(operator)
       end
 
       def ruby_op
