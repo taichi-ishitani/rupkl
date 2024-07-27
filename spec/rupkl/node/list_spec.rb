@@ -275,6 +275,10 @@ RSpec.describe RuPkl::Node::List do
           a = List()
           b = new Listing {}
         PKL
+        strings << <<~'PKL'
+          a = List(0, 1)
+          b = Pair(0, 1)
+        PKL
         strings
       end
 

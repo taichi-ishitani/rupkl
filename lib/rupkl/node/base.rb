@@ -46,6 +46,10 @@ module RuPkl
       ) do |args, parent, position|
         List.new(parent, args[:elements], position)
       end
+
+      define_builtin_method(:Pair, first: Any, second: Any) do |args, parent, position|
+        Pair.new(parent, args[:first], args[:second], position)
+      end
     end
   end
 end

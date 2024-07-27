@@ -71,6 +71,8 @@ module RuPkl
       be_instance_of(Node::Null)
     end
 
+    alias_method :null, :null_expression
+
     def method_call(*args, nullable: false)
       arguments_matcher =
         if args[-1].is_a?(Array)
@@ -122,6 +124,15 @@ module RuPkl
     end
 
     alias_method :be_list, :list
+
+    def pair(first, second)
+      mathcers =
+        [first, second].map { expression_matcher(_1) }
+      be_instance_of(Node::Pair)
+        .and have_attributes(first: mathcers[0], second: mathcers[1])
+    end
+
+    alias_method :be_pair, :pair
 
     def expression_matcher(expression)
       case expression
