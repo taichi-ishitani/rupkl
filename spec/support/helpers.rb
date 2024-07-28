@@ -125,6 +125,19 @@ module RuPkl
 
     alias_method :be_list, :list
 
+    def set(*elements)
+      elements_matcher =
+        if elements.empty?
+          be_nil
+        else
+          match(elements.map { |e| expression_matcher(e) })
+        end
+      be_instance_of(Node::Set)
+        .and have_attributes(elements: elements_matcher)
+    end
+
+    alias_method :be_set, :set
+
     def pair(first, second)
       mathcers =
         [first, second].map { expression_matcher(_1) }
