@@ -56,6 +56,12 @@ module RuPkl
       define_builtin_method(:Pair, first: Any, second: Any) do |args, parent, position|
         Pair.new(parent, args[:first], args[:second], position)
       end
+
+      define_builtin_method(
+        :Map, entries: [Any, varparams: true]
+      ) do |args, parent, position|
+        Map.new(parent, args[:entries], position)
+      end
     end
   end
 end

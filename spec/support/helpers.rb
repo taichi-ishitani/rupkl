@@ -138,6 +138,25 @@ module RuPkl
 
     alias_method :be_set, :set
 
+    def map(entries = nil)
+      entries_matcher =
+        if entries
+          matchers = entries.map do |(key, value)|
+            have_attributes(
+              key: expression_matcher(key),
+              value: expression_matcher(value)
+            )
+          end
+          match(matchers)
+        else
+          be_nil
+        end
+      be_instance_of(Node::Map)
+        .and have_attributes(entries: entries_matcher)
+    end
+
+    alias_method :be_map, :map
+
     def pair(first, second)
       mathcers =
         [first, second].map { expression_matcher(_1) }
