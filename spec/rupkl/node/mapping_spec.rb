@@ -298,7 +298,7 @@ RSpec.describe RuPkl::Node::Mapping do
       end
     end
 
-    context 'when no entrie is found' do
+    context 'when no entries is found' do
       it 'should raise EvaluationError' do
         node = parse(<<~'PKL', root: :pkl_module)
           foo {
