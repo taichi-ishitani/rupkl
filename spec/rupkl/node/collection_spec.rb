@@ -411,6 +411,10 @@ RSpec.describe RuPkl::Node::Collection do
           b = Set(0, 1)
         PKL
         strings << <<~'PKL'
+          a = List(0, 1)
+          b = Map(0, 1)
+        PKL
+        strings << <<~'PKL'
           a = Set()
           b = Set(0)
         PKL
@@ -467,6 +471,10 @@ RSpec.describe RuPkl::Node::Collection do
         strings << <<~'PKL'
           a = Set(0, 1)
           b = List(0, 1)
+        PKL
+        strings << <<~'PKL'
+          a = Set(0, 1)
+          b = Map(0, 1)
         PKL
         strings
       end

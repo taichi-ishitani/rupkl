@@ -43,7 +43,8 @@ module RuPkl
       end
 
       def ==(other)
-        first == other.first && second == other.second
+        other.is_a?(self.class) &&
+          first == other.first && second == other.second
       end
 
       define_builtin_property(:first) do
