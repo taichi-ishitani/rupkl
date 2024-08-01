@@ -82,6 +82,32 @@ module RuPkl
         find_entry(key)&.value
       end
 
+      define_builtin_property(:isEmpty) do
+        result = entries.nil? || entries.empty?
+        Boolean.new(self, result, position)
+      end
+
+      define_builtin_property(:length) do
+        result = entries&.length || 0
+        Int.new(self, result, position)
+      end
+
+      define_builtin_property(:keys) do
+        keys = entries&.map(&:key)
+        Set.new(self, keys, position)
+      end
+
+      define_builtin_property(:values) do
+        values = entries&.map(&:value)
+        List.new(self, values, position)
+      end
+
+      define_builtin_property(:entries) do
+        key_value_pairs =
+          entries&.map { |e| Pair.new(nil, e.key, e.value, position) }
+        List.new(self, key_value_pairs, position)
+      end
+
       private
 
       def compose_entries(entries, position)

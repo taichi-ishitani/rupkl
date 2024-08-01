@@ -399,4 +399,90 @@ RSpec.describe RuPkl::Node::Map do
       end
     end
   end
+
+  describe 'builtin property' do
+    describe 'length' do
+      it 'should return the number of entries in this map' do
+        node = parse(<<~'PKL')
+          m0 = Map()
+          m1 = Map("one", 1, "two", 2, "three", 3)
+          a = m0.length
+          b = m1.length
+        PKL
+        node.evaluate(nil).properties[-2..].then do |(a, b)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(3)
+        end
+      end
+    end
+
+    describe 'isEmpty' do
+      it 'should tell whether this map is empty' do
+        node = parse(<<~'PKL')
+          m0 = Map()
+          m1 = Map("one", 1, "two", 2, "three", 3)
+          a = m0.isEmpty
+          b = m1.isEmpty
+        PKL
+        node.evaluate(nil).properties[-2..].then do |(a, b)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(false)
+        end
+      end
+    end
+
+    describe 'keys' do
+      it 'should return the keys contained in this map' do
+        node = parse(<<~'PKL')
+          m0 = Map()
+          m1 = Map("one", 1, "two", 2, "three", 3)
+          m2 = Map("one", 1, "two", 2) + Map("three", 3, "four", 4)
+          a = m0.keys
+          b = m1.keys
+          c = m2.keys
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_set
+          expect(b.value).to be_set('one', 'two', 'three')
+          expect(c.value).to be_set('one', 'two', 'three', 'four')
+        end
+      end
+    end
+
+    describe 'values' do
+      it 'should return the values contained in this map' do
+        node = parse(<<~'PKL')
+          m0 = Map()
+          m1 = Map("one", 1, "two", 2, "three", 3)
+          m2 = Map("one", 1, "two", 2) + Map("three", 3, "four", 4)
+          a = m0.values
+          b = m1.values
+          c = m2.values
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_list
+          expect(b.value).to be_list(1, 2, 3)
+          expect(c.value).to be_list(1, 2, 3, 4)
+        end
+      end
+    end
+
+    describe 'entries' do
+      it 'should the entries contained in this map' do
+        node = parse(<<~'PKL')
+          m0 = Map()
+          m1 = Map("one", 1, "two", 2, "three", 3)
+          m2 = Map("one", 1, "two", 2) + Map("three", 3, "four", 4)
+          a = m0.entries
+          b = m1.entries
+          c = m2.entries
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_list
+          expect(b.value).to be_list(pair('one', 1), pair('two', 2), pair('three', 3))
+          expect(c.value).to be_list(pair('one', 1), pair('two', 2), pair('three', 3), pair('four', 4))
+        end
+      end
+    end
+  end
 end
