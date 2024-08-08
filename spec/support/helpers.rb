@@ -166,6 +166,16 @@ module RuPkl
 
     alias_method :be_pair, :pair
 
+    def intseq(start, last, step: nil)
+      start_matcher = expression_matcher(start)
+      end_matcher = expression_matcher(last)
+      step_matcher = expression_matcher(step) || be_nil
+      be_instance_of(Node::IntSeq)
+        .and have_attributes(start: start_matcher, end: end_matcher, step: step_matcher)
+    end
+
+    alias_method :be_intseq, :intseq
+
     def expression_matcher(expression)
       case expression
       when NilClass then be_nil
@@ -588,6 +598,16 @@ module RuPkl
 
     def to_be_empty_pkl_object
       match_pkl_object
+    end
+
+    def match_array(*elements)
+      elements_matcher =
+        if elements.empty?
+          be_empty
+        else
+          match(elements)
+        end
+      be_instance_of(Array).and elements_matcher
     end
 
     def raise_parse_error(message)

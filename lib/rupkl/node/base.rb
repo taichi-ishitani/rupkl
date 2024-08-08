@@ -62,6 +62,10 @@ module RuPkl
       ) do |args, parent, position|
         Map.new(parent, args[:entries], position)
       end
+
+      define_builtin_method(:IntSeq, start: Int, last: Int) do |args, parent, position|
+        IntSeq.new(parent, args[:start], args[:last], nil, position)
+      end
     end
   end
 end
