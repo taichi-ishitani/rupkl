@@ -36,8 +36,12 @@ module RuPkl
       end
 
       def to_string(context = nil)
-        start_value, last_value, _step_value = children.map { _1.to_pkl_string(context) }
-        "IntSeq(#{start_value}, #{last_value})"
+        start_value, last_value, step_value = children.map { _1.to_pkl_string(context) }
+        if step && step.value != 1
+          "IntSeq(#{start_value}, #{last_value}).step(#{step_value})"
+        else
+          "IntSeq(#{start_value}, #{last_value})"
+        end
       end
 
       def undefined_operator?(operator)
@@ -51,6 +55,28 @@ module RuPkl
       def ==(other)
         other.is_a?(self.class) &&
           to_array(self) == to_array(other)
+      end
+
+      define_builtin_property(:start) do
+        Int.new(self, start.value, position)
+      end
+
+      define_builtin_property(:end) do
+        Int.new(self, last.value, position)
+      end
+
+      define_builtin_property(:step) do
+        Int.new(self, step&.value || 1, position)
+      end
+
+      define_builtin_method(:step, step: Int) do |args, parent, position|
+        step = args[:step]
+        if step.value.zero?
+          message = "expected a non zero number, but got '#{step.value}'"
+          raise EvaluationError.new(message, position)
+        end
+
+        IntSeq.new(parent, start, last, step, position)
       end
 
       private

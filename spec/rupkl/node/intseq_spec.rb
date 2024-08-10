@@ -142,6 +142,34 @@ RSpec.describe RuPkl::Node::IntSeq do
           a: match_array(-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0)
         }
       )
+
+      node = parse("#{pkl_strings[0]}.step(2)")
+      expect(node.to_ruby(nil)).to match_pkl_object(
+        properties: {
+          a: match_array(-3, -1, 1)
+        }
+      )
+
+      node = parse("#{pkl_strings[0]}.step(-1)")
+      expect(node.to_ruby(nil)).to match_pkl_object(
+        properties: {
+          a: match_array
+        }
+      )
+
+      node = parse("#{pkl_strings[2]}.step(2)")
+      expect(node.to_ruby(nil)).to match_pkl_object(
+        properties: {
+          a: match_array
+        }
+      )
+
+      node = parse("#{pkl_strings[2]}.step(-1)")
+      expect(node.to_ruby(nil)).to match_pkl_object(
+        properties: {
+          a: match_array(5, 4, 3, 2, 1, 0)
+        }
+      )
     end
   end
 
@@ -184,6 +212,27 @@ RSpec.describe RuPkl::Node::IntSeq do
 
       s = 'IntSeq(-10, 0)'
       node = parse(pkl_strings[5])
+      node.evaluate(nil).properties[-1].then do |a|
+        expect(a.value.to_string(nil)).to eq s
+        expect(a.value.to_pkl_string(nil)).to eq s
+      end
+
+      s = 'IntSeq(0, 10)'
+      node = parse('a = IntSeq(0, 10).step(1)')
+      node.evaluate(nil).properties[-1].then do |a|
+        expect(a.value.to_string(nil)).to eq s
+        expect(a.value.to_pkl_string(nil)).to eq s
+      end
+
+      s = 'IntSeq(0, 10).step(2)'
+      node = parse('a = IntSeq(0, 10).step(2)')
+      node.evaluate(nil).properties[-1].then do |a|
+        expect(a.value.to_string(nil)).to eq s
+        expect(a.value.to_pkl_string(nil)).to eq s
+      end
+
+      s = 'IntSeq(-10, 0).step(-2)'
+      node = parse('a = IntSeq(-10, 0).step(-2)')
       node.evaluate(nil).properties[-1].then do |a|
         expect(a.value.to_string(nil)).to eq s
         expect(a.value.to_pkl_string(nil)).to eq s
@@ -376,6 +425,74 @@ RSpec.describe RuPkl::Node::IntSeq do
           node = parse("a = IntSeq(0, 1) #{op} IntSeq(0, 1)")
           expect { node.evaluate(nil) }
             .to raise_evaluation_error "operator '#{op}' is not defined for IntSeq type"
+        end
+      end
+    end
+  end
+
+  describe 'builtin property/method' do
+    describe 'start' do
+      it 'should return the start of this sequence' do
+        node = parse(<<~'PKL')
+          a = IntSeq(-3, 2).start
+          b = IntSeq(2, -3).start
+        PKL
+        node.evaluate(nil).properties.then do |(a, b)|
+          expect(a.value).to be_int(-3)
+          expect(b.value).to be_int(2)
+        end
+      end
+    end
+
+    describe 'end' do
+      it 'should return the inclusive end of this sequence' do
+        node = parse(<<~'PKL')
+          a = IntSeq(-3, 2).end
+          b = IntSeq(2, -3).end
+        PKL
+        node.evaluate(nil).properties.then do |(a, b)|
+          expect(a.value).to be_int(2)
+          expect(b.value).to be_int(-3)
+        end
+      end
+    end
+
+    describe 'step (property)' do
+      it 'should the common difference of successive members of this sequence' do
+        node = parse(<<~'PKL')
+          a = IntSeq(-3, 2).step
+          b = IntSeq(-3, 2).step(2).step
+          c = IntSeq(2, -3).step
+          d = IntSeq(2, -3).step(-2).step
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d)|
+          expect(a.value).to be_int(1)
+          expect(b.value).to be_int(2)
+          expect(c.value).to be_int(1)
+          expect(d.value).to be_int(-2)
+        end
+      end
+    end
+
+    describe 'step (method)' do
+      it 'should change Changes step to the given value' do
+        node = parse(<<~'PKL')
+          a = IntSeq(-3, 2).step(2)
+          b = IntSeq(2, -3).step(-2)
+        PKL
+        node.evaluate(nil).properties.then do |(a, b)|
+          expect(a.value).to be_intseq(-3, 2, step: 2)
+          expect(b.value).to be_intseq(2, -3, step: -2)
+        end
+      end
+
+      context 'when the given value is 0' do
+        it 'should raise EvaluationError' do
+          node = parse(<<~'PKL')
+            a = IntSeq(0, 1).step(0)
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected a non zero number, but got \'0\''
         end
       end
     end
