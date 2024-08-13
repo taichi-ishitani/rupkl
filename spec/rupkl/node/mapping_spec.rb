@@ -157,58 +157,36 @@ RSpec.describe RuPkl::Node::Mapping do
   describe '#to_ruby' do
     it 'should return a PklObject object containing evaluated members' do
       node = parse(pkl_strings[0])
-      expect(node.to_ruby(nil)).to match_pkl_object
+      expect(node.to_ruby(nil)).to match_hash
 
       node = parse(pkl_strings[1])
-      expect(node.to_ruby(nil)).to match_pkl_object(
-        entries: {
-          'foo' => 1, 'bar' => 2, 'baz' => 3
-        }
-      )
+      expect(node.to_ruby(nil)).to match_hash({ 'foo' => 1, 'bar' => 2, 'baz' => 3 })
 
       node = parse(pkl_strings[2])
-      expect(node.to_ruby(nil)).to match_pkl_object(
-        entries: {
-          'foo' => 1, 'bar' => 2, 'baz' => 3
-        }
-      )
+      expect(node.to_ruby(nil)).to match_hash({ 'foo' => 1, 'bar' => 2, 'baz' => 3 })
 
       node = parse(pkl_strings[3], root: :object)
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          res1: match_pkl_object(
-            entries: { 'foo' => 1, 'bar' => 2 }
-          ),
-          res2: match_pkl_object(
-            entries: { 'foo' => 2, 'bar' => 2, 'baz' => 3 }
-          )
+          res1: match_hash({ 'foo' => 1, 'bar' => 2 }),
+          res2: match_hash({ 'foo' => 2, 'bar' => 2, 'baz' => 3 })
         }
       )
 
       node = parse(pkl_strings[4])
-      expect(node.to_ruby(nil)).to match_pkl_object(
-        entries: {
-          1 => match_pkl_object(
-            entries: {
-              'a' => match_pkl_object(entries: { 'x' => 1 }),
-              'b' => match_pkl_object(entries: { 'y' => 2 })
-            }
-          ),
-          2 => match_pkl_object(
-            entries: {
-              'c' => match_pkl_object(entries: { 'z' => 3 })
-            }
-          )
-        }
-      )
+      expect(node.to_ruby(nil)).to match_hash({
+        1 => match_hash({
+          'a' => match_hash({ 'x' => 1 }),
+          'b' => match_hash({ 'y' => 2 })
+        }),
+        2 => match_hash({
+          'c' => match_hash({ 'z' => 3 })
+        })
+      })
 
       node = parse(pkl_strings[5])
       node.to_ruby(nil).then do |o|
-        expect(o).to match_pkl_object(
-          entries: {
-            'foo' => 0, 'bar' => 1, 'baz' => equal(o)
-          }
-        )
+        expect(o).to match_hash({ 'foo' => 0, 'bar' => 1, 'baz' => equal(o) })
       end
     end
   end

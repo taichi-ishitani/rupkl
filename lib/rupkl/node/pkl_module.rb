@@ -25,6 +25,10 @@ module RuPkl
         super
       end
 
+      def to_ruby(context = nil)
+        to_pkl_object(context)
+      end
+
       private
 
       def properties_not_allowed?

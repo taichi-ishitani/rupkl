@@ -164,69 +164,47 @@ RSpec.describe RuPkl::Node::Listing do
   describe '#to_ruby' do
     it 'should return a PklObject object containing evaluated members' do
       node = parse(pkl_strings[0])
-      expect(node.to_ruby(nil)).to match_pkl_object
+      expect(node.to_ruby(nil)).to match_array
 
       node = parse(pkl_strings[1])
-      expect(node.to_ruby(nil)).to match_pkl_object(
-        elements: [1, 2, 3]
-      )
+      expect(node.to_ruby(nil)).to match_array(1, 2, 3)
 
       node = parse(pkl_strings[2])
-      expect(node.to_ruby(nil)).to match_pkl_object(
-        elements: [1, 2, 3]
-      )
+      expect(node.to_ruby(nil)).to match_array(1, 2, 3)
 
       node = parse(pkl_strings[3], root: :object)
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          res1: match_pkl_object(
-            elements: [1, 2]
-          ),
-          res2: match_pkl_object(
-            elements: [2, 2, 3]
-          )
+          res1: match_array(1, 2),
+          res2: match_array(2, 2, 3)
         }
       )
 
       node = parse(pkl_strings[4])
-      expect(node.to_ruby(nil)).to match_pkl_object(
-        elements: [
-          match_pkl_object(
-            elements: ['one']
-          ),
-          match_pkl_object(
-            elements: ['two', 'three']
-          ),
-          match_pkl_object(
-            entries: { 'four' => 4 }
-          )
-        ]
+      expect(node.to_ruby(nil)).to match_array(
+        match_array('one'),
+        match_array('two', 'three'),
+        match_hash({ 'four' => 4 })
       )
 
       node = parse(pkl_strings[5], root: :object)
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          birds: match_pkl_object(
-            elements: [
-              match_pkl_object(properties: { name: 'Pigeon', diet: 'Seeds' }),
-              match_pkl_object(properties: { name: 'Parrot', diet: 'Berries' })
-            ]
+          birds: match_array(
+            match_pkl_object(properties: { name: 'Pigeon', diet: 'Seeds' }),
+            match_pkl_object(properties: { name: 'Parrot', diet: 'Berries' })
           ),
-          birds2: match_pkl_object(
-            elements: [
-              match_pkl_object(properties: { name: 'Pigeon', diet: 'Worms' }),
-              match_pkl_object(properties: { name: 'Albatross', diet: 'Fish' }),
-              match_pkl_object(properties: { name: 'Barn owl', diet: 'Mice' })
-            ]
+          birds2: match_array(
+            match_pkl_object(properties: { name: 'Pigeon', diet: 'Worms' }),
+            match_pkl_object(properties: { name: 'Albatross', diet: 'Fish' }),
+            match_pkl_object(properties: { name: 'Barn owl', diet: 'Mice' })
           )
         }
       )
 
       node = parse(pkl_strings[6])
       node.to_ruby(nil).then do |o|
-        expect(o).to match_pkl_object(
-          elements: [0, 1, equal(o)]
-        )
+        expect(o).to match_array(0, 1, equal(o))
       end
     end
   end

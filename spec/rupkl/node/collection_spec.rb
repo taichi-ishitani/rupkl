@@ -116,54 +116,42 @@ RSpec.describe RuPkl::Node::Collection do
       node = parse(pkl_strings[0])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object
+          a: match_array
         }
       )
 
       node = parse(pkl_strings[1])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object(
-            elements: [1, 2, 3]
-          )
+          a: match_array(1, 2, 3)
         }
       )
 
       node = parse(pkl_strings[2])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object(
-            elements: [
-              1, 'x', match_pkl_object(elements: [1, 2, 3])
-            ]
-          )
+          a: match_array(1, 'x', match_array(1, 2, 3))
         }
       )
 
       node = parse(pkl_strings[3])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object
+          a: match_array
         }
       )
 
       node = parse(pkl_strings[4])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object(
-            elements: [1, 2, 3]
-          )
+          a: match_array(1, 2, 3)
         }
       )
 
       node = parse(pkl_strings[5])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object(
-            elements: [
-              1, 'x', match_pkl_object(elements: [1, 2, 3])
-            ]
-          )
+          a: match_array(1, 'x', match_array(1, 2, 3))
         }
       )
     end

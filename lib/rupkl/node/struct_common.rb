@@ -28,12 +28,6 @@ module RuPkl
         self
       end
 
-      def to_ruby(context = nil)
-        do_evaluation(__method__, context, 1, PklObject::SELF) do |c|
-          create_pkl_object(c)
-        end
-      end
-
       def to_pkl_string(context = nil)
         to_string(context)
       end
@@ -126,22 +120,48 @@ module RuPkl
         end
       end
 
-      def create_pkl_object(context)
-        context.push_scope(@body).then do |c|
-          RuPkl::PklObject.new(
-            to_ruby_hash(@body.properties, c),
-            to_ruby_hash(@body.entries, c),
-            to_ruby_array(@body.elements, c)
-          )
+      SELF = Object.new.freeze
+
+      def to_pkl_object(context)
+        to_ruby_object(context) do |properties, entries, elements|
+          PklObject.new do |object|
+            [
+              replace_self_hash(properties, object),
+              replace_self_hash(entries, object),
+              replace_self_array(elements, object)
+            ]
+          end
         end
       end
 
-      def to_ruby_hash(members, context)
-        members&.to_h { _1.to_ruby(context) }
+      def to_ruby_object(context)
+        do_evaluation(__method__, context, 1, SELF) do |c|
+          results = convert_members(c)
+          yield(*results)
+        end
       end
 
-      def to_ruby_array(members, context)
-        members&.map { _1.to_ruby(context) }
+      def convert_members(context)
+        context.push_scope(@body).then do |c|
+          to_ruby = proc { _1.to_ruby(c) }
+          [
+            @body.properties&.to_h(&to_ruby),
+            @body.entries&.to_h(&to_ruby),
+            @body.elements&.map(&to_ruby)
+          ]
+        end
+      end
+
+      def replace_self_hash(hash, replacement)
+        hash&.each do |key, value|
+          hash[key] = replacement if value.equal?(SELF)
+        end
+      end
+
+      def replace_self_array(array, replacement)
+        array&.each_with_index do |value, i|
+          array[i] = replacement if value.equal?(SELF)
+        end
       end
 
       def to_string_object(context)

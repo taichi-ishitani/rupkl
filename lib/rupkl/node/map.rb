@@ -26,11 +26,7 @@ module RuPkl
       end
 
       def to_ruby(context = nil)
-        hash =
-          entries&.to_h do |entry|
-            entry.map { _1.to_ruby(context) }
-          end
-        PklObject.new(nil, hash, nil)
+        entries&.to_h { |e| e.map { _1.to_ruby(context) } } || {}
       end
 
       def to_pkl_string(context = nil)

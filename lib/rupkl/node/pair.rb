@@ -18,10 +18,7 @@ module RuPkl
       end
 
       def to_ruby(context = nil)
-        objects =
-          { first: first, second: second }
-            .transform_values { _1.to_ruby(context) }
-        PklObject.new(objects, nil, nil)
+        PklPair.new(first.to_ruby(context), second.to_ruby(context))
       end
 
       def to_pkl_string(context = nil)

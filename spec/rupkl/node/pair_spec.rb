@@ -58,24 +58,12 @@ RSpec.describe RuPkl::Node::Pair do
       node = parse(pkl_string)
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          p0: match_pkl_object(
-            properties: {
-              first: 'Pigeon',
-              second: 42
-            }
+          p0: match_pair('Pigeon', 42),
+          p1: match_pair(
+            match_pkl_object(properties: { name: 'Pigeon' }),
+            match_array(1, 2, 3)
           ),
-          p1: match_pkl_object(
-            properties: {
-              first: match_pkl_object(properties: { name: 'Pigeon' }),
-              second: match_pkl_object(elements: [1, 2, 3])
-            }
-          ),
-          p2: match_pkl_object(
-            properties: {
-              first: be_nil,
-              second: match_pkl_object(properties: { first: 'Pigeon', second: 42 })
-            }
-          )
+          p2: match_pair(be_nil, match_pair('Pigeon', 42))
         }
       )
     end

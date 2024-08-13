@@ -9,6 +9,12 @@ module RuPkl
         @body&.entries
       end
 
+      def to_ruby(context = nil)
+        to_ruby_object(context) do |_properties, entries, _elements|
+          replace_self_hash(entries, entries) || {}
+        end
+      end
+
       def ==(other)
         other.instance_of?(self.class) &&
           match_members?(entries, other.entries, false)

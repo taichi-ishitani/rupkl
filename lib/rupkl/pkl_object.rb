@@ -4,12 +4,8 @@ module RuPkl
   class PklObject
     include Enumerable
 
-    SELF = Object.new.freeze
-
-    def initialize(properties, entries, elements)
-      @properties = replace_self_hash(properties)
-      @entries = replace_self_hash(entries)
-      @elements = replace_self_array(elements)
+    def initialize
+      @properties, @entries, @elements = yield(self)
       define_property_accessors
     end
 
@@ -95,18 +91,6 @@ module RuPkl
     end
 
     private
-
-    def replace_self_hash(hash)
-      hash&.each do |(key, value)|
-        hash[key] = self if value.equal?(SELF)
-      end
-    end
-
-    def replace_self_array(array)
-      array&.each_with_index do |value, i|
-        array[i] = self if value.equal?(SELF)
-      end
-    end
 
     def define_property_accessors
       @properties&.each_key do |name|

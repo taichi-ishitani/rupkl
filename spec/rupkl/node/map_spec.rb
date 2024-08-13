@@ -95,28 +95,21 @@ RSpec.describe RuPkl::Node::Map do
       node = parse(pkl_strings[0])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object
+          a: match_hash
         }
       )
 
       node = parse(pkl_strings[1])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object(
-            entries: { 1 => 'one', 2 => 'two', 3 => 'three' }
-          )
+          a: match_hash({ 1 => 'one', 2 => 'two', 3 => 'three' })
         }
       )
 
       node = parse(pkl_strings[2])
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          a: match_pkl_object(
-            entries: {
-              1 => 'x',
-              2 => match_pkl_object(entries: { 3 => 4 })
-            }
-          )
+          a: match_hash({ 1 => 'x', 2 => match_hash({ 3 => 4 }) })
         }
       )
     end

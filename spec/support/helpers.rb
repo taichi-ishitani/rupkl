@@ -610,6 +610,15 @@ module RuPkl
       be_instance_of(Array).and elements_matcher
     end
 
+    def match_hash(hash = nil)
+      hash_matcher = hash && match(hash) || be_empty
+      be_instance_of(Hash).and hash_matcher
+    end
+
+    def match_pair(first, second)
+      be_instance_of(PklPair).and have_attributes(first: first, second: second)
+    end
+
     def raise_parse_error(message)
       raise_error(ParseError, message)
     end

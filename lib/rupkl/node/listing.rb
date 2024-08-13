@@ -9,6 +9,12 @@ module RuPkl
         @body&.elements
       end
 
+      def to_ruby(context = nil)
+        to_ruby_object(context) do |_properties, _entries, elements|
+          replace_self_array(elements, elements) || []
+        end
+      end
+
       def ==(other)
         other.instance_of?(self.class) &&
           match_members?(elements, other.elements, true)

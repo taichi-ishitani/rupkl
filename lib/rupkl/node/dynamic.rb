@@ -17,6 +17,10 @@ module RuPkl
         @body&.elements
       end
 
+      def to_ruby(context = nil)
+        to_pkl_object(context)
+      end
+
       def ==(other)
         other.instance_of?(self.class) &&
           match_members?(properties, other.properties, false) &&

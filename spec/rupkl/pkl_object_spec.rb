@@ -3,11 +3,11 @@
 RSpec.describe RuPkl::PklObject do
   let(:objects) do
     o = []
-    o << described_class.new(nil, nil, nil)
-    o << described_class.new({ foo: 0, bar: 1 }, nil, nil)
-    o << described_class.new(nil, { 'baz' => 2, 'qux' => 3 }, nil)
-    o << described_class.new(nil, nil, [4, 5])
-    o << described_class.new({ foo: 0, bar: 1 }, { 'baz' => 2, 'qux' => 3 }, [4, 5])
+    o << described_class.new { [nil, nil, nil] }
+    o << described_class.new { [{ foo: 0, bar: 1 }]}
+    o << described_class.new { [nil, { 'baz' => 2, 'qux' => 3 }] }
+    o << described_class.new { [nil, nil, [4, 5]] }
+    o << described_class.new { [{foo: 0, bar: 1 }, { 'baz' => 2, 'qux' => 3 }, [4, 5]] }
     o << RuPkl.load(<<~'PKL')
       mixedObject {
         name = "Pigeon"
@@ -23,8 +23,8 @@ RSpec.describe RuPkl::PklObject do
       }
     PKL
     o << RuPkl.load('foo { foo = 0; bar = 1; baz = this }')
-    o << RuPkl.load('foo = new Mapping { ["foo"] = 0; ["bar"] = 1; ["baz"] = this }')
-    o << RuPkl.load('foo = new Listing { 0; 1; this }')
+    o << RuPkl.load('foo { ["foo"] = 0; ["bar"] = 1; ["baz"] = this }')
+    o << RuPkl.load('foo { 0; 1; this }')
   end
 
   it 'should have accessor methods for each property' do
