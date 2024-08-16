@@ -14,6 +14,10 @@ module RuPkl
 
       attr_reader :body
 
+      def properties
+        @body&.properties(visibility: :object)
+      end
+
       def evaluate(context = nil)
         do_evaluation(__method__, context, 1) do |c|
           @body&.evaluate(c)

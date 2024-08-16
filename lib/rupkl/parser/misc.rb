@@ -50,5 +50,25 @@ module RuPkl
         atom >> (ws? >> str(delimiter).ignore >> ws? >> atom).repeat
       end
     end
+
+    define_parser do
+      rule(:modifier) do
+        kw_local.as(:modifier)
+      end
+
+      rule(:modifiers) do
+        (modifier >> ws).repeat(1).as(:modifiers)
+      end
+    end
+
+    define_transform do
+      rule(modifier: simple(:modifier)) do
+        modifier.to_sym
+      end
+
+      rule(modifiers: sequence(:modifiers)) do
+        modifiers.to_h { |m| [m.to_sym, true] }
+      end
+    end
   end
 end

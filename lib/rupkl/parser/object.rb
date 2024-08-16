@@ -24,10 +24,8 @@ module RuPkl
 
       rule(:object_property) do
         (
-          id.as(:name) >> ws? >>
-            (
-              (str('=').ignore >> ws? >> expression) | object
-            ).as(:value)
+          modifiers.as(:modifiers).maybe >> id.as(:name) >> ws? >>
+            ((str('=').ignore >> ws? >> expression) | object).as(:value)
         ).as(:object_property)
       end
 
@@ -42,7 +40,7 @@ module RuPkl
 
       rule(:object_element) do
         (
-          expression >> (ws? >> match('[={]')).absent?
+          modifiers.absent? >> expression >> (ws? >> match('[={]')).absent?
         ).as(:object_element)
       end
 
@@ -69,7 +67,16 @@ module RuPkl
       end
 
       rule(object_property: { name: simple(:n), value: simple(:v) }) do
-        Node::ObjectProperty.new(nil, n, v, n.position)
+        Node::ObjectProperty.new(nil, n, v, nil, n.position)
+      end
+
+      rule(
+        object_property:
+          {
+            modifiers: subtree(:m), name: simple(:n), value: simple(:v)
+          }
+      ) do
+        Node::ObjectProperty.new(nil, n, v, m, n.position)
       end
 
       rule(object_entry: { key: simple(:k), value: simple(:v) }) do

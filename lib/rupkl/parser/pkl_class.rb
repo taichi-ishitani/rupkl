@@ -5,10 +5,8 @@ module RuPkl
     define_parser do
       rule(:pkl_class_property) do
         (
-          id.as(:name) >> ws? >>
-          (
-            (str('=').ignore >> ws? >> expression) | object
-          ).as(:value)
+          modifiers.as(:modifiers).maybe >> id.as(:name) >> ws? >>
+            ((str('=').ignore >> ws? >> expression) | object).as(:value)
         ).as(:class_property)
       end
 
@@ -22,7 +20,16 @@ module RuPkl
 
     define_transform do
       rule(class_property: { name: simple(:n), value: simple(:v) }) do
-        Node::ObjectProperty.new(nil, n, v, n.position)
+        Node::ObjectProperty.new(nil, n, v, nil, n.position)
+      end
+
+      rule(
+        class_property:
+          {
+            modifiers: subtree(:m), name: simple(:n), value: simple(:v)
+          }
+      ) do
+        Node::ObjectProperty.new(nil, n, v, m, n.position)
       end
 
       rule(

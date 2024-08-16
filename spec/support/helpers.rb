@@ -264,13 +264,17 @@ module RuPkl
       end
     end
 
-    ObjectProperty = Struct.new(:name, :value) do
+    ObjectProperty = Struct.new(:name, :value, :modifiers) do
       def to_matcher(context)
-        context.instance_exec(name, value) do |n, v|
+        context.instance_exec(name, value, modifiers) do |n, v, m|
           value_matcher =
             (v || v == false) && expression_matcher(v) || be_nil
+          modifiers_matcher =
+            m.empty? && be_nil || match(m)
           be_instance_of(Node::ObjectProperty)
-            .and have_attributes(name: identifer(n), value: value_matcher)
+            .and have_attributes(
+              name: identifer(n), value: value_matcher, modifiers: modifiers_matcher
+            )
         end
       end
     end
@@ -343,8 +347,8 @@ module RuPkl
     end
 
     ObjectBody = Struct.new(:properties, :entries, :elements, :methods) do
-      def property(name, value)
-        (self.properties ||= []) << ObjectProperty.new(name, value)
+      def property(name, value, **modifiers)
+        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
       end
 
       def entry(key, value)
@@ -433,8 +437,8 @@ module RuPkl
     end
 
     Dynamic = Struct.new(:properties, :elements, :entries) do
-      def property(name, value)
-        (self.properties ||= []) << ObjectProperty.new(name, value)
+      def property(name, value, **modifiers)
+        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
       end
 
       def entry(key, value)
@@ -475,12 +479,25 @@ module RuPkl
 
     alias_method :be_dynamic, :dynamic
 
-    Mapping = Struct.new(:entries) do
+    Mapping = Struct.new(:properties, :entries) do
+      def property(name, value, **modifiers)
+        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
+      end
+
       def []=(key, value)
         (self.entries ||= []) << ObjectEntry.new(key, value)
       end
 
       def to_matcher(context)
+        properties_matcher =
+          if self.properties
+            self
+              .properties
+              .map { _1.to_matcher(context) }
+              .then { context.__send__(:match, _1) }
+          else
+            context.__send__(:be_nil)
+          end
         entries_matcher =
           if self.entries
             self
@@ -492,7 +509,9 @@ module RuPkl
           end
         context.instance_eval do
           be_instance_of(Node::Mapping)
-            .and have_attributes(entries: entries_matcher)
+            .and have_attributes(
+              properties: properties_matcher, entries: entries_matcher
+            )
         end
       end
     end
@@ -505,12 +524,26 @@ module RuPkl
 
     alias_method :be_mapping, :mapping
 
-    Listing = Struct.new(:elements) do
+    Listing = Struct.new(:properties, :elements) do
+      def property(name, value, **modifiers)
+        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
+      end
+
       def <<(value)
         (self.elements ||= []) << ObjectElement.new(value)
       end
 
       def to_matcher(context)
+        properties_matcher =
+          if self.properties
+            self
+              .properties
+              .map { _1.to_matcher(context) }
+              .then { context.__send__(:match, _1) }
+          else
+            context.__send__(:be_nil)
+          end
+
         elements_matcher =
           if self.elements
             self
@@ -522,7 +555,9 @@ module RuPkl
           end
         context.instance_eval do
           be_instance_of(Node::Listing)
-            .and have_attributes(elements: elements_matcher)
+            .and have_attributes(
+              properties: properties_matcher, elements: elements_matcher
+            )
         end
       end
     end
@@ -536,8 +571,8 @@ module RuPkl
     alias_method :be_listing, :listing
 
     PklModule = Struct.new(:properties, :methods) do
-      def property(name, value)
-        (self.properties ||= []) << ObjectProperty.new(name, value)
+      def property(name, value, **modifiers)
+        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
       end
 
       def method(name, **kwargs)

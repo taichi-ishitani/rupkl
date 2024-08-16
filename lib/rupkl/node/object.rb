@@ -30,13 +30,15 @@ module RuPkl
     end
 
     class ObjectProperty < ObjectMember
-      def initialize(parent, name, value, position)
-        super
+      def initialize(parent, name, value, modifiers, position)
+        super(parent, name, value, position)
         @name = name
         @value = value
+        @modifiers = modifiers
       end
 
       attr_reader :name
+      attr_reader :modifiers
 
       def evaluate(context = nil)
         evaluate_value(__method__, context)
@@ -67,7 +69,7 @@ module RuPkl
       end
 
       def copy(parent = nil, position = @position)
-        self.class.new(parent, name.copy, value.copy, position)
+        self.class.new(parent, name.copy, value.copy, modifiers, position)
       end
 
       private

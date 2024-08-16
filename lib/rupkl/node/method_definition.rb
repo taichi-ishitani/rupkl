@@ -125,7 +125,7 @@ module RuPkl
       def initialize(arguments)
         @properties =
           arguments&.map do |(name, value)|
-            ObjectProperty.new(nil, name, value, nil)
+            ObjectProperty.new(nil, name, value, nil, nil)
           end
         super(nil, *@properties, nil)
       end

@@ -5,10 +5,6 @@ module RuPkl
     class Dynamic < Any
       include StructCommon
 
-      def properties
-        @body&.properties(visibility: :object)
-      end
-
       def entries
         @body&.entries
       end

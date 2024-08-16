@@ -8,10 +8,6 @@ module RuPkl
       abstract_class
       klass_name :Module
 
-      def properties
-        @body&.properties(visibility: :object)
-      end
-
       def pkl_methods
         @body&.pkl_methods
       end

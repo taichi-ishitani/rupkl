@@ -65,6 +65,20 @@ RSpec.describe RuPkl::Parser::Parser do
         end
       )
 
+      pkl = '{ local foo = 1 }'
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o|
+          o.body { |b| b.property :foo, 1, local: true }
+        end
+      )
+
+      pkl = '{ local local foo = 1 }'
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o|
+          o.body { |b| b.property :foo, 1, local: true }
+        end
+      )
+
       pkl = '{["foo"] = 1 }'
       expect(parser).to parse(pkl).as(
         unresolved_object do |o|

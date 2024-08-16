@@ -99,6 +99,17 @@ RSpec.describe RuPkl::Parser do
       )
 
       pkl = <<~'PKL'
+        local foo = 1
+        local local bar = 2
+      PKL
+      expect(parser).to parse(pkl).as(
+        pkl_module do |m|
+          m.property :foo, 1, local: true
+          m.property :bar, 2, local: true
+        end
+      )
+
+      pkl = <<~'PKL'
         function foo() = a * b * c
         function bar(a) = a * b * c
         function baz(a, b) = a * b * c
