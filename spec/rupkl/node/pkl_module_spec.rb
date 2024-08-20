@@ -195,6 +195,10 @@ RSpec.describe RuPkl::Node::PklModule do
         node = parser.parse('foo = 1 foo = 2', root: :pkl_module)
         expect { node.evaluate(nil) }
           .to raise_evaluation_error 'duplicate definition of member'
+
+        node = parser.parse('foo = 1 local foo = 2', root: :pkl_module)
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'duplicate definition of member'
       end
     end
   end

@@ -480,24 +480,12 @@ module RuPkl
     alias_method :be_dynamic, :dynamic
 
     Mapping = Struct.new(:properties, :entries) do
-      def property(name, value, **modifiers)
-        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
-      end
-
       def []=(key, value)
         (self.entries ||= []) << ObjectEntry.new(key, value)
       end
 
       def to_matcher(context)
-        properties_matcher =
-          if self.properties
-            self
-              .properties
-              .map { _1.to_matcher(context) }
-              .then { context.__send__(:match, _1) }
-          else
-            context.__send__(:be_nil)
-          end
+        properties_matcher = context.instance_eval { be_nil.or be_empty }
         entries_matcher =
           if self.entries
             self
@@ -525,25 +513,12 @@ module RuPkl
     alias_method :be_mapping, :mapping
 
     Listing = Struct.new(:properties, :elements) do
-      def property(name, value, **modifiers)
-        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
-      end
-
       def <<(value)
         (self.elements ||= []) << ObjectElement.new(value)
       end
 
       def to_matcher(context)
-        properties_matcher =
-          if self.properties
-            self
-              .properties
-              .map { _1.to_matcher(context) }
-              .then { context.__send__(:match, _1) }
-          else
-            context.__send__(:be_nil)
-          end
-
+        properties_matcher = context.instance_eval { be_nil.or be_empty }
         elements_matcher =
           if self.elements
             self

@@ -250,6 +250,104 @@ RSpec.describe RuPkl::Node::AmendExpression do
           end
         )
       end
+
+      pkl = <<~'PKL'
+        foo {
+          local l = "original"
+          x = l
+        }
+        bar = (foo) {
+          local l = "override"
+        }
+      PKL
+      parse(pkl).properties[-1].then do |bar|
+        expect(bar.value).to (be_dynamic { |o| o.property :x, "original" })
+      end
+
+      pkl = <<~'PKL'
+        foo {
+          local l = "original"
+          x = l
+        }
+        bar = (foo) {
+          l = "override"
+        }
+      PKL
+      parse(pkl).properties[-1].then do |bar|
+        expect(bar.value).to (be_dynamic { |o| o.property :x, 'original'; o.property :l, 'override' })
+      end
+
+      pkl = <<~'PKL'
+        foo {
+          l = "original"
+          x = l
+        }
+        bar = (foo) {
+          local l = "override"
+        }
+      PKL
+      parse(pkl).properties[-1].then do |bar|
+        expect(bar.value).to (be_dynamic { |o| o.property :l, 'original'; o.property :x, 'original' })
+      end
+
+      pkl = <<~'PKL'
+        foo {
+          local l = "original"
+          bar {
+            x = l
+          }
+        }
+        bar = (foo) {
+          local l = "override"
+        }
+      PKL
+      parse(pkl).properties[-1].then do |bar|
+        expect(bar.value).to (
+          be_dynamic do |o1|
+            o1.property :bar, (dynamic { |o2| o2.property :x, 'original' })
+          end
+        )
+      end
+
+      pkl = <<~'PKL'
+        foo {
+          local l = "original"
+          bar {
+            x = l
+          }
+        }
+        bar = (foo) {
+          l = "override"
+        }
+      PKL
+      parse(pkl).properties[-1].then do |bar|
+        expect(bar.value).to (
+          be_dynamic do |o1|
+            o1.property :bar, (dynamic { |o2| o2.property :x, 'original' })
+            o1.property :l, 'override'
+          end
+        )
+      end
+
+      pkl = <<~'PKL'
+        foo {
+          l = "original"
+          bar {
+            x = l
+          }
+        }
+        bar = (foo) {
+          local l = "override"
+        }
+      PKL
+      parse(pkl).properties[-1].then do |bar|
+        expect(bar.value).to (
+          be_dynamic do |o1|
+            o1.property :l, 'original'
+            o1.property :bar, (dynamic { |o2| o2.property :x, 'original' })
+          end
+        )
+      end
     end
 
     context 'when the targer is not an object' do

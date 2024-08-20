@@ -91,6 +91,16 @@ RSpec.describe RuPkl::Node::Dynamic do
         bar = this
       }
     PKL
+    strings << <<~'PKL'
+      {
+        local foo_1 = 1
+        local foo_2 = 2
+        local foo_3 = 3
+        bar = foo_1
+        ["bar"] = foo_2
+        foo_3
+      }
+    PKL
   end
 
   def parse(string, root: :object)
@@ -200,9 +210,16 @@ RSpec.describe RuPkl::Node::Dynamic do
 
       node = parse(pkl_strings[9])
       node.evaluate(nil).then do |n|
-        expect(n).to (
-          be_dynamic { |o| o.property :foo, 1; o.property :bar, equal(n) }
-        )
+        expect(n).to (be_dynamic { |o| o.property :foo, 1; o.property :bar, equal(n) })
+      end
+
+      node = parse(pkl_strings[10])
+      node.evaluate(nil).then do |n|
+        expect(n).to (be_dynamic do |o|
+          o.property :bar, 1
+          o.entry 'bar', 2
+          o.element 3
+        end)
       end
     end
   end
@@ -312,6 +329,16 @@ RSpec.describe RuPkl::Node::Dynamic do
             properties: { foo: 1, bar: equal(o) }
           )
       end
+
+      node = parse(pkl_strings[10])
+      node.to_ruby(nil).then do |o|
+        expect(o)
+          .to match_pkl_object(
+            properties: { bar: 1 },
+            entries: { 'bar' =>  2 },
+            elements: [3]
+          )
+      end
     end
   end
 
@@ -388,6 +415,11 @@ RSpec.describe RuPkl::Node::Dynamic do
 
       node = parse(pkl_strings[9])
       s = 'new Dynamic { foo = 1; bar { foo = 1; bar = ? } }'
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
+
+      node = parse(pkl_strings[10])
+      s = 'new Dynamic { bar = 1; ["bar"] = 2; 3 }'
       expect(node.to_string(nil)).to eq s
       expect(node.to_pkl_string(nil)).to eq s
     end
@@ -564,6 +596,10 @@ RSpec.describe RuPkl::Node::Dynamic do
         strings << <<~'PKL'
           a { 0 foo = 1 ["foo"] = 2 3 bar = 4 ["bar"] = 5 }
           b { 0 foo = 1 ["foo"] = 2 3 bar = 4 ["bar"] = 5 }
+        PKL
+        strings << <<~'PKL'
+          a { 0 foo = 1 ["foo"] = 2 local baz = 3 }
+          b { 0 foo = 1 ["foo"] = 2 local baz = 4 }
         PKL
       end
 

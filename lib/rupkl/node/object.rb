@@ -65,11 +65,19 @@ module RuPkl
       end
 
       def ==(other)
-        name.id == other.name.id && value == other.value
+        name == other.name && value == other.value
       end
 
       def copy(parent = nil, position = @position)
         self.class.new(parent, name.copy, value.copy, modifiers, position)
+      end
+
+      def local?
+        @modifiers&.[](:local) || false
+      end
+
+      def coexistable?(other)
+        name != other.name || local? != other.local? && !parent.equal?(other.parent)
       end
 
       private
@@ -124,6 +132,10 @@ module RuPkl
 
       def copy(parent = nil, position = @position)
         self.class.new(parent, key, value.copy, position)
+      end
+
+      def coexistable?(other)
+        key != other.key
       end
 
       private
@@ -196,23 +208,22 @@ module RuPkl
 
       def properties(visibility: :lexical)
         if visibility == :lexical
-          @properties
-            &.select { _1.visibility == :lexical || _1.parent.equal?(self) }
+          @properties&.select { _1.visibility == :lexical || _1.parent.equal?(self) }
         else
-          @properties
+          @properties&.select { !_1.local? }
         end
       end
 
-      def fields
-        [*properties, *entries, *elements]
+      def fields(visibility: :lexical)
+        [*properties(visibility: visibility), *entries, *elements]
       end
 
       def definitions
         [*pkl_methods, *pkl_classes]
       end
 
-      def members
-        [*fields, *definitions]
+      def members(visibility: :lexical)
+        [*fields(visibility: visibility), *definitions]
       end
 
       def evaluate(context = nil)
@@ -267,29 +278,28 @@ module RuPkl
       end
 
       def check_duplication
-        check_duplication_members(@properties, :name)
-        check_duplication_members(@entries, :key)
-        check_duplication_members(@pkl_methods, :name)
+        check_duplication_members(@properties)
+        check_duplication_members(@entries)
+        check_duplication_members(@pkl_methods)
       end
 
-      def check_duplication_members(members, accessor)
+      def check_duplication_members(members)
         members&.each do |member|
-          duplicate_member?(members, member, accessor) &&
+          duplicate_member?(members, member) &&
             (raise EvaluationError.new('duplicate definition of member', member.position))
         end
       end
 
-      def duplicate_member?(members, member, accessor)
-        count =
-          members
-            .count { _1.__send__(accessor) == member.__send__(accessor) }
+      def duplicate_member?(members, member)
+        count = members.count { !_1.coexistable?(member) }
         count > 1
       end
 
       def do_merge(rhs)
+        rhs_properties = rhs.properties(visibility: :object)
         rhs_entries, rhs_amend = split_entries(rhs.entries)
-        @properties = merge_hash_members(@properties, rhs.properties, :name)
-        @entries = merge_hash_members(@entries, rhs_entries, :key)
+        @properties = merge_hash_members(@properties, rhs_properties)
+        @entries = merge_hash_members(@entries, rhs_entries)
         @elements = merge_array_members(@elements, rhs.elements, rhs_amend, :key)
       end
 
@@ -307,12 +317,12 @@ module RuPkl
         node.instance_of?(Node::Int) && node.value < elements_size
       end
 
-      def merge_hash_members(lhs, rhs, accessor)
+      def merge_hash_members(lhs, rhs)
         return nil unless lhs || rhs
         return rhs unless lhs
 
         rhs&.each do |r|
-          if (index = find_member_index(lhs, r, accessor))
+          if (index = find_member_index(lhs, r))
             lhs[index] = merge_hash_value(lhs[index], r)
           else
             r.visibility = :object
@@ -325,15 +335,15 @@ module RuPkl
 
       def merge_hash_value(lhs, rhs)
         if [lhs.value, rhs.value].all? { _1.respond_to?(:body) }
-          lhs.value.merge!(rhs.value)
+          lhs.value.merge!(rhs.value.body)
           lhs
         else
           rhs
         end
       end
 
-      def find_member_index(lhs, rhs, accessor)
-        lhs.find_index { _1.__send__(accessor) == rhs.__send__(accessor) }
+      def find_member_index(lhs, rhs)
+        lhs.find_index { !_1.coexistable?(rhs) }
       end
 
       def merge_array_members(lhs_array, rhs_array, rhs_hash, accessor)

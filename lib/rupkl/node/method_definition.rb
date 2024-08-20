@@ -54,6 +54,10 @@ module RuPkl
         execute_method(receiver, args, parent, position)
       end
 
+      def coexistable?(other)
+        name != other.name
+      end
+
       private
 
       def evaluate_arguments(arguments, context, position)

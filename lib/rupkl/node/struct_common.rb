@@ -6,6 +6,22 @@ module RuPkl
       include NodeCommon
       include MemberFinder
 
+      module ClassMethod
+        def override_default_visibility(visibility)
+          @default_visibility = visibility
+          yield
+          remove_instance_variable(:@default_visibility)
+        end
+
+        def default_visibility
+          @default_visibility || :object
+        end
+      end
+
+      def self.included(klass)
+        klass.extend(ClassMethod)
+      end
+
       def initialize(parent, body, position)
         super
         @body = body
@@ -14,8 +30,20 @@ module RuPkl
 
       attr_reader :body
 
-      def properties
-        @body&.properties(visibility: :object)
+      def properties(visibility: default_visibility)
+        @body&.properties(visibility: visibility)
+      end
+
+      def entries
+        @body&.entries
+      end
+
+      def elements
+        @body&.elements
+      end
+
+      def members(visibility: default_visibility)
+        @body&.members(visibility: visibility)
       end
 
       def evaluate(context = nil)
@@ -57,7 +85,7 @@ module RuPkl
       def merge!(*bodies)
         return unless @body
 
-        @body.merge!(*bodies)
+        @body.merge!(*bodies.compact)
         check_members
       end
 
@@ -70,6 +98,10 @@ module RuPkl
       end
 
       private
+
+      def default_visibility
+        self.class.default_visibility
+      end
 
       def check_members
         message =
@@ -85,15 +117,15 @@ module RuPkl
       end
 
       def properties_not_allowed?
-        body.properties
+        properties.then { _1 && !_1.empty? }
       end
 
       def entries_not_allowed?
-        body.entries
+        entries
       end
 
       def elements_not_allowed?
-        body.elements
+        elements
       end
 
       def do_evaluation(method, context, limit, ifreachlimit = nil)
@@ -149,9 +181,9 @@ module RuPkl
         context.push_scope(@body).then do |c|
           to_ruby = proc { _1.to_ruby(c) }
           [
-            @body.properties&.to_h(&to_ruby),
-            @body.entries&.to_h(&to_ruby),
-            @body.elements&.map(&to_ruby)
+            properties&.to_h(&to_ruby),
+            entries&.to_h(&to_ruby),
+            elements&.map(&to_ruby)
           ]
         end
       end
@@ -173,7 +205,6 @@ module RuPkl
       end
 
       def to_string_members(context)
-        members = @body.members
         return '{}' if members.empty?
 
         context.push_scope(@body).then do |c|

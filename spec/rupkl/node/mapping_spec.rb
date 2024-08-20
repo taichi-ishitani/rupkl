@@ -56,6 +56,14 @@ RSpec.describe RuPkl::Node::Mapping do
         ["baz"] = this
       }
     PKL
+    strings << <<~'PKL'
+      new Mapping {
+        local foo_1 = 1
+        local foo_2 = 2
+        ["bar"] = foo_1
+        ["baz"] = foo_2
+      }
+    PKL
   end
 
   def parse(string, root: :expression)
@@ -151,6 +159,16 @@ RSpec.describe RuPkl::Node::Mapping do
           end
         )
       end
+
+      node = parse(pkl_strings[6])
+      node.evaluate(nil).then do |n|
+        expect(n).to (
+          be_mapping do |m|
+            m['bar'] = 1
+            m['baz'] = 2
+          end
+        )
+      end
     end
   end
 
@@ -187,6 +205,11 @@ RSpec.describe RuPkl::Node::Mapping do
       node = parse(pkl_strings[5])
       node.to_ruby(nil).then do |o|
         expect(o).to match_hash({ 'foo' => 0, 'bar' => 1, 'baz' => equal(o) })
+      end
+
+      node = parse(pkl_strings[6])
+      node.to_ruby(nil).then do |o|
+        expect(o).to match_hash({ 'bar' => 1, 'baz' => 2 })
       end
     end
   end
@@ -243,6 +266,11 @@ RSpec.describe RuPkl::Node::Mapping do
             'new Mapping { ["foo"] = 0; ["bar"] = 1; ["baz"] = ? } ',
         '}'
       ].join
+      expect(node.to_string(nil)).to eq s
+      expect(node.to_pkl_string(nil)).to eq s
+
+      node = parse(pkl_strings[6])
+      s = 'new Mapping { ["bar"] = 1; ["baz"] = 2 }'
       expect(node.to_string(nil)).to eq s
       expect(node.to_pkl_string(nil)).to eq s
     end
@@ -378,6 +406,10 @@ RSpec.describe RuPkl::Node::Mapping do
           o2 = new Mapping { ["foo"] = 1 }
           a = new Mapping { [o1] = 1 }
           b = new Mapping { [o2] = 1 }
+        PKL
+        strings << <<~'PKL'
+          a = new Mapping { ["foo"] = 1 ["bar"] = "fizz"; local baz = 2 }
+          b = new Mapping { ["foo"] = 1 ["bar"] = "fizz"; local baz = 3 }
         PKL
       end
 

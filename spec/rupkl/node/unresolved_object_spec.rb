@@ -77,6 +77,12 @@ RSpec.describe RuPkl::Node::UnresolvedObject do
           .to raise_evaluation_error 'duplicate definition of member'
 
         node = parse(<<~'PKL')
+          { foo = 1 local foo = 2 }
+        PKL
+        expect { node.evaluate(nil) }
+          .to raise_evaluation_error 'duplicate definition of member'
+
+        node = parse(<<~'PKL')
           { ["foo"] = 1 ["foo"] = 2 }
         PKL
         expect { node.evaluate(nil) }
