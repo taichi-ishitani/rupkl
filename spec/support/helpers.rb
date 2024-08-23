@@ -346,47 +346,31 @@ module RuPkl
       end
     end
 
-    ObjectBody = Struct.new(:properties, :entries, :elements, :methods) do
+    ObjectBody = Struct.new(:items) do
       def property(name, value, **modifiers)
-        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
+        (self.items ||= []) << ObjectProperty.new(name, value, modifiers)
       end
 
       def entry(key, value)
-        (self.entries ||= []) << ObjectEntry.new(key, value)
+        (self.items ||= []) << ObjectEntry.new(key, value)
       end
 
       def element(value)
-        (self.elements ||= []) << ObjectElement.new(value)
+        (self.items ||= []) << ObjectElement.new(value)
       end
 
       def method(name, **kwargs)
-        (self.methods ||= []) << MethodDefinition.new(name, **kwargs)
+        (self.items ||= []) << MethodDefinition.new(name, **kwargs)
       end
 
       def to_matcher(context)
-        properties_matcher = create_members_matcher(context, properties)
-        entries_matcher = create_members_matcher(context, entries)
-        elements_matcher = create_members_matcher(context, elements)
-        methods_matcher = create_members_matcher(context, methods)
-
-        context.instance_eval do
+        context.instance_exec(items) do |items|
+          items_matcher =
+            items
+              &.map { _1.to_matcher(self) }
+              .then { _1 && match(_1) || be_nil }
           be_instance_of(Node::ObjectBody)
-            .and have_attributes(
-              properties: properties_matcher, entries: entries_matcher,
-              elements: elements_matcher, pkl_methods: methods_matcher
-            )
-        end
-      end
-
-      private
-
-      def create_members_matcher(context, members)
-        context.instance_exec(members) do |m|
-          if m
-            match(m.map { _1.to_matcher(self) })
-          else
-            be_nil
-          end
+            .and have_attributes(items: items_matcher)
         end
       end
     end
@@ -545,41 +529,49 @@ module RuPkl
 
     alias_method :be_listing, :listing
 
-    PklModule = Struct.new(:properties, :methods) do
+    class PklModule
+      def initialize(evaluated)
+        @evaluated = evaluated
+      end
+
       def property(name, value, **modifiers)
-        (self.properties ||= []) << ObjectProperty.new(name, value, modifiers)
+        (evaluated? ? (@properties ||= []) : (@items ||= [])) <<
+          ObjectProperty.new(name, value, modifiers)
       end
 
       def method(name, **kwargs)
-        (self.methods ||= []) << MethodDefinition.new(name, **kwargs)
+        (evaluated? ? (@methods ||= []) : (@items ||= [])) <<
+          MethodDefinition.new(name, **kwargs)
       end
 
       def to_matcher(context)
-        context.instance_exec(self) do |m|
-          properties_matcher =
-            if m.properties
-              match(m.properties.map { _1.to_matcher(self) })
-            else
-              be_nil
-            end
-          methods_matcher =
-            if m.methods
-              match(m.methods.map { _1.to_matcher(self) })
-            else
-              be_nil
-            end
+        members =
+          if evaluated?
+            { properties: @properties, pkl_methods: @methods }
+          else
+            { items: @items }
+          end
+        context.instance_exec(members) do |members|
+          matcher = members.transform_values do |member|
+            member
+              &.map { _1.to_matcher(self) }
+              .then { _1 && match(_1) || be_nil }
+          end
 
           be_instance_of(Node::PklModule)
-            .and have_attributes(
-              properties: properties_matcher,
-              pkl_methods: methods_matcher
-            )
+            .and have_attributes(matcher)
         end
+      end
+
+      private
+
+      def evaluated?
+        @evaluated
       end
     end
 
-    def pkl_module
-      m = PklModule.new
+    def pkl_module(evaluated: true)
+      m = PklModule.new(evaluated)
       yield(m) if block_given?
       m.to_matcher(self)
     end

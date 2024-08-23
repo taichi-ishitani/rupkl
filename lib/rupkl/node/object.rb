@@ -196,22 +196,36 @@ module RuPkl
       include NodeCommon
       include MemberFinder
 
-      def initialize(parent, members, position)
-        super(parent, position)
-        members&.each { add_member(_1) }
+      def initialize(parent, items, position)
+        super(parent, *items, position)
       end
 
-      attr_reader :entries
-      attr_reader :elements
-      attr_reader :pkl_methods
       attr_reader :pkl_classes
 
-      def properties(visibility: :lexical)
-        if visibility == :lexical
+      alias_method :items, :children
+
+      def properties(visibility: :lexical, all: false)
+        @properties ||= collect_members(ObjectProperty)
+
+        if all
+          @properties
+        elsif visibility == :lexical
           @properties&.select { _1.visibility == :lexical || _1.parent.equal?(self) }
         else
           @properties&.select { !_1.local? }
         end
+      end
+
+      def entries
+        @entries ||= collect_members(ObjectEntry)
+      end
+
+      def elements
+        @elements ||= collect_members(ObjectElement)
+      end
+
+      def pkl_methods
+        @pkl_methods ||= collect_members(MethodDefinition)
       end
 
       def fields(visibility: :lexical)
@@ -235,7 +249,7 @@ module RuPkl
       end
 
       def copy(parent = nil, position = @position)
-        copied_members = members.map(&:copy)
+        copied_members = items&.map(&:copy)
         self.class.new(parent, copied_members, position)
       end
 
@@ -250,25 +264,6 @@ module RuPkl
 
       private
 
-      def add_member(member)
-        add_child(member)
-
-        varialbe_name = member_variable_name(member)
-        unless instance_variable_defined?(varialbe_name)
-          instance_variable_set(varialbe_name, [])
-        end
-        instance_variable_get(varialbe_name) << member
-      end
-
-      def member_variable_name(member)
-        {
-          ObjectProperty => :@properties,
-          ObjectEntry => :@entries,
-          ObjectElement => :@elements,
-          MethodDefinition => :@pkl_methods
-        }[member.class]
-      end
-
       def do_evaluation(evaluator, context)
         (context&.push_scope(self) || current_context).then do |c|
           fields.each { |f| f.__send__(evaluator, c) }
@@ -278,9 +273,9 @@ module RuPkl
       end
 
       def check_duplication
-        check_duplication_members(@properties)
-        check_duplication_members(@entries)
-        check_duplication_members(@pkl_methods)
+        check_duplication_members(properties(all: true))
+        check_duplication_members(entries)
+        check_duplication_members(pkl_methods)
       end
 
       def check_duplication_members(members)
@@ -298,9 +293,9 @@ module RuPkl
       def do_merge(rhs)
         rhs_properties = rhs.properties(visibility: :object)
         rhs_entries, rhs_amend = split_entries(rhs.entries)
-        @properties = merge_hash_members(@properties, rhs_properties)
-        @entries = merge_hash_members(@entries, rhs_entries)
-        @elements = merge_array_members(@elements, rhs.elements, rhs_amend, :key)
+        @properties = merge_hash_members(properties(all: true), rhs_properties)
+        @entries = merge_hash_members(entries, rhs_entries)
+        @elements = merge_array_members(elements, rhs.elements, rhs_amend, :key)
       end
 
       def split_entries(entries)
@@ -372,6 +367,14 @@ module RuPkl
         else
           lhs.class.new(self, rhs.value, rhs.position)
         end
+      end
+
+      protected
+
+      def collect_members(klass)
+        items
+          &.select { |item| item.is_a?(klass) }
+          &.then { !_1.empty? && _1 || nil }
       end
     end
 

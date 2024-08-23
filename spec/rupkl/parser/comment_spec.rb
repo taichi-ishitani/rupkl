@@ -25,7 +25,7 @@ RSpec.describe RuPkl::Parser do
 
       expect(parser)
         .to parse_string(pkl, :pkl_module)
-        .as(pkl_module do |m|
+        .as(pkl_module(evaluated: false) do |m|
           m.property :x, 10
           m.property :y, 20
           m.property :z, 30

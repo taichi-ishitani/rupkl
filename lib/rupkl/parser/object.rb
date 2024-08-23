@@ -8,14 +8,17 @@ module RuPkl
       end
 
       rule(:object_body) do
-        members = object_member >> (ws >> object_member).repeat
         bracketed(
-          members.as(:members).maybe,
+          object_items.as(:items).maybe,
           str('{').as(:body_begin), '}'
         ).as(:object_body)
       end
 
-      rule(:object_member) do
+      rule(:object_items) do
+        object_item >> (ws >> object_item).repeat
+      end
+
+      rule(:object_item) do
         [
           object_method, object_element,
           object_property, object_entry
@@ -58,12 +61,16 @@ module RuPkl
         Node::UnresolvedObject.new(nil, nil, bodies, bodies.first.position)
       end
 
-      rule(object_body: { body_begin: simple(:b) }) do
-        Node::ObjectBody.new(nil, nil, node_position(b))
+      rule(object_body: { body_begin: simple(:body_begin) }) do
+        Node::ObjectBody.new(nil, nil, node_position(body_begin))
       end
 
-      rule(object_body: { body_begin: simple(:b), members: subtree(:m) }) do
-        Node::ObjectBody.new(nil, Array(m), node_position(b))
+      rule(
+        object_body: {
+          body_begin: simple(:body_begin), items: subtree(:items)
+        }
+      ) do
+        Node::ObjectBody.new(nil, Array(items), node_position(body_begin))
       end
 
       rule(object_property: { name: simple(:n), value: simple(:v) }) do

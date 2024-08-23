@@ -6,22 +6,6 @@ module RuPkl
       include NodeCommon
       include MemberFinder
 
-      module ClassMethod
-        def override_default_visibility(visibility)
-          @default_visibility = visibility
-          yield
-          remove_instance_variable(:@default_visibility)
-        end
-
-        def default_visibility
-          @default_visibility || :object
-        end
-      end
-
-      def self.included(klass)
-        klass.extend(ClassMethod)
-      end
-
       def initialize(parent, body, position)
         super
         @body = body
@@ -30,7 +14,7 @@ module RuPkl
 
       attr_reader :body
 
-      def properties(visibility: default_visibility)
+      def properties(visibility: :object)
         @body&.properties(visibility: visibility)
       end
 
@@ -42,8 +26,12 @@ module RuPkl
         @body&.elements
       end
 
-      def members(visibility: default_visibility)
+      def members(visibility: :object)
         @body&.members(visibility: visibility)
+      end
+
+      def items
+        @body&.items
       end
 
       def evaluate(context = nil)
@@ -98,10 +86,6 @@ module RuPkl
       end
 
       private
-
-      def default_visibility
-        self.class.default_visibility
-      end
 
       def check_members
         message =

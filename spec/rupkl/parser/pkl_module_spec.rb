@@ -13,25 +13,25 @@ RSpec.describe RuPkl::Parser do
     it 'should be parsed by module parser' do
       pkl = <<~'PKL'
       PKL
-      expect(parser).to parse(pkl).as(pkl_module)
+      expect(parser).to parse(pkl).as(pkl_module(evaluated: false))
 
       pkl = <<~'PKL'
 
 
 
       PKL
-      expect(parser).to parse(pkl).as(pkl_module)
+      expect(parser).to parse(pkl).as(pkl_module(evaluated: false))
 
       pkl = 'name="Pkl: Configure your Systems in New Ways"'
       expect(parser).to parse(pkl).as(
-        pkl_module do |m|
+        pkl_module(evaluated: false) do |m|
           m.property :name, 'Pkl: Configure your Systems in New Ways'
         end
       )
 
       pkl = 'name="Pkl: Configure your Systems in New Ways";attendants=100'
       expect(parser).to parse(pkl).as(
-        pkl_module do |m|
+        pkl_module(evaluated: false) do |m|
           m.property :name, 'Pkl: Configure your Systems in New Ways'
           m.property :attendants, 100
         end
@@ -39,7 +39,7 @@ RSpec.describe RuPkl::Parser do
 
       pkl = 'name="Pkl: Configure your Systems in New Ways";attendants=100;isInteractive=true'
       expect(parser).to parse(pkl).as(
-        pkl_module do |m|
+        pkl_module(evaluated: false) do |m|
           m.property :name, 'Pkl: Configure your Systems in New Ways'
           m.property :attendants, 100
           m.property :isInteractive, true
@@ -54,7 +54,7 @@ RSpec.describe RuPkl::Parser do
 
       PKL
       expect(parser).to parse(pkl).as(
-        pkl_module do |m|
+        pkl_module(evaluated: false) do |m|
           m.property :name, 'Pkl: Configure your Systems in New Ways'
           m.property :attendants, 100
           m.property :isInteractive, true
@@ -76,7 +76,7 @@ RSpec.describe RuPkl::Parser do
         }
       PKL
       expect(parser).to parse(pkl).as(
-        pkl_module do |m|
+        pkl_module(evaluated: false) do |m|
           m.property :mixedObject, (
             unresolved_object do |o1|
               o1.body do |b1|
@@ -98,18 +98,16 @@ RSpec.describe RuPkl::Parser do
         end
       )
 
-      RuPkl::Node::PklModule.override_default_visibility(:lexical) do
-        pkl = <<~'PKL'
-          local foo = 1
-          local local bar = 2
-        PKL
-        expect(parser).to parse(pkl).as(
-          pkl_module do |m|
-            m.property :foo, 1, local: true
-            m.property :bar, 2, local: true
-          end
-        )
-      end
+      pkl = <<~'PKL'
+        local foo = 1
+        local local bar = 2
+      PKL
+      expect(parser).to parse(pkl).as(
+        pkl_module(evaluated: false) do |m|
+          m.property :foo, 1, local: true
+          m.property :bar, 2, local: true
+        end
+      )
 
       pkl = <<~'PKL'
         function foo() = a * b * c
@@ -118,7 +116,7 @@ RSpec.describe RuPkl::Parser do
         function qux(a, b, c) = a * b * c
       PKL
       expect(parser).to parse(pkl).as(
-        pkl_module do |m|
+        pkl_module(evaluated: false) do |m|
           m.method(:foo, body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
           m.method(:bar, params: [param(:a)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
           m.method(:baz, params: [param(:a), param(:b)], body: b_op(:*, b_op(:*, member_ref(:a), member_ref(:b)), member_ref(:c)))
@@ -132,7 +130,7 @@ RSpec.describe RuPkl::Parser do
         function sum3(a: Int, b: Int): Int = 1.1
       PKL
       expect(parser).to parse(pkl).as(
-        pkl_module do |m|
+        pkl_module(evaluated: false) do |m|
           m.method(
             :sum1, params: [param(:a, declared_type(:Int)), param(:b, declared_type(:Int))],
             type: declared_type(:Int), body: b_op(:+, member_ref(:a),  member_ref(:b))
