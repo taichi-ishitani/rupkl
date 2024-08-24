@@ -192,6 +192,62 @@ module RuPkl
       end
     end
 
+    class WhenGenerator
+      include NodeCommon
+
+      def initialize(parent, condition, when_body, else_body, result, position)
+        super
+        @condition = condition
+        @when_body = when_body
+        @else_body = else_body
+        @result = result
+      end
+
+      attr_reader :condition
+      attr_reader :when_body
+      attr_reader :else_body
+
+      def resolve_structure(context = nil)
+        @result =
+          if evaluate_condition(context)
+            when_body.resolve_structure(context)
+          else
+            else_body&.resolve_structure(context)
+          end
+        self
+      end
+
+      def copy(parent = nil, position = @position)
+        if result
+          self.class.new(parent, nil, nil, nil, result&.copy, position)
+        else
+          copies = [condition, when_body, else_body].map { _1&.copy }
+          self.class.new(parent, *copies, nil, position)
+        end
+      end
+
+      def collect_members(klass)
+        result&.collect_members(klass)
+      end
+
+      private
+
+      attr_reader :result
+
+      def evaluate_condition(context)
+        result =
+          (context || current_context).pop.then do |c|
+            condition.evaluate(c)
+          end
+        return result.value if result.is_a?(Boolean)
+
+        message =
+          'expected type \'Boolean\', ' \
+          "but got type '#{result.class.basename}'"
+        raise EvaluationError.new(message, position)
+      end
+    end
+
     class ObjectBody
       include NodeCommon
       include MemberFinder
@@ -245,6 +301,7 @@ module RuPkl
       end
 
       def resolve_structure(context = nil)
+        generators&.each { _1.resolve_structure(context) }
         do_evaluation(__method__, context)
       end
 
@@ -257,12 +314,26 @@ module RuPkl
         super&.push_scope(self)
       end
 
+      def collect_members(klass)
+        items
+          &.each_with_object([], &member_collector(klass))
+          &.then { !_1.empty? && _1 || nil }
+      end
+
       def merge!(*others)
         others.each { do_merge(_1) }
         self
       end
 
       private
+
+      def generators
+        items&.select { generator?(_1) }
+      end
+
+      def generator?(item)
+        item.is_a?(WhenGenerator)
+      end
 
       def do_evaluation(evaluator, context)
         (context&.push_scope(self) || current_context).then do |c|
@@ -288,6 +359,17 @@ module RuPkl
       def duplicate_member?(members, member)
         count = members.count { !_1.coexistable?(member) }
         count > 1
+      end
+
+      def member_collector(klass)
+        proc do |item, members|
+          if generator?(item)
+            items = item.collect_members(klass)
+            items && members.concat(items)
+          elsif item.is_a?(klass)
+            members << item
+          end
+        end
       end
 
       def do_merge(rhs)
@@ -367,14 +449,6 @@ module RuPkl
         else
           lhs.class.new(self, rhs.value, rhs.position)
         end
-      end
-
-      protected
-
-      def collect_members(klass)
-        items
-          &.select { |item| item.is_a?(klass) }
-          &.then { !_1.empty? && _1 || nil }
       end
     end
 

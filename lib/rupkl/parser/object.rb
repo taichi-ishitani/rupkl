@@ -20,7 +20,7 @@ module RuPkl
 
       rule(:object_item) do
         [
-          object_method, object_element,
+          when_generator, object_method, object_element,
           object_property, object_entry
         ].inject(:|)
       end
@@ -52,6 +52,15 @@ module RuPkl
           method_header >> ws? >>
           str('=').ignore >> ws? >> expression.as(:body)
         ).as(:object_method)
+      end
+
+      rule(:when_generator) do
+        (
+          kw_when.as(:kw_when) >> ws? >>
+          bracketed(expression.as(:condition), '(', ')') >> ws? >>
+          object_body.as(:when_body) >>
+          (ws? >> kw_else.ignore >> ws? >> object_body.as(:else_body)).maybe
+        ).as(:when_generator)
       end
     end
 
@@ -112,6 +121,30 @@ module RuPkl
           }
       ) do
         Node::MethodDefinition.new(nil, name, params, type, body, node_position(kw))
+      end
+
+      rule(
+        when_generator:
+          {
+            kw_when: simple(:kw), condition: simple(:condition),
+            when_body: simple(:when_body)
+          }
+      ) do
+        Node::WhenGenerator.new(
+          nil, condition, when_body, nil, nil, node_position(kw)
+        )
+      end
+
+      rule(
+        when_generator:
+          {
+            kw_when: simple(:kw), condition: simple(:condition),
+            when_body: simple(:when_body), else_body: simple(:else_body)
+          }
+      ) do
+        Node::WhenGenerator.new(
+          nil, condition, when_body, else_body, nil, node_position(kw)
+        )
       end
     end
   end

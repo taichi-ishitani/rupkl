@@ -363,6 +363,11 @@ module RuPkl
         (self.items ||= []) << MethodDefinition.new(name, **kwargs)
       end
 
+      def when_generator
+        (self.items ||= []) << WhenGenerator.new
+        yield(self.items.last)
+      end
+
       def to_matcher(context)
         context.instance_exec(items) do |items|
           items_matcher =
@@ -371,6 +376,45 @@ module RuPkl
               .then { _1 && match(_1) || be_nil }
           be_instance_of(Node::ObjectBody)
             .and have_attributes(items: items_matcher)
+        end
+      end
+    end
+
+    class WhenGenerator
+      def condition(expression = nil)
+        @condition = expression if expression
+        @condition
+      end
+
+      def when_body
+        if block_given?
+          body = ObjectBody.new
+          yield(body)
+          @when_body = body
+        end
+        @when_body
+      end
+
+      def else_body
+        if block_given?
+          body = ObjectBody.new
+          yield(body)
+          @else_body = body
+        end
+        @else_body
+      end
+
+      def to_matcher(context)
+        context.instance_exec(self) do |generator|
+          condition_matcher = expression_matcher(generator.condition)
+          when_body_matcher = generator.when_body.to_matcher(self)
+          else_body_matcher = generator.else_body&.to_matcher(self) || be_nil
+
+          be_instance_of(Node::WhenGenerator)
+            .and have_attributes(
+              condition: condition_matcher, when_body: when_body_matcher,
+              else_body: else_body_matcher
+            )
         end
       end
     end

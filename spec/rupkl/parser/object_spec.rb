@@ -219,6 +219,70 @@ RSpec.describe RuPkl::Parser::Parser do
           end
         end
       )
+
+      pkl = <<~'PKL'
+        {
+          when (isSinger) {
+            hobby = "singing"
+            idol = "Frank Sinatra"
+          }
+        }
+      PKL
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o|
+          o.body do |b0|
+            b0.when_generator do |g|
+              g.condition member_ref(:isSinger)
+              g.when_body { |b1| b1.property :hobby, 'singing'; b1.property :idol, 'Frank Sinatra' }
+            end
+          end
+        end
+      )
+
+      pkl = <<~'PKL'
+        {
+          "chirping"
+          when (isSinger) {
+            "singing"
+          }
+          "whistling"
+        }
+      PKL
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o|
+          o.body do |b0|
+            b0.element 'chirping'
+            b0.when_generator do |g|
+              g.condition member_ref(:isSinger)
+              g.when_body { |b1| b1.element 'singing' }
+            end
+            b0.element 'whistling'
+          end
+        end
+      )
+
+      pkl = <<~'PKL'
+        {
+          when (isSinger) {
+            hobby = "singing"
+            idol = "Aretha Franklin"
+          } else {
+            hobby = "whistling"
+            idol = "Wolfgang Amadeus Mozart"
+          }
+        }
+      PKL
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o|
+          o.body do |b0|
+            b0.when_generator do |g|
+              g.condition member_ref(:isSinger)
+              g.when_body { |b1| b1.property :hobby, 'singing'; b1.property :idol, 'Aretha Franklin' }
+              g.else_body { |b1| b1.property :hobby, 'whistling'; b1.property :idol, 'Wolfgang Amadeus Mozart' }
+            end
+          end
+        end
+      )
     end
   end
 end
