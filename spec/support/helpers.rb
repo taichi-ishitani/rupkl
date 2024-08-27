@@ -368,6 +368,10 @@ module RuPkl
         yield(self.items.last)
       end
 
+      def for_generator(*args, &body)
+        (self.items ||= []) << ForGenerator.new(*args, &body)
+      end
+
       def to_matcher(context)
         context.instance_exec(items) do |items|
           items_matcher =
@@ -414,6 +418,39 @@ module RuPkl
             .and have_attributes(
               condition: condition_matcher, when_body: when_body_matcher,
               else_body: else_body_matcher
+            )
+        end
+      end
+    end
+
+    class ForGenerator
+      def initialize(*args)
+        @key_name, @value_name, @iterable =
+          if args.size == 3
+            args
+          else
+            [nil, *args]
+          end
+        @body = ObjectBody.new
+        yield(@body)
+      end
+
+      attr_reader :key_name
+      attr_reader :value_name
+      attr_reader :iterable
+      attr_reader :body
+
+      def to_matcher(context)
+        context.instance_exec(self) do |generator|
+          key_matcher = generator.key_name && identifer(generator.key_name) || be_nil
+          value_matcher = identifer(generator.value_name)
+          iterable_matcher = expression_matcher(generator.iterable)
+          body_matcher = generator.body.to_matcher(self)
+
+          be_instance_of(Node::ForGenerator)
+            .and have_attributes(
+              key_name: key_matcher, value_name: value_matcher,
+              #iterable: iterable_matcher, body: body_matcher
             )
         end
       end
@@ -473,9 +510,13 @@ module RuPkl
         (self.entries ||= []) << ObjectEntry.new(key, value)
       end
 
+      alias_method :[], :entry
+
       def element(value)
         (self.elements ||= []) << ObjectElement.new(value)
       end
+
+      alias_method :<<, :element
 
       def to_matcher(context)
         context.instance_exec(self) do |o|

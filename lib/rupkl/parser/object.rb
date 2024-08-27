@@ -20,7 +20,8 @@ module RuPkl
 
       rule(:object_item) do
         [
-          when_generator, object_method, object_element,
+          when_generator, for_generator,
+          object_method, object_element,
           object_property, object_entry
         ].inject(:|)
       end
@@ -61,6 +62,16 @@ module RuPkl
           object_body.as(:when_body) >>
           (ws? >> kw_else.ignore >> ws? >> object_body.as(:else_body)).maybe
         ).as(:when_generator)
+      end
+
+      rule(:for_generator) do
+        (
+          header =
+            (id.as(:key_name) >> ws? >> str(',') >> ws?).maybe >>
+            id.as(:value_name) >> ws >> kw_in >> ws >> expression.as(:iterable)
+          kw_for.as(:kw_for) >> ws? >>
+            bracketed(header, '(', ')') >> ws? >> object_body.as(:body)
+        ).as(:for_generator)
       end
     end
 
@@ -144,6 +155,31 @@ module RuPkl
       ) do
         Node::WhenGenerator.new(
           nil, condition, when_body, else_body, nil, node_position(kw)
+        )
+      end
+
+      rule(
+        for_generator:
+          {
+            kw_for: simple(:kw), value_name: simple(:value_name),
+            iterable: simple(:iterable), body: simple(:body)
+          }
+      ) do
+        Node::ForGenerator.new(
+          nil, nil, value_name, iterable, body, nil, node_position(kw)
+        )
+      end
+
+      rule(
+        for_generator:
+          {
+            kw_for: simple(:kw),
+            key_name: simple(:key_name), value_name: simple(:value_name),
+            iterable: simple(:iterable), body: simple(:body)
+          }
+      ) do
+        Node::ForGenerator.new(
+          nil, key_name, value_name, iterable, body, nil, node_position(kw)
         )
       end
     end

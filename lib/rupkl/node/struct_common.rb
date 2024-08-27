@@ -9,7 +9,6 @@ module RuPkl
       def initialize(parent, body, position)
         super
         @body = body
-        body && check_members
       end
 
       attr_reader :body
@@ -45,6 +44,7 @@ module RuPkl
         do_evaluation(__method__, context, 1) do |c|
           @body&.resolve_structure(c)
         end
+        @body && check_members
         self
       end
 

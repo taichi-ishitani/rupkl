@@ -283,6 +283,50 @@ RSpec.describe RuPkl::Parser::Parser do
           end
         end
       )
+
+      pkl = <<~'PKL'
+        {
+          for (_name in names) {
+            new {
+              name = _name
+              lifespan = 42
+            }
+          }
+        }
+      PKL
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o0|
+          o0.body do |b0|
+            b0.for_generator(:_name, member_ref(:names)) do |b1|
+              b1.element(unresolved_object do |o1|
+                o1.body { |b2| b2.property :name, member_ref(:_name); b2.property :lifespan, 42 }
+              end)
+            end
+          end
+        end
+      )
+
+      pkl = <<~'PKL'
+        {
+          for (_name, _lifespan in namesAndLifespans) {
+            [_name] {
+              name = _name
+              lifespan = _lifespan
+            }
+          }
+        }
+      PKL
+      expect(parser).to parse(pkl).as(
+        unresolved_object do |o0|
+          o0.body do |b0|
+            b0.for_generator(:_name, :_lifespan, member_ref(:namesAndLifespans)) do |b1|
+              b1.entry(member_ref(:_name), unresolved_object do |o1|
+                o1.body { |b2| b2.property :name, member_ref(:_name); b2.property :lifespan, member_ref(:_lifespan) }
+              end)
+            end
+          end
+        end
+      )
     end
   end
 end

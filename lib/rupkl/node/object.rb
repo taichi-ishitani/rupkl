@@ -21,6 +21,12 @@ module RuPkl
 
       attr_writer :visibility
 
+      def generated?
+        @generated
+      end
+
+      attr_writer :generated
+
       private
 
       def evaluate_value(evaluator, context)
@@ -200,26 +206,29 @@ module RuPkl
         @condition = condition
         @when_body = when_body
         @else_body = else_body
-        @result = result
+        @result = result if result
       end
 
       attr_reader :condition
       attr_reader :when_body
       attr_reader :else_body
 
-      def resolve_structure(context = nil)
-        @result =
-          if evaluate_condition(context)
-            when_body.resolve_structure(context)
-          else
-            else_body&.resolve_structure(context)
-          end
+      def resolve_generator(context = nil)
+        unless instance_variable_defined?(:@result)
+          @result =
+            if evaluate_condition(context)
+              when_body.resolve_generator(context)
+            else
+              else_body&.resolve_generator(context)
+            end
+        end
+
         self
       end
 
       def copy(parent = nil, position = @position)
         if result
-          self.class.new(parent, nil, nil, nil, result&.copy, position)
+          self.class.new(parent, nil, nil, nil, result.copy, position)
         else
           copies = [condition, when_body, else_body].map { _1&.copy }
           self.class.new(parent, *copies, nil, position)
@@ -236,7 +245,7 @@ module RuPkl
 
       def evaluate_condition(context)
         result =
-          (context || current_context).pop.then do |c|
+          (context || current_context.pop).then do |c|
             condition.evaluate(c)
           end
         return result.value if result.is_a?(Boolean)
@@ -244,6 +253,149 @@ module RuPkl
         message =
           'expected type \'Boolean\', ' \
           "but got type '#{result.class.basename}'"
+        raise EvaluationError.new(message, position)
+      end
+    end
+
+    class ForGenerator
+      include NodeCommon
+
+      def initialize(parent, key_name, value_name, iterable, body, results, position)
+        super(parent, key_name, value_name, iterable, body, *results, position)
+        @key_name = key_name
+        @value_name = value_name
+        @iterable = iterable
+        @body = body
+        @results = results
+      end
+
+      attr_reader :key_name
+      attr_reader :value_name
+      attr_reader :iterable
+      attr_reader :body
+
+      def resolve_generator(context = nil)
+        @results ||= iterate_body(context)
+        self
+      end
+
+      def copy(parent = nil, position = @position)
+        if results
+          copies = results.map(&:copy)
+          self.class.new(parent, key_name, value_name, nil, nil, copies, position)
+        else
+          copies = [iterable, body].map { _1&.copy }
+          self.class.new(parent, key_name, value_name, *copies, nil, position)
+        end
+      end
+
+      def collect_members(klass)
+        results
+          &.flat_map { collect_members_from_body(_1, klass) }
+          &.compact
+      end
+
+      private
+
+      attr_reader :results
+
+      ITERATION_METHODS = {
+        IntSeq => :iterate_intseq,
+        List => :iterate_collection,
+        Set => :iterate_collection,
+        Map => :iterate_map,
+        Listing => :iterate_listing,
+        Mapping => :iterate_mapping,
+        Dynamic => :iterate_dynamic
+      }.freeze
+
+      def iterate_body(context)
+        iterable_object = evaluate_iterable(context)
+        if (method = ITERATION_METHODS[iterable_object.class])
+          __send__(method, iterable_object)&.map do |(k, v)|
+            body.copy(self).then { resolve_body(_1, k, v) }
+          end
+        else
+          message =
+            "cannot iterate over value of type '#{iterable_object.class.basename}'"
+          raise EvaluationError.new(message, position)
+        end
+      end
+
+      def evaluate_iterable(context)
+        (context || current_context.pop).then do |c|
+          iterable.evaluate(c)
+        end
+      end
+
+      def iterate_intseq(intseq)
+        intseq.to_ruby.map.with_index do |v, i|
+          [Int.new(nil, i, nil), Int.new(nil, v, nil)]
+        end
+      end
+
+      def iterate_collection(collection)
+        collection.elements.map.with_index do |e, i|
+          [Int.new(nil, i, nil), e]
+        end
+      end
+
+      def iterate_map(map)
+        map.entries.map do |e|
+          [e.key, e.value]
+        end
+      end
+
+      def iterate_listing(listing)
+        listing.elements&.map&.with_index do |e, i|
+          [Int.new(nil, i, nil), e.value]
+        end
+      end
+
+      def iterate_mapping(mapping)
+        mapping.entries&.map do |e|
+          [e.key, e.value]
+        end
+      end
+
+      def iterate_properties(dynamic)
+        dynamic.properties&.map do |p|
+          [String.new(nil, p.name.id.to_s, nil, nil), p.value]
+        end
+      end
+
+      def iterate_dynamic(dynamic)
+        [
+          *iterate_properties(dynamic),
+          *iterate_mapping(dynamic),
+          *iterate_listing(dynamic)
+        ]
+      end
+
+      def resolve_body(body, key, value)
+        create_iterator_property(body, key_name, key) if key_name
+        create_iterator_property(body, value_name, value)
+        body.resolve_generator(body.current_context)
+        body
+      end
+
+      def create_iterator_property(body, name, value)
+        ObjectProperty.new(body, name, value, { local: true }, name.position)
+      end
+
+      def collect_members_from_body(body, klass)
+        body
+          .collect_members(klass)
+          &.tap { |members| filter_iterators(members, klass) }
+      end
+
+      def filter_iterators(members, klass)
+        return if klass != ObjectProperty
+
+        members.delete_if { [key_name, value_name].any?(_1.name) }
+        return if members.empty?
+
+        message = 'cannot generate object properties'
         raise EvaluationError.new(message, position)
       end
     end
@@ -301,7 +453,7 @@ module RuPkl
       end
 
       def resolve_structure(context = nil)
-        generators&.each { _1.resolve_structure(context) }
+        resolve_generator(context)
         do_evaluation(__method__, context)
       end
 
@@ -312,6 +464,11 @@ module RuPkl
 
       def current_context
         super&.push_scope(self)
+      end
+
+      def resolve_generator(context = nil)
+        generators&.each { _1.resolve_generator(context) }
+        self
       end
 
       def collect_members(klass)
@@ -327,17 +484,28 @@ module RuPkl
 
       private
 
+      GENERATOR_CLASSES = [
+        WhenGenerator,
+        ForGenerator
+      ].freeze
+
+      def generator?(item)
+        GENERATOR_CLASSES.any? { item.is_a?(_1) }
+      end
+
       def generators
         items&.select { generator?(_1) }
       end
 
-      def generator?(item)
-        item.is_a?(WhenGenerator)
-      end
-
       def do_evaluation(evaluator, context)
         (context&.push_scope(self) || current_context).then do |c|
-          fields.each { |f| f.__send__(evaluator, c) }
+          fields&.each do |field|
+            if field.generated?
+              field.__send__(evaluator)
+            else
+              field.__send__(evaluator, c)
+            end
+          end
           check_duplication
           self
         end
@@ -365,7 +533,7 @@ module RuPkl
         proc do |item, members|
           if generator?(item)
             items = item.collect_members(klass)
-            items && members.concat(items)
+            items && members.concat(items.each { _1.generated = true })
           elsif item.is_a?(klass)
             members << item
           end

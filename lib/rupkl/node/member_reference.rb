@@ -22,13 +22,15 @@ module RuPkl
 
       def evaluate(context = nil)
         do_evaluate do
-          resolve_member_reference(context, member, receiver, nullable?).evaluate
+          result = resolve_member_reference(context, member, receiver, nullable?)
+          result.evaluate
         end
       end
 
       def resolve_reference(context = nil)
         do_evaluate do
-          resolve_member_reference(context, member, receiver, nullable?).resolve_reference
+          result = resolve_member_reference(context, member, receiver, nullable?)
+          result.resolve_reference
         end
       end
 
