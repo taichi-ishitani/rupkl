@@ -158,10 +158,10 @@ module RuPkl
     alias_method :be_map, :map
 
     def pair(first, second)
-      mathcers =
+      matchers =
         [first, second].map { expression_matcher(_1) }
       be_instance_of(Node::Pair)
-        .and have_attributes(first: mathcers[0], second: mathcers[1])
+        .and have_attributes(first: matchers[0], second: matchers[1])
     end
 
     alias_method :be_pair, :pair
@@ -249,6 +249,36 @@ module RuPkl
 
     def amend_expression
       e = AmendExpression.new
+      yield(e)
+      e.to_matcher(self)
+    end
+
+    class IfExpression
+      def condition(expression)
+        @condition = expression
+      end
+
+      def if_expression(expression)
+        @if_expression = expression
+      end
+
+      def else_expression(expression)
+        @else_expression = expression
+      end
+
+      def to_matcher(context)
+        context.instance_exec([@condition, @if_expression, @else_expression]) do |args|
+          matchers = args.map { expression_matcher(_1) }
+          be_instance_of(Node::IfExpression)
+            .and have_attributes(
+              condition: matchers[0], if_expression: matchers[1], else_expression: matchers[2]
+            )
+        end
+      end
+    end
+
+    def if_expression
+      e = IfExpression.new
       yield(e)
       e.to_matcher(self)
     end

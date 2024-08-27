@@ -41,11 +41,21 @@ module RuPkl
         ).as(:amend_expression)
       end
 
+      rule(:if_expression) do
+        (
+          kw_if.as(:kw_if) >> ws? >>
+            bracketed(expression.as(:condition), '(', ')') >> ws? >>
+              expression.as(:if_expression) >> ws >>
+            kw_else.ignore >> ws >>
+              expression.as(:else_expression)
+        ).as(:if_expression)
+      end
+
       rule(:primary) do
         [
           float_literal, int_literal, boolean_literal, string_literal,
           this_expression, null_expression, new_expression, amend_expression,
-          unqualified_member_ref, parenthesized_expression
+          if_expression, unqualified_member_ref, parenthesized_expression
         ].inject(:|)
       end
 
@@ -211,6 +221,19 @@ module RuPkl
           { target: simple(:t), bodies: subtree(:b) }
       ) do
         Node::AmendExpression.new(nil, t, Array(b), t.position)
+      end
+
+      rule(
+        if_expression:
+          {
+            kw_if: simple(:kw), condition: simple(:condition),
+            if_expression: simple(:if_expression),
+            else_expression: simple(:else_expression)
+          }
+      ) do
+        Node::IfExpression.new(
+          nil, condition, if_expression, else_expression, node_position(kw)
+        )
       end
 
       rule(operand: simple(:operand), non_null_operator: simple(:operator)) do

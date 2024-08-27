@@ -328,6 +328,38 @@ RSpec.describe RuPkl::Parser do
     end
   end
 
+  describe 'if expression' do
+    it 'should be parsed by expression parser' do
+      pkl = <<~'PKL'
+        if (true) 1 else 2
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          if_expression do |e|
+            e.condition true
+            e.if_expression 1
+            e.else_expression 2
+          end
+        )
+
+      pkl = <<~'PKL'
+        if (false) 1 else if (false) 2 else 3
+      PKL
+      expect(parser)
+        .to parse(pkl).as(
+          if_expression do |e0|
+            e0.condition false
+            e0.if_expression 1
+            e0.else_expression(if_expression do |e1|
+              e1.condition false
+              e1.if_expression 2
+              e1.else_expression 3
+            end)
+          end
+        )
+    end
+  end
+
   describe 'operation' do
     describe 'subscript operation' do
       it 'should be parsed by expression parser' do
