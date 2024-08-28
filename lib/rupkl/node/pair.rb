@@ -18,7 +18,7 @@ module RuPkl
       end
 
       def to_ruby(context = nil)
-        PklPair.new(first.to_ruby(context), second.to_ruby(context))
+        [first, second].map { _1.to_ruby(context) }
       end
 
       def to_pkl_string(context = nil)

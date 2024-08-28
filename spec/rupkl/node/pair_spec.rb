@@ -54,16 +54,16 @@ RSpec.describe RuPkl::Node::Pair do
   end
 
   describe '#to_ruby' do
-    it 'should return a PklObject object containing its elements' do
+    it 'should return a Array object containing its elements' do
       node = parse(pkl_string)
       expect(node.to_ruby(nil)).to match_pkl_object(
         properties: {
-          p0: match_pair('Pigeon', 42),
-          p1: match_pair(
+          p0: match_array('Pigeon', 42),
+          p1: match_array(
             match_pkl_object(properties: { name: 'Pigeon' }),
             match_array(1, 2, 3)
           ),
-          p2: match_pair(be_nil, match_pair('Pigeon', 42))
+          p2: match_array(be_nil, match_array('Pigeon', 42))
         }
       )
     end
