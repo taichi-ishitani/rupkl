@@ -66,6 +66,10 @@ module RuPkl
       define_builtin_method(:IntSeq, start: Int, last: Int) do |args, parent, position|
         IntSeq.new(parent, args[:start], args[:last], nil, position)
       end
+
+      define_builtin_method(:Regex, pattern: String) do |args, parent, position|
+        Regex.new(parent, args[:pattern], position)
+      end
     end
   end
 end

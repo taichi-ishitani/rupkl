@@ -287,6 +287,10 @@ RSpec.describe RuPkl::Node::Map do
           a = Map(0, 1)
           b = IntSeq(0, 1)
         PKL
+        strings << <<~'PKL'
+          a = Map(0, 1)
+          b = Regex("")
+        PKL
       end
 
       it 'should execute the given operation' do

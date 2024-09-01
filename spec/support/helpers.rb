@@ -176,6 +176,13 @@ module RuPkl
 
     alias_method :be_intseq, :intseq
 
+    def regex(pattern)
+      be_instance_of(Node::Regex)
+        .and have_attributes(pattern: eq(pattern))
+    end
+
+    alias_method :be_regex, :regex
+
     def expression_matcher(expression)
       case expression
       when NilClass then be_nil

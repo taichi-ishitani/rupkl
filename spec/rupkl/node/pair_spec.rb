@@ -198,6 +198,10 @@ RSpec.describe RuPkl::Node::Pair do
           a = Pair(0, 1)
           b = IntSeq(0, 1)
         PKL
+        strings << <<~'PKL'
+          a = Pair(0, 1)
+          b = Regex("")
+        PKL
       end
 
       it 'should execute the given operation' do
