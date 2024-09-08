@@ -223,4 +223,40 @@ RSpec.describe RuPkl::Node::Regex do
       end
     end
   end
+
+  describe 'builtin property/method' do
+    describe 'pattern' do
+      it 'should return the pattern string of this regular expression' do
+        node = parse(<<~'PKL')
+          a = Regex("").pattern
+          b = Regex(#"(?i)abc"#).pattern
+          c = Regex(#"a(\s*)b(\s*)c"#).pattern
+          d = Regex(#"a(?:\s*)b\(c\)"#).pattern
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d)|
+          expect(a.value).to be_evaluated_string('')
+          expect(b.value).to be_evaluated_string('(?i)abc')
+          expect(c.value).to be_evaluated_string('a(\\s*)b(\\s*)c')
+          expect(d.value).to be_evaluated_string('a(?:\\s*)b\\(c\\)')
+        end
+      end
+    end
+
+    describe 'groupCount' do
+      it 'shoul return the number of capturing groups in this regular expression' do
+        node = parse(<<~'PKL')
+          a = Regex("").groupCount
+          b = Regex(#"(?i)abc"#).groupCount
+          c = Regex(#"a(\s*)b(\s*)c"#).groupCount
+          d = Regex(#"a(?:\s*)b\(c\)"#).groupCount
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d)|
+          expect(a.value).to be_int(0)
+          expect(b.value).to be_int(0)
+          expect(c.value).to be_int(2)
+          expect(d.value).to be_int(0)
+        end
+      end
+    end
+  end
 end

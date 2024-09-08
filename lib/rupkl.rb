@@ -8,6 +8,7 @@ require 'singleton'
 require 'stringio'
 require 'parslet'
 require 'facets/module/basename'
+require 'regexp_parser'
 
 require_relative 'rupkl/version'
 require_relative 'rupkl/exception'
