@@ -258,5 +258,72 @@ RSpec.describe RuPkl::Node::Regex do
         end
       end
     end
+
+    describe 'findMatchesIn' do
+      it 'should find all matches of this regular expression in the input string' do
+        node = parse(<<~'PKL')
+          a = Regex(#"\]\*\["#).findMatchesIn("[*] ... [*]")
+          b = Regex(#"\[\*\]"#).findMatchesIn("[*] ... [*]")
+          c = Regex(#""#).findMatchesIn("[*] ... [*]")
+          d = Regex(#".*"#).findMatchesIn("[*] ... [*]")
+          e = Regex(#"(abc)|(def)"#).findMatchesIn("xxxabcxxxdefxxxabc")
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e)|
+          expect(a.value).to be_list()
+          expect(b.value).to be_list(
+            regexp_match('[*]', 0, 3, [regexp_match('[*]', 0, 3)]),
+            regexp_match('[*]', 8, 11, [regexp_match('[*]', 8, 11)])
+          )
+          expect(c.value).to be_list(
+            regexp_match('', 0, 0, [regexp_match('', 0, 0)]),
+            regexp_match('', 1, 1, [regexp_match('', 1, 1)]),
+            regexp_match('', 2, 2, [regexp_match('', 2, 2)]),
+            regexp_match('', 3, 3, [regexp_match('', 3, 3)]),
+            regexp_match('', 4, 4, [regexp_match('', 4, 4)]),
+            regexp_match('', 5, 5, [regexp_match('', 5, 5)]),
+            regexp_match('', 6, 6, [regexp_match('', 6, 6)]),
+            regexp_match('', 7, 7, [regexp_match('', 7, 7)]),
+            regexp_match('', 8, 8, [regexp_match('', 8, 8)]),
+            regexp_match('', 9, 9, [regexp_match('', 9, 9)]),
+            regexp_match('', 10, 10, [regexp_match('', 10, 10)]),
+            regexp_match('', 11, 11, [regexp_match('', 11, 11)])
+          )
+          expect(d.value).to be_list(
+            regexp_match('[*] ... [*]', 0, 11, [regexp_match('[*] ... [*]', 0, 11)]),
+            regexp_match('', 11, 11, [regexp_match('', 11, 11)])
+          )
+          expect(e.value).to be_list(
+            regexp_match('abc', 3, 6, [regexp_match('abc', 3, 6), regexp_match('abc', 3, 6), null]),
+            regexp_match('def', 9, 12, [regexp_match('def', 9, 12), null, regexp_match('def', 9, 12)]),
+            regexp_match('abc', 15, 18, [regexp_match('abc', 15, 18), regexp_match('abc', 15, 18), null])
+          )
+        end
+      end
+    end
+
+    describe 'matchEntire' do
+      it 'should match this regular expression against the entire input string' do
+        node = parse(<<~'PKL')
+          a = Regex(#"(\d+)\w+"#).matchEntire("123abc")
+        PKL
+        node.evaluate(nil).properties[-1].then do |a|
+          expect(a.value).to be_regxp_match(
+            '123abc', 0, 6,
+            [regexp_match('123abc', 0, 6), regexp_match('123', 0, 3)]
+          )
+        end
+      end
+
+      context 'when this regular expression is not matched against the entire input string' do
+        it 'should return a Null object' do
+          node = parse(<<~'PKL')
+            a = Regex(#"(\d+)\w+"#).matchEntire("123abc!!!")
+          PKL
+          node.evaluate(nil).properties[-1].then do |a|
+            expect(a.value).to be_null
+          end
+        end
+      end
+    end
   end
 end

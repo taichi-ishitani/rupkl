@@ -183,6 +183,20 @@ module RuPkl
 
     alias_method :be_regex, :regex
 
+    def regexp_match(value, start_index, end_index, groups = nil)
+      value_matcher = expression_matcher(value)
+      start_matcher = expression_matcher(start_index)
+      end_matcher = expression_matcher(end_index)
+      groups_matcher = list(*groups)
+      be_instance_of(Node::RegexMatch)
+        .and have_attributes(
+          value: value_matcher, start: start_matcher,
+          end: end_matcher, groups: groups_matcher
+        )
+    end
+
+    alias_method :be_regxp_match, :regexp_match
+
     def expression_matcher(expression)
       case expression
       when NilClass then be_nil
