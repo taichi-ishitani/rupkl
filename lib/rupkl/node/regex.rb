@@ -144,12 +144,48 @@ module RuPkl
         @children[1]
       end
 
+      alias_method :start_offset, :start
+
       def end
         @children[2]
       end
 
+      alias_method :end_offset, :end
+
       def groups
         @children[3]
+      end
+
+      def evaluate(_context = nil)
+        self
+      end
+
+      def to_ruby(context = nil)
+        {
+          value: value, start: start_offset, end: end_offset, groups: groups
+        }.transform_values { |v| v.to_ruby(context) }
+      end
+
+      def to_pkl_string(context = nil)
+        to_string(context)
+      end
+
+      def to_string(context)
+        value.to_string(context)
+      end
+
+      def undefined_operator?(operator)
+        [:==, :'!='].none?(operator)
+      end
+
+      def coerce(_operator, r_operand)
+        [self, r_operand]
+      end
+
+      def ==(other)
+        other.is_a?(self.class) &&
+          value == other.value && start_offset == other.start &&
+          end_offset == other.end && groups == other.groups
       end
     end
   end

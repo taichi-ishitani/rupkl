@@ -291,6 +291,10 @@ RSpec.describe RuPkl::Node::Map do
           a = Map(0, 1)
           b = Regex("")
         PKL
+        strings << <<~'PKL'
+          a = Map(0, 1)
+          b = Regex("").matchEntire("")
+        PKL
       end
 
       it 'should execute the given operation' do

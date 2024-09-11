@@ -411,6 +411,10 @@ RSpec.describe RuPkl::Node::Collection do
           b = Regex("")
         PKL
         strings << <<~'PKL'
+          a = List(0, 1)
+          b = Regex("").matchEntire("")
+        PKL
+        strings << <<~'PKL'
           a = Set()
           b = Set(0)
         PKL
@@ -479,6 +483,10 @@ RSpec.describe RuPkl::Node::Collection do
         strings << <<~'PKL'
           a = Set(0, 1)
           b = Regex("")
+        PKL
+        strings << <<~'PKL'
+          a = Set(0, 1)
+          b = Regex("").matchEntire("")
         PKL
         strings
       end

@@ -202,6 +202,10 @@ RSpec.describe RuPkl::Node::Pair do
           a = Pair(0, 1)
           b = Regex("")
         PKL
+        strings << <<~'PKL'
+          a = Pair(0, 1)
+          b = Regex("").matchEntire("")
+        PKL
       end
 
       it 'should execute the given operation' do

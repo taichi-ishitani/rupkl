@@ -178,6 +178,10 @@ RSpec.describe RuPkl::Node::Regex do
           a = Regex("")
           b = IntSeq(0, 0)
         PKL
+        strings << <<~'PKL'
+          a = Regex("")
+          b = Regex("").matchEntire("")
+        PKL
       end
 
       it 'should execute the given operation' do
