@@ -242,4 +242,82 @@ RSpec.describe RuPkl::Node::RegexMatch do
       end
     end
   end
+
+  describe 'builtin property/method' do
+    describe 'value' do
+      it 'should return the string value of this match' do
+        node = parse(<<~PKL)
+          #{pkl_string}
+          a = m0.value
+          b = m1.value
+          c = m2.value
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_evaluated_string('abc')
+          expect(b.value).to be_evaluated_string('def')
+          expect(c.value).to be_evaluated_string('abc')
+        end
+      end
+    end
+
+    describe 'start' do
+      it 'should return the start index of this match' do
+        node = parse(<<~PKL)
+          #{pkl_string}
+          a = m0.start
+          b = m1.start
+          c = m2.start
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_int(3)
+          expect(b.value).to be_int(9)
+          expect(c.value).to be_int(15)
+        end
+      end
+    end
+
+    describe 'end' do
+      it 'should return the exclusive end index of this match' do
+        node = parse(<<~PKL)
+          #{pkl_string}
+          a = m0.end
+          b = m1.end
+          c = m2.end
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_int(6)
+          expect(b.value).to be_int(12)
+          expect(c.value).to be_int(18)
+        end
+      end
+    end
+
+    describe 'groups' do
+      it 'should return the capturing group matches within this match' do
+        node = parse(<<~PKL)
+          #{pkl_string}
+          a = m0.groups
+          b = m1.groups
+          c = m2.groups
+        PKL
+        node.evaluate(nil).properties[-3..].then do |(a, b, c)|
+          expect(a.value).to be_list(
+            regexp_match('abc', 3, 6),
+            regexp_match('abc', 3, 6),
+            null
+          )
+          expect(b.value).to be_list(
+            regexp_match('def', 9, 12),
+            null,
+            regexp_match('def', 9, 12)
+          )
+          expect(c.value).to be_list(
+            regexp_match('abc', 15, 18),
+            regexp_match('abc', 15, 18),
+            null
+          )
+        end
+      end
+    end
+  end
 end

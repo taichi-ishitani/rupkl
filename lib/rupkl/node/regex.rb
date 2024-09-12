@@ -187,6 +187,22 @@ module RuPkl
           value == other.value && start_offset == other.start &&
           end_offset == other.end && groups == other.groups
       end
+
+      define_builtin_property(:value) do
+        value
+      end
+
+      define_builtin_property(:start) do
+        start_offset
+      end
+
+      define_builtin_property(:end) do
+        end_offset
+      end
+
+      define_builtin_property(:groups) do
+        groups
+      end
     end
   end
 end
