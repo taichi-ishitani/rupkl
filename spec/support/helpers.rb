@@ -197,6 +197,14 @@ module RuPkl
 
     alias_method :be_regxp_match, :regexp_match
 
+    def data_size(value, unit:)
+      value_matcher = expression_matcher(value)
+      be_instance_of(Node::DataSize)
+        .and have_attributes(value: value_matcher, unit: eq(unit))
+    end
+
+    alias_method :be_data_size, :data_size
+
     def expression_matcher(expression)
       case expression
       when NilClass then be_nil

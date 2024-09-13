@@ -39,6 +39,19 @@ module RuPkl
         self.class.new(self, result, position)
       end
 
+      [
+        :b, :kb, :kib, :mb, :mib, :gb, :gib, :tb, :tib, :pb, :pib
+      ].each do |unit|
+        class_eval(<<~P, __FILE__, __LINE__ + 1)
+          # define_builtin_property(:b) do
+          #   DataSize.new(self, self, :b, position)
+          # end
+          define_builtin_property(:#{unit}) do
+            DataSize.new(self, self, :#{unit}, position)
+          end
+        P
+      end
+
       define_builtin_property(:abs) do
         self.class.new(self, value.abs, position)
       end
