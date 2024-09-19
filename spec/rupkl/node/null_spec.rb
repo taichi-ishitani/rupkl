@@ -32,11 +32,11 @@ RSpec.describe RuPkl::Node::Null do
     specify 'unary operations are not defined' do
       node = parser.parse('!null', root: :expression)
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for Null type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for Null type'
 
       node = parser.parse('-null', root: :expression)
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for Null type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for Null type'
     end
   end
 

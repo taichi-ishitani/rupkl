@@ -535,14 +535,14 @@ RSpec.describe RuPkl::Node::Dynamic do
         bar = -foo
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for Dynamic type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for Dynamic type'
 
       node = parse(<<~'PKL', root: :pkl_module)
         foo {}
         bar = !foo
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for Dynamic type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for Dynamic type'
     end
   end
 

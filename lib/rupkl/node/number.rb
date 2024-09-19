@@ -4,30 +4,61 @@ module RuPkl
   module Node
     class Number < Any
       include ValueCommon
-
-      def undefined_operator?(operator)
-        [:[], :!, :'&&', :'||'].include?(operator)
-      end
-
-      def invalid_r_operand?(_operator, operand)
-        !operand.is_a?(Number)
-      end
-
-      def coerce(operator, r_operand)
-        if force_float?(operator, r_operand)
-          [value.to_f, r_operand.value.to_f]
-        else
-          [value.to_i, r_operand.value.to_i]
-        end
-      end
-
-      def force_float?(operator, r_operand)
-        operator == :/ ||
-          operator != :'~/' && [self, r_operand].any?(Float)
-      end
+      include Operatable
 
       abstract_class
       uninstantiable_class
+
+      def u_op_minus(position)
+        self.class.new(nil, -value, position)
+      end
+
+      {
+        b_op_exp: [:**, :**],
+        b_op_mul: [:*, :*], b_op_div: [:/, :/],
+        b_op_truncating_div: [:'~/', :/], b_op_rem: [:%, :%],
+        b_op_add: [:+, :+], b_op_sub: [:-, :-]
+      }.each do |method_name, (pkl_op, ruby_op)|
+        class_eval(<<~M, __FILE__, __LINE__ + 1)
+          # def b_op_mul(r_operand, position)
+          #   l, r = coerce(:'*', r_operand)
+          #   result = l * r
+          #   if result.integer?
+          #      Int.new(nil, result, position)
+          #   else
+          #      Float.new(nil, result, position)
+          #   end
+          # end
+          def #{method_name}(r_operand, position)
+            l, r = coerce(:'#{pkl_op}', r_operand)
+            result = l #{ruby_op} r
+            if result.integer?
+              Int.new(nil, result, position)
+            else
+              Float.new(nil, result, position)
+            end
+          end
+        M
+      end
+
+      {
+        b_op_lt: :<, b_op_gt: :>,
+        b_op_le: :<=, b_op_ge: :>=,
+        b_op_eq: :==, b_op_ne: :'!='
+      }.each do |method_name, op|
+        class_eval(<<~M, __FILE__, __LINE__ + 1)
+          # def b_op_lt(r_operand, position)
+          #   l, r = coerce(:'<', r_operand)
+          #   result = l < r
+          #   Boolean.new(nil, result, position)
+          # end
+          def #{method_name}(r_operand, position)
+            l, r = coerce(:'#{op}', r_operand)
+            result = l #{op} r
+            Boolean.new(nil, result, position)
+          end
+        M
+      end
 
       define_builtin_property(:sign) do
         result =
@@ -120,6 +151,29 @@ module RuPkl
           [f, l, value].all? { _1.finite? || _1.infinite? } &&
           (f..l).include?(value)
         Boolean.new(parent, result, position)
+      end
+
+      private
+
+      def defined_operator?(operator)
+        [:[], :'!@', :'&&', :'||'].none?(operator)
+      end
+
+      def valid_r_operand?(_operator, operand)
+        operand.is_a?(Number)
+      end
+
+      def coerce(operator, r_operand)
+        if force_float?(operator, r_operand)
+          [value.to_f, r_operand.value.to_f]
+        else
+          [value.to_i, r_operand.value.to_i]
+        end
+      end
+
+      def force_float?(operator, r_operand)
+        operator == :/ ||
+          operator != :'~/' && [self, r_operand].any?(Float)
       end
     end
 

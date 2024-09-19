@@ -3,6 +3,8 @@
 module RuPkl
   module Node
     class Pair < Any
+      include Operatable
+
       uninstantiable_class
 
       def first
@@ -29,14 +31,6 @@ module RuPkl
         element_strings =
           [first, second].map { _1.to_pkl_string(context) }
         "Pair(#{element_strings[0]}, #{element_strings[1]})"
-      end
-
-      def undefined_operator?(operator)
-        [:==, :'!='].none?(operator)
-      end
-
-      def coerce(_operator, r_operand)
-        [self, r_operand]
       end
 
       def ==(other)

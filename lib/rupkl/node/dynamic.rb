@@ -3,6 +3,7 @@
 module RuPkl
   module Node
     class Dynamic < Any
+      include Operatable
       include StructCommon
 
       def entries

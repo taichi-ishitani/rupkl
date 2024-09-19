@@ -96,13 +96,13 @@ RSpec.describe RuPkl::Node::Regex do
         a = -Regex("foo")
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for Regex type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for Regex type'
 
       node = parse(<<~'PKL')
         a = !Regex("foo")
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for Regex type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for Regex type'
     end
   end
 

@@ -2,6 +2,127 @@
 
 module RuPkl
   module Node
+    module Operatable
+      def s_op(operator, key, context, position)
+        check_s_op(operator, position)
+
+        k = key.evaluate(context)
+        valid_key_operand?(k) ||
+          raise_invalid_key_error(operator, k, position)
+
+        (v = find_by_key(k)) ||
+          raise_no_key_found_error(k, context, position)
+
+        v.evaluate
+      end
+
+      def u_op(operator, position)
+        check_u_op(operator, position)
+        __send__(u_op_method(operator), position)
+      end
+
+      def b_op(operator, operand, context, position)
+        check_b_op(operator, position)
+        return self if short_circuit?(operator)
+
+        r_operand = operand.evaluate(context)
+        if valid_r_operand?(operator, r_operand)
+          __send__(b_op_method(operator), r_operand, position)
+        elsif [:==, :'!='].any?(operator)
+          Boolean.new(nil, operator != :==, position)
+        else
+          raise_invalid_r_operand_error(operator, r_operand, position)
+        end
+      end
+
+      def b_op_eq(r_operand, position)
+        result = self == r_operand
+        Boolean.new(nil, result, position)
+      end
+
+      def b_op_ne(r_operand, position)
+        result = self != r_operand
+        Boolean.new(nil, result, position)
+      end
+
+      private
+
+      def check_s_op(operator, position)
+        check_operator(operator, position)
+      end
+
+      def valid_key_operand?(_key)
+        true
+      end
+
+      def raise_invalid_key_error(operator, key, position)
+        message =
+          "invalid key operand type #{key.class.basename} is given " \
+          "for operator '#{operator}'"
+        raise EvaluationError.new(message, position)
+      end
+
+      def raise_no_key_found_error(key, context, position)
+        message = "cannot find key '#{key.to_pkl_string(context)}'"
+        raise EvaluationError.new(message, position)
+      end
+
+      def check_u_op(operator, position)
+        op = :"#{operator}@"
+        check_operator(op, position)
+      end
+
+      def u_op_method(operator)
+        { '-': :u_op_minus, '!': :u_op_negate }[operator]
+      end
+
+      def check_b_op(operator, position)
+        check_operator(operator, position)
+      end
+
+      def short_circuit?(_operator)
+        false
+      end
+
+      def valid_r_operand?(_operator, operand)
+        operand.is_a?(self.class)
+      end
+
+      def raise_invalid_r_operand_error(operator, r_operand, position)
+        message =
+          "invalid operand type #{r_operand.class.basename} is given " \
+          "for operator '#{operator}'"
+        raise EvaluationError.new(message, position)
+      end
+
+      def b_op_method(operator)
+        {
+          '**': :b_op_exp,
+          '*': :b_op_mul, '/': :b_op_div,
+          '~/': :b_op_truncating_div, '%': :b_op_rem,
+          '+': :b_op_add, '-': :b_op_sub,
+          '<': :b_op_lt, '>': :b_op_gt,
+          '<=': :b_op_le, '>=': :b_op_ge,
+          '==': :b_op_eq, '!=': :b_op_ne,
+          '&&': :b_op_and, '||': :b_op_or
+        }[operator]
+      end
+
+      def check_operator(operator, position)
+        return if
+          [:==, :'!='].any?(operator) || defined_operator?(operator)
+
+        message =
+          "operator '#{operator}' is not defined for " \
+          "#{self.class.basename} type"
+        raise EvaluationError.new(message, position)
+      end
+
+      def defined_operator?(_operator)
+        false
+      end
+    end
+
     module OperationCommon
       include NodeCommon
 
@@ -23,18 +144,7 @@ module RuPkl
 
       def s_op(context)
         r = receiver.evaluate(context)
-        check_operator(r)
-
-        k = key.evaluate(context)
-        check_key_operand(r, k)
-
-        (v = r.find_by_key(k)) ||
-          begin
-            message = "cannot find key '#{k.to_pkl_string(context)}'"
-            raise EvaluationError.new(message, position)
-          end
-
-        v.evaluate
+        r.s_op(operator, key, context, position)
       end
 
       def non_null_op(context)
@@ -47,27 +157,12 @@ module RuPkl
 
       def u_op(context)
         o = operand.evaluate(context)
-        check_operator(o)
-
-        result =
-          if operator == :-
-            -o.value
-          else
-            !o.value
-          end
-        create_op_result(result)
+        o.u_op(operator, position)
       end
 
       def b_op(context)
         l = l_operand.evaluate(context)
-        check_operator(l)
-        return l if short_circuit?(l)
-
-        r = r_operand.evaluate(context)
-        check_r_operand(l, r)
-          .then { return _1 if _1 }
-
-        do_b_op(l, r)
+        l.b_op(operator, r_operand, context, position)
       end
 
       def null_coalescing_op(context)
@@ -75,90 +170,6 @@ module RuPkl
         return l unless l.null?
 
         r_operand.evaluate(context)
-      end
-
-      def check_operator(operand)
-        undefined_operator?(operand) &&
-          begin
-            message =
-              "operator '#{operator}' is not defined for " \
-              "#{operand.class.basename} type"
-            raise EvaluationError.new(message, position)
-          end
-      end
-
-      def undefined_operator?(operand)
-        !operand.respond_to?(:undefined_operator?) ||
-          operand.undefined_operator?(operator)
-      end
-
-      def check_key_operand(receiver, key)
-        invalid_key_operand?(receiver, key) &&
-          begin
-            message =
-              "invalid key operand type #{key.class.basename} is given " \
-              "for operator '#{operator}'"
-            raise EvaluationError.new(message, position)
-          end
-      end
-
-      def invalid_key_operand?(receiver, key)
-        receiver.respond_to?(:invalid_key_operand?) &&
-          receiver.invalid_key_operand?(key)
-      end
-
-      def check_r_operand(l_operand, r_operand)
-        return unless invalid_r_operand?(l_operand, r_operand)
-
-        if [:==, :'!='].include?(operator)
-          create_op_result(operator != :==)
-        else
-          message =
-            "invalid operand type #{r_operand.class.basename} is given " \
-            "for operator '#{operator}'"
-          raise EvaluationError.new(message, position)
-        end
-      end
-
-      def invalid_r_operand?(l_operand, r_operand)
-        if l_operand.respond_to?(:invalid_r_operand?)
-          l_operand.invalid_r_operand?(operator, r_operand)
-        else
-          !r_operand.is_a?(l_operand.class)
-        end
-      end
-
-      def short_circuit?(l_operand)
-        l_operand.respond_to?(:short_circuit?) &&
-          l_operand.short_circuit?(operator)
-      end
-
-      def do_b_op(l_operand, r_operand)
-        l, r = l_operand.coerce(operator, r_operand)
-        if (op = convert_operator(l))
-          l.__send__(op, r, parent, position)
-        else
-          create_op_result(l.__send__(ruby_op, r))
-        end
-      end
-
-      def convert_operator(l_operand)
-        return unless l_operand.respond_to?(:convert_operator)
-
-        l_operand.convert_operator(operator)
-      end
-
-      def ruby_op
-        { '&&': :&, '||': :|, '~/': :/ }.fetch(operator, operator)
-      end
-
-      def create_op_result(result)
-        case result
-        when ::Integer then Int.new(parent, result, position)
-        when ::Float then Float.new(parent, result, position)
-        when ::String then String.new(parent, result, nil, position)
-        when true, false then Boolean.new(parent, result, position)
-        end
       end
     end
 

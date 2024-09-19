@@ -4,6 +4,7 @@ module RuPkl
   module Node
     class Null < Any
       include ValueCommon
+      include Operatable
 
       uninstantiable_class
 
@@ -13,10 +14,6 @@ module RuPkl
 
       def to_string(_context = nil)
         'null'
-      end
-
-      def undefined_operator?(operator)
-        [:==, :'!='].none?(operator)
       end
 
       def null?

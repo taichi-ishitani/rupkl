@@ -348,13 +348,13 @@ RSpec.describe RuPkl::Node::Mapping do
         -(new Mapping{})
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for Mapping type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for Mapping type'
 
       node = parse(<<~'PKL')
         !(new Mapping{})
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for Mapping type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for Mapping type'
     end
   end
 

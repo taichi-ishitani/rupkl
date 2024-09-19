@@ -3,6 +3,8 @@
 module RuPkl
   module Node
     class Regex < Any
+      include Operatable
+
       uninstantiable_class
 
       def initialize(parent, pattern, position)
@@ -27,14 +29,6 @@ module RuPkl
       def to_string(context = nil)
         source_string = source.to_pkl_string(context)
         "Regex(#{source_string})"
-      end
-
-      def undefined_operator?(operator)
-        [:==, :'!='].none?(operator)
-      end
-
-      def coerce(_operator, r_operand)
-        [self, r_operand]
       end
 
       def ==(other)
@@ -105,6 +99,8 @@ module RuPkl
     end
 
     class RegexMatch < Any
+      include Operatable
+
       uninstantiable_class
 
       class << self
@@ -172,14 +168,6 @@ module RuPkl
 
       def to_string(context)
         value.to_string(context)
-      end
-
-      def undefined_operator?(operator)
-        [:==, :'!='].none?(operator)
-      end
-
-      def coerce(_operator, r_operand)
-        [self, r_operand]
       end
 
       def ==(other)

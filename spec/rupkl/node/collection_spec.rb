@@ -281,13 +281,13 @@ RSpec.describe RuPkl::Node::Collection do
         a = -List(0, 1, 2)
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for List type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for List type'
 
       node = parse(<<~'PKL')
         a = !List(0, 1, 2)
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for List type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for List type'
     end
   end
 

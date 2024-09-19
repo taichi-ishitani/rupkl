@@ -3,6 +3,8 @@
 module RuPkl
   module Node
     class IntSeq < Any
+      include Operatable
+
       uninstantiable_class
 
       def initialize(parent, start, last, step, position)
@@ -42,14 +44,6 @@ module RuPkl
         else
           "IntSeq(#{start_value}, #{last_value})"
         end
-      end
-
-      def undefined_operator?(operator)
-        [:==, :'!='].none?(operator)
-      end
-
-      def coerce(_operator, r_operand)
-        [self, r_operand]
       end
 
       def ==(other)

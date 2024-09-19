@@ -64,11 +64,11 @@ RSpec.describe RuPkl::Node::Boolean do
       it 'should raise EvaluatedError' do
         node = parser.parse('-true', root: :expression)
         expect { node.evaluate(nil) }
-          .to raise_evaluation_error 'operator \'-\' is not defined for Boolean type'
+          .to raise_evaluation_error 'operator \'-@\' is not defined for Boolean type'
 
         node = parser.parse('-false', root: :expression)
         expect { node.evaluate(nil) }
-          .to raise_evaluation_error 'operator \'-\' is not defined for Boolean type'
+          .to raise_evaluation_error 'operator \'-@\' is not defined for Boolean type'
       end
     end
   end

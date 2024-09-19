@@ -105,13 +105,13 @@ RSpec.describe RuPkl::Node::Pair do
         a = -Pair(1, 2)
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for Pair type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for Pair type'
 
       node = parse(<<~'PKL')
         a = !Pair(1, 2)
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for Pair type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for Pair type'
     end
   end
 

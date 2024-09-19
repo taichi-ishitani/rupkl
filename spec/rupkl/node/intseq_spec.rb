@@ -256,13 +256,13 @@ RSpec.describe RuPkl::Node::IntSeq do
         a = -IntSeq(0, 1)
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for IntSeq type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for IntSeq type'
 
         node = parse(<<~'PKL')
         a = !IntSeq(0, 1)
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for IntSeq type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for IntSeq type'
     end
   end
 

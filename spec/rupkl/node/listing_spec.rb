@@ -367,13 +367,13 @@ RSpec.describe RuPkl::Node::Listing do
         -(new Listing{})
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for Listing type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for Listing type'
 
       node = parse(<<~'PKL')
         !(new Listing{})
       PKL
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for Listing type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for Listing type'
     end
   end
 

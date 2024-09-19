@@ -3,6 +3,8 @@
 module RuPkl
   module Node
     class Collection < Any
+      include Operatable
+
       abstract_class
       uninstantiable_class
 
@@ -32,35 +34,18 @@ module RuPkl
         "#{self.class.basename}(#{element_string})"
       end
 
-      def invalid_r_operand?(operator, operand)
-        match =
-          operand.is_a?(self.class) ||
-          operator == :+ && (operand in List | Set)
-        !match
-      end
-
-      def coerce(_operator, r_operand)
-        [self, r_operand]
-      end
-
-      def convert_operator(operator)
-        case operator
-        when :+ then :plus_op
-        end
-      end
-
-      def plus_op(operand, parent, position)
-        result =
-          if elements && operand.elements
-            elements + operand.elements
-          else
-            elements || operand.elements
-          end
-        self.class.new(parent, result, position)
-      end
-
       def ==(other)
         other.instance_of?(self.class) && elements == other.elements
+      end
+
+      def b_op_add(r_operand, position)
+        result =
+          if elements && r_operand.elements
+            elements + r_operand.elements
+          else
+            elements || r_operand.elements
+          end
+        self.class.new(nil, result, position)
       end
 
       define_builtin_property(:length) do
@@ -137,6 +122,11 @@ module RuPkl
           end
         raise EvaluationError.new(message, position)
       end
+
+      def valid_r_operand?(operator, operand)
+        operand.is_a?(self.class) ||
+          operator == :+ && (operand in List | Set)
+      end
     end
 
     class List < Collection
@@ -144,10 +134,6 @@ module RuPkl
       undef_method :pkl_method
 
       uninstantiable_class
-
-      def undefined_operator?(operator)
-        [:[], :==, :'!=', :+].none?(operator)
-      end
 
       def find_by_key(key)
         find_element(key)
@@ -164,6 +150,12 @@ module RuPkl
         result = remove_duplicate_elements(elements)
         List.new(parent, result, position)
       end
+
+      private
+
+      def defined_operator?(operator)
+        [:[], :+].any?(operator)
+      end
     end
 
     class Set < Collection
@@ -174,8 +166,10 @@ module RuPkl
         super(parent, unique_elements, position)
       end
 
-      def undefined_operator?(operator)
-        [:==, :'!=', :+].none?(operator)
+      private
+
+      def defined_operator?(operator)
+        operator == :+
       end
     end
   end

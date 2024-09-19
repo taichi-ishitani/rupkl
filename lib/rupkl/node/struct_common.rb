@@ -77,14 +77,6 @@ module RuPkl
         check_members
       end
 
-      def undefined_operator?(operator)
-        [:[], :==, :'!='].none?(operator)
-      end
-
-      def coerce(_operator, r_operand)
-        [self, r_operand]
-      end
-
       private
 
       def check_members
@@ -197,6 +189,10 @@ module RuPkl
             .join('; ')
             .then { "{ #{_1} }" }
         end
+      end
+
+      def defined_operator?(operator)
+        operator == :[]
       end
     end
   end

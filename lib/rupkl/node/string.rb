@@ -4,6 +4,7 @@ module RuPkl
   module Node
     class String < Any
       include ValueCommon
+      include Operatable
 
       uninstantiable_class
 
@@ -39,19 +40,16 @@ module RuPkl
         self.class.new(parent, nil, copied_portions, position)
       end
 
-      def undefined_operator?(operator)
-        [:[], :==, :'!=', :+].none?(operator)
-      end
-
-      def invalid_key_operand?(key)
-        !key.is_a?(Int)
-      end
-
       def find_by_key(key)
         index = key.value
         return nil unless (0...value.length).include?(index)
 
         self.class.new(parent, value[index], nil, position)
+      end
+
+      def b_op_add(r_operand, position)
+        result = value + r_operand.value
+        String.new(nil, result, nil, position)
       end
 
       define_builtin_property(:length) do
@@ -373,6 +371,14 @@ module RuPkl
           '"' => '\"', '\\' => '\\\\'
         }
         string.gsub(/([\t\n\r"\\])/) { replace[_1] }
+      end
+
+      def valid_key_operand?(key)
+        key.is_a?(Int)
+      end
+
+      def defined_operator?(operator)
+        [:[], :+].any?(operator)
       end
 
       def check_range(index, start_index, position)

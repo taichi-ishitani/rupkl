@@ -72,11 +72,11 @@ RSpec.describe RuPkl::Node::Number do
       it 'should raise EvaluatedError' do
         node = parser.parse('!1', root: :expression)
         expect { node.evaluate(nil) }
-          .to raise_evaluation_error 'operator \'!\' is not defined for Int type'
+          .to raise_evaluation_error 'operator \'!@\' is not defined for Int type'
 
         node = parser.parse('!1.0', root: :expression)
         expect { node.evaluate(nil) }
-          .to raise_evaluation_error 'operator \'!\' is not defined for Float type'
+          .to raise_evaluation_error 'operator \'!@\' is not defined for Float type'
       end
     end
   end

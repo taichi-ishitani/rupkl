@@ -228,11 +228,11 @@ RSpec.describe RuPkl::Node::String do
     specify 'unary operations are not defiend' do
       node = parser.parse('!"foo"', root: :expression)
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'!\' is not defined for String type'
+        .to raise_evaluation_error 'operator \'!@\' is not defined for String type'
 
       node = parser.parse('-"foo"', root: :expression)
       expect { node.evaluate(nil) }
-        .to raise_evaluation_error 'operator \'-\' is not defined for String type'
+        .to raise_evaluation_error 'operator \'-@\' is not defined for String type'
     end
   end
 

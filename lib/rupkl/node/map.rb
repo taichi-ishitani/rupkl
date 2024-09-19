@@ -9,6 +9,7 @@ module RuPkl
         end
       end
 
+      include Operatable
       include MemberFinder
       undef_method :pkl_method
 
@@ -41,28 +42,14 @@ module RuPkl
         "Map(#{entry_string})"
       end
 
-      def undefined_operator?(operator)
-        [:[], :==, :'!=', :+].none?(operator)
-      end
-
-      def coerce(_operator, r_operand)
-        [self, r_operand]
-      end
-
-      def convert_operator(operator)
-        case operator
-        when :+ then :plus_op
-        end
-      end
-
-      def plus_op(operand, parent, position)
+      def b_op_add(r_operand, position)
         result =
-          if entries && operand.entries
-            entries + operand.entries
+          if entries && r_operand.entries
+            entries + r_operand.entries
           else
-            entries || operand.entries
+            entries || r_operand.entries
           end
-        self.class.new(parent, result&.flat_map(&:to_a), position)
+        self.class.new(nil, result&.flat_map(&:to_a), position)
       end
 
       def ==(other)
@@ -123,6 +110,10 @@ module RuPkl
 
         m = 'number of arguments must be a multiple of two'
         raise EvaluationError.new(m, position)
+      end
+
+      def defined_operator?(operator)
+        [:[], :+].any?(operator)
       end
     end
   end
