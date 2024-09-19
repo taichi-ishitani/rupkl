@@ -426,6 +426,9 @@ RSpec.describe RuPkl::Parser do
         expect(parser)
           .to parse('-123456789.123456789')
           .as(u_op(:-, 123456789.123456789))
+        expect(parser)
+          .to parse('--42')
+          .as(u_op(:-, u_op(:-, 42)))
 
         # logicalNotExpr
         expect(parser)
@@ -434,6 +437,9 @@ RSpec.describe RuPkl::Parser do
         expect(parser)
           .to parse(spacing('!', 'false'))
           .as(u_op(:!, false))
+        expect(parser)
+          .to parse('!!true')
+          .as(u_op(:!, u_op(:!, true)))
       end
     end
 

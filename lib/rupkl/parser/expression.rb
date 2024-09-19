@@ -93,11 +93,15 @@ module RuPkl
         ) | qualified_member_ref_or_subscript_operation
       end
 
+      rule(:unary_operator) do
+        (str('-') | str('!')).as(:unary_operator)
+      end
+
       rule(:unary_operation) do
         (
-          (str(:-) | str(:!)).as(:unary_operator) >>
-            ws? >> non_null_operation.as(:operand)
-        ) | non_null_operation
+          (unary_operator >> ws?).repeat(1).as(:operators) >>
+            non_null_operation.as(:operand)
+        ).as(:unary_operation) | non_null_operation
       end
 
       rule(:binary_operation) do
@@ -240,8 +244,18 @@ module RuPkl
         Node::NonNullOperation.new(nil, operator.to_sym, operand, operand.position)
       end
 
-      rule(unary_operator: simple(:operator), operand: simple(:operand)) do
-        Node::UnaryOperation.new(nil, operator.to_sym, operand, node_position(operator))
+      rule(unary_operator: simple(:op)) do
+        op
+      end
+
+      rule(
+        unary_operation: {
+          operators: sequence(:operators), operand: simple(:operand)
+        }
+      ) do
+        operators.reverse.inject(operand) do |result, operator|
+          Node::UnaryOperation.new(nil, operator.to_sym, result, node_position(operator))
+        end
       end
 
       rule(
