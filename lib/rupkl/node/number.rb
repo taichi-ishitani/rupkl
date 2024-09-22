@@ -14,31 +14,25 @@ module RuPkl
       end
 
       {
-        b_op_exp: [:**, :**],
-        b_op_mul: [:*, :*], b_op_div: [:/, :/],
-        b_op_truncating_div: [:'~/', :/], b_op_rem: [:%, :%],
-        b_op_add: [:+, :+], b_op_sub: [:-, :-]
-      }.each do |method_name, (pkl_op, ruby_op)|
+        b_op_exp: [:**, false], b_op_div: [:/, false],
+        b_op_truncating_div: [:/, true], b_op_rem: [:%, false],
+        b_op_add: [:+, false], b_op_sub: [:-, false]
+      }.each do |method_name, (op, result_int)|
         class_eval(<<~M, __FILE__, __LINE__ + 1)
-          # def b_op_mul(r_operand, position)
-          #   l, r = coerce(:'*', r_operand)
-          #   result = l * r
-          #   if result.integer?
-          #      Int.new(nil, result, position)
-          #   else
-          #      Float.new(nil, result, position)
-          #   end
+          # def b_op_exp(r_operand, position)
+          #   b_op_arithmetic(:'**', r_operand, false, position)
           # end
           def #{method_name}(r_operand, position)
-            l, r = coerce(:'#{pkl_op}', r_operand)
-            result = l #{ruby_op} r
-            if result.integer?
-              Int.new(nil, result, position)
-            else
-              Float.new(nil, result, position)
-            end
+            b_op_arithmetic(:'#{op}', r_operand, #{result_int}, position)
           end
         M
+      end
+
+      def b_op_mul(r_operand, position)
+        case r_operand
+        when DataSize then r_operand.b_op_mul(self, position)
+        else b_op_arithmetic(:*, r_operand, false, position)
+        end
       end
 
       {
@@ -159,8 +153,11 @@ module RuPkl
         [:[], :'!@', :'&&', :'||'].none?(operator)
       end
 
-      def valid_r_operand?(_operator, operand)
-        operand.is_a?(Number)
+      def valid_r_operand?(operator, operand)
+        case operator
+        when :* then operand in Number | DataSize
+        else operand in Number
+        end
       end
 
       def coerce(operator, r_operand)
@@ -172,8 +169,17 @@ module RuPkl
       end
 
       def force_float?(operator, r_operand)
-        operator == :/ ||
-          operator != :'~/' && [self, r_operand].any?(Float)
+        operator == :/ || [self, r_operand].any?(Float)
+      end
+
+      def b_op_arithmetic(operator, r_operand, result_int, position)
+        l, r = coerce(operator, r_operand)
+        result = l.__send__(operator, r)
+        if result_int || result.integer?
+          Int.new(nil, result, position)
+        else
+          Float.new(nil, result, position)
+        end
       end
     end
 
