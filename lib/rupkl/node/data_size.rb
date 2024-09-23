@@ -45,13 +45,13 @@ module RuPkl
       ].each do |method_name|
         class_eval(<<~M, __FILE__, __LINE__ + 1)
           # def b_op_lt(r_operand, position)
-          # l = calc_byte_size(value, unit)
-          # r = calc_byte_size(r_operand.value, r_operand.unit)
+          # l = calc_byte_size(self)
+          # r = calc_byte_size(r_operand)
           # l.b_op_lt(r, position)
           # end
           def #{method_name}(r_operand, position)
-            l = calc_byte_size(value, unit)
-            r = calc_byte_size(r_operand.value, r_operand.unit)
+            l = calc_byte_size(self)
+            r = calc_byte_size(r_operand)
             l.#{method_name}(r, position)
           end
         M
@@ -89,8 +89,8 @@ module RuPkl
         class_eval(<<~M, __FILE__, __LINE__ + 1)
           # def b_op_div(r_operand, position)
           #   if r_operand.is_a?(DataSize)
-          #     l = calc_byte_size(value, unit)
-          #     r = calc_byte_size(r_operand.value, r_operand.unit)
+          #     l = calc_byte_size(self)
+          #     r = calc_byte_size(r_operand)
           #     l.b_op_div(r, position)
           #   else
           #     result = value.b_op_div(r_operand, position)
@@ -99,8 +99,8 @@ module RuPkl
           # end
           def #{method_name}(r_operand, position)
             if r_operand.is_a?(DataSize)
-              l = calc_byte_size(value, unit)
-              r = calc_byte_size(r_operand.value, r_operand.unit)
+              l = calc_byte_size(self)
+              r = calc_byte_size(r_operand)
               l.#{method_name}(r, position)
             else
               result = value.#{method_name}(r_operand, position)
@@ -133,16 +133,51 @@ module RuPkl
         Boolean.new(self, result, position)
       end
 
+      define_builtin_method(
+        :isBetween, first: DataSize, last: DataSize
+      ) do |args, parent, position|
+        r = calc_byte_size(self)
+        f = calc_byte_size(args[:first])
+        l = calc_byte_size(args[:last])
+        r.execute_builtin_method(:isBetween, { first: f, last: l }, parent, position)
+      end
+
+      define_builtin_method(:toUnit, unit: String) do |args, parent, position|
+        unit = unit_symbol(args[:unit], position)
+        value = convert_unit(self, unit, position)
+        DataSize.new(parent, value, unit, position)
+      end
+
+      define_builtin_method(:toBinaryUnit) do |_args, parent, position|
+        if (unit = to_binary_unit)
+          value = convert_unit(self, unit, position)
+          DataSize.new(parent, value, unit, position)
+        else
+          self
+        end
+      end
+
+      define_builtin_method(:toDecimalUnit) do |_args, parent, position|
+        if (unit = to_decimal_unit)
+          value = convert_unit(self, unit, position)
+          DataSize.new(parent, value, unit, position)
+        else
+          self
+        end
+      end
+
       private
 
+      UNIT_FACTOR = {
+        b: 1000**0,
+        kb: 1000**1, mb: 1000**2, gb: 1000**3,
+        tb: 1000**4, pb: 1000**5,
+        kib: 1024**1, mib: 1024**2, gib: 1024**3,
+        tib: 1024**4, pib: 1024**5
+      }.freeze
+
       def unit_factor(unit)
-        {
-          b: 1000**0,
-          kb: 1000**1, mb: 1000**2, gb: 1000**3,
-          tb: 1000**4, pb: 1000**5,
-          kib: 1024**1, mib: 1024**2, gib: 1024**3,
-          tib: 1024**4, pib: 1024**5
-        }[unit]
+        UNIT_FACTOR[unit]
       end
 
       def defined_operator?(operator)
@@ -157,31 +192,61 @@ module RuPkl
         end
       end
 
-      def calc_byte_size(value, unit)
-        factor = Int.new(nil, unit_factor(unit), nil)
-        value.b_op_mul(factor, nil)
+      def calc_byte_size(data_size)
+        factor = Int.new(nil, unit_factor(data_size.unit), nil)
+        data_size.value.b_op_mul(factor, nil)
       end
 
       def align_unit(l_operand, r_operand)
-        l_factor = unit_factor(l_operand.unit)
-        r_factor = unit_factor(r_operand.unit)
-        if l_factor > r_factor
-          [l_operand.value, convert_unit(r_operand, r_factor, l_factor), l_operand.unit]
-        elsif l_factor < r_factor
-          [convert_unit(l_operand, l_factor, r_factor), r_operand.value, r_operand.unit]
+        unit =
+          if unit_factor(l_operand.unit) >= unit_factor(r_operand.unit)
+            l_operand.unit
+          else
+            r_operand.unit
+          end
+
+        [
+          convert_unit(l_operand, unit, position),
+          convert_unit(r_operand, unit, position),
+          unit
+        ]
+      end
+
+      def convert_unit(data_size, unit, position)
+        return data_size.value if data_size.unit == unit
+
+        byte_size = calc_byte_size(data_size)
+        factor = Int.new(nil, unit_factor(unit), nil)
+        if (byte_size.value % factor.value).zero?
+          byte_size.b_op_truncating_div(factor, position)
         else
-          [l_operand.value, r_operand.value, l_operand.unit]
+          byte_size.b_op_div(factor, position)
         end
       end
 
-      def convert_unit(data_size, factor_own, factor_other)
-        ratio =
-          if (factor_other % factor_own).zero?
-            Int.new(nil, factor_other / factor_own, nil)
-          else
-            Float.new(nil, factor_other.to_f / factor_own, nil)
-          end
-        data_size.value.b_op_div(ratio, nil)
+      def unit_symbol(string, position)
+        symbol = string.value.to_sym
+        return symbol if UNIT_FACTOR.key?(symbol)
+
+        message =
+          'expected value of type ' \
+          '"b"|"kb"|"kib"|"mb"|"mib"|"gb"|"gib"|"tb"|"tib"|"pb"|"pib", ' \
+          "but got #{string.to_pkl_string(nil)}"
+        raise EvaluationError.new(message, position)
+      end
+
+      def to_binary_unit
+        {
+          kb: :kib, mb: :mib, gb: :gib,
+          tb: :tib, pb: :pib
+        }[unit]
+      end
+
+      def to_decimal_unit
+        {
+          kib: :kb, mib: :mb, gib: :gb,
+          tib: :tb, pib: :pb
+        }[unit]
       end
     end
   end

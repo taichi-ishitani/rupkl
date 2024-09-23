@@ -740,5 +740,212 @@ RSpec.describe RuPkl::Node::DataSize do
         end
       end
     end
+
+    describe 'isBetween' do
+      it 'should tell if this data size is greater than or equal to start and less than or equal to inclusiveEnd' do
+        node = parse(<<~'PKL')
+          a = 3.kb.isBetween(2.kb, 4.kb)
+          b = 3.kb.isBetween(3.kb, 4.kb)
+          c = 3.kb.isBetween(2.kb, 3.kb)
+          d = 3.kb.isBetween(3.kb, 3.kb)
+          e = 3.kb.isBetween(2000.b, 3000.b)
+          f = 3.kb.isBetween(1.kb, 2.kb)
+          g = 3.kb.isBetween(4.kb, 2.kb)
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f, g)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(true)
+          expect(e.value).to be_boolean(true)
+          expect(f.value).to be_boolean(false)
+          expect(g.value).to be_boolean(false)
+        end
+
+        node = parse(<<~'PKL')
+          a = 3.3.kb.isBetween(2.2.kb, 4.4.kb)
+          b = 3.3.kb.isBetween(3.3.kb, 4.4.kb)
+          c = 3.3.kb.isBetween(2.2.kb, 3.3.kb)
+          d = 3.3.kb.isBetween(3.3.kb, 3.3.kb)
+          e = 3.3.kb.isBetween(2000.b, 3300.b)
+          f = 3.3.kb.isBetween(1.1.kb, 2.2.kb)
+          g = 3.3.kb.isBetween(4.4.kb, 2.2.kb)
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f, g)|
+          expect(a.value).to be_boolean(true)
+          expect(b.value).to be_boolean(true)
+          expect(c.value).to be_boolean(true)
+          expect(d.value).to be_boolean(true)
+          expect(e.value).to be_boolean(true)
+          expect(f.value).to be_boolean(false)
+          expect(g.value).to be_boolean(false)
+        end
+      end
+    end
+
+    describe 'toUnit' do
+      it 'should return the equivalent data size with the given unit' do
+        node = parse(<<~'PKL')
+          a = 1.pb.toUnit("pb")
+          b = 1.pb.toUnit("tb")
+          c = 1.pb.toUnit("gb")
+          d = 1.pb.toUnit("mb")
+          e = 1.pb.toUnit("kb")
+          f = 1.pb.toUnit("b")
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_data_size(1, unit: :pb)
+          expect(b.value).to be_data_size(1000, unit: :tb)
+          expect(c.value).to be_data_size(1000000, unit: :gb)
+          expect(d.value).to be_data_size(1000000000, unit: :mb)
+          expect(e.value).to be_data_size(1000000000000, unit: :kb)
+          expect(f.value).to be_data_size(1000000000000000, unit: :b)
+        end
+
+        node = parse(<<~'PKL')
+          a = 1.pb.toUnit("b").toUnit("pb")
+          b = 1.pb.toUnit("b").toUnit("tb")
+          c = 1.pb.toUnit("b").toUnit("gb")
+          d = 1.pb.toUnit("b").toUnit("mb")
+          e = 1.pb.toUnit("b").toUnit("kb")
+          f = 1.pb.toUnit("b").toUnit("b")
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_data_size(1, unit: :pb)
+          expect(b.value).to be_data_size(1000, unit: :tb)
+          expect(c.value).to be_data_size(1000000, unit: :gb)
+          expect(d.value).to be_data_size(1000000000, unit: :mb)
+          expect(e.value).to be_data_size(1000000000000, unit: :kb)
+          expect(f.value).to be_data_size(1000000000000000, unit: :b)
+        end
+
+        node = parse(<<~'PKL')
+          a = 1.pib.toUnit("pib")
+          b = 1.pib.toUnit("tib")
+          c = 1.pib.toUnit("gib")
+          d = 1.pib.toUnit("mib")
+          e = 1.pib.toUnit("kib")
+          f = 1.pib.toUnit("b")
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_data_size(1, unit: :pib)
+          expect(b.value).to be_data_size(1024, unit: :tib)
+          expect(c.value).to be_data_size(1048576, unit: :gib)
+          expect(d.value).to be_data_size(1073741824, unit: :mib)
+          expect(e.value).to be_data_size(1099511627776, unit: :kib)
+          expect(f.value).to be_data_size(1125899906842624, unit: :b)
+        end
+
+        node = parse(<<~'PKL')
+          a = 1.pib.toUnit("b").toUnit("pib")
+          b = 1.pib.toUnit("b").toUnit("tib")
+          c = 1.pib.toUnit("b").toUnit("gib")
+          e = 1.pib.toUnit("b").toUnit("mib")
+          d = 1.pib.toUnit("b").toUnit("kib")
+          f = 1.pib.toUnit("b").toUnit("b")
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_data_size(1, unit: :pib)
+          expect(b.value).to be_data_size(1024, unit: :tib)
+          expect(c.value).to be_data_size(1048576, unit: :gib)
+          expect(d.value).to be_data_size(1073741824, unit: :mib)
+          expect(e.value).to be_data_size(1099511627776, unit: :kib)
+          expect(f.value).to be_data_size(1125899906842624, unit: :b)
+        end
+
+        node = parse(<<~'PKL')
+          a = 0.5.gb.toUnit("kb")
+          b = 0.5.gb.toUnit("gib")
+        PKL
+        node.evaluate(nil).properties.then do |(a, b)|
+          expect(a.value).to be_data_size(500000, unit: :kb)
+          expect(b.value).to be_data_size(0.46566128730773926, unit: :gib)
+        end
+      end
+
+      context 'when non data unit string is given' do
+        it 'should raise EvaluationError' do
+          node = parse(<<~'PKL')
+            a = 1.pb.toUnit("foo")
+          PKL
+          expect { node.evaluate(nil) }
+            .to raise_evaluation_error 'expected value of type ' \
+                                       '"b"|"kb"|"kib"|"mb"|"mib"|"gb"|"gib"|"tb"|"tib"|"pb"|"pib", ' \
+                                       'but got "foo"'
+        end
+      end
+    end
+
+    describe 'toBinaryUnit' do
+      it 'should returns the equivalent data size with a binary unit' do
+        node = parse(<<~'PKL')
+          a = 1.024.pb.toBinaryUnit()
+          b = 1.024.tb.toBinaryUnit()
+          c = 1.024.gb.toBinaryUnit()
+          d = 1.024.mb.toBinaryUnit()
+          e = 1.024.kb.toBinaryUnit()
+          f = 1.024.b.toBinaryUnit()
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_data_size(0.9094947017729282, unit: :pib)
+          expect(b.value).to be_data_size(0.9313225746154785, unit: :tib)
+          expect(c.value).to be_data_size(0.95367431640625, unit: :gib)
+          expect(d.value).to be_data_size(0.9765625, unit: :mib)
+          expect(e.value).to be_data_size(1, unit: :kib)
+          expect(f.value).to be_data_size(1.024, unit: :b)
+        end
+
+        node = parse(<<~'PKL')
+          a = 1.024.pib.toBinaryUnit()
+          b = 1.024.tib.toBinaryUnit()
+          c = 1.024.gib.toBinaryUnit()
+          d = 1.024.mib.toBinaryUnit()
+          e = 1.024.kib.toBinaryUnit()
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e)|
+          expect(a.value).to be_data_size(1.024, unit: :pib)
+          expect(b.value).to be_data_size(1.024, unit: :tib)
+          expect(c.value).to be_data_size(1.024, unit: :gib)
+          expect(d.value).to be_data_size(1.024, unit: :mib)
+          expect(e.value).to be_data_size(1.024, unit: :kib)
+        end
+      end
+    end
+
+    describe 'toDecimalUnit' do
+      it 'should returns the equivalent data size with a decimal unit' do
+        node = parse(<<~'PKL')
+          a = 1.pb.toDecimalUnit()
+          b = 1.tb.toDecimalUnit()
+          c = 1.gb.toDecimalUnit()
+          d = 1.mb.toDecimalUnit()
+          e = 1.kb.toDecimalUnit()
+          f = 1.b.toDecimalUnit()
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e, f)|
+          expect(a.value).to be_data_size(1, unit: :pb)
+          expect(b.value).to be_data_size(1, unit: :tb)
+          expect(c.value).to be_data_size(1, unit: :gb)
+          expect(d.value).to be_data_size(1, unit: :mb)
+          expect(e.value).to be_data_size(1, unit: :kb)
+          expect(f.value).to be_data_size(1, unit: :b)
+        end
+
+        node = parse(<<~'PKL')
+          a = 1.pib.toDecimalUnit()
+          b = 1.tib.toDecimalUnit()
+          c = 1.gib.toDecimalUnit()
+          d = 1.mib.toDecimalUnit()
+          e = 1.kib.toDecimalUnit()
+        PKL
+        node.evaluate(nil).properties.then do |(a, b, c, d, e)|
+          expect(a.value).to be_data_size(1.125899906842624, unit: :pb)
+          expect(b.value).to be_data_size(1.099511627776, unit: :tb)
+          expect(c.value).to be_data_size(1.073741824, unit: :gb)
+          expect(d.value).to be_data_size(1.048576, unit: :mb)
+          expect(e.value).to be_data_size(1.024, unit: :kb)
+        end
+      end
+    end
   end
 end

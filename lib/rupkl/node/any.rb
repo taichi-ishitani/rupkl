@@ -19,11 +19,11 @@ module RuPkl
         end
 
         def builtin_property(name)
-          @builtin_properties&.[](name.id)
+          @builtin_properties&.[](name.to_sym)
         end
 
         def buildin_method(name)
-          @builtin_methods&.[](name.id)
+          @builtin_methods&.[](name.to_sym)
         end
 
         private
@@ -93,6 +93,13 @@ module RuPkl
 
         m = "expected a positive number, but got '#{number.value}'"
         raise EvaluationError.new(m, position)
+      end
+
+      protected
+
+      def execute_builtin_method(name, arguments, parent, position)
+        buildin_method(name)
+          .execute_method(self, arguments, parent, position)
       end
     end
   end

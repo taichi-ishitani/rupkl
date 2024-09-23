@@ -24,6 +24,10 @@ module RuPkl
             other
           end
       end
+
+      def to_sym
+        id.to_sym
+      end
     end
   end
 end

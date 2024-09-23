@@ -176,6 +176,12 @@ module RuPkl
         @body = body
       end
 
+      def execute_method(receiver, arguments, parent, position)
+        args = arguments&.transform_keys(&:to_sym)
+        receiver
+          .instance_exec(args, parent, position, &body)
+      end
+
       private
 
       def param_list(params)
@@ -187,12 +193,6 @@ module RuPkl
             BuiltinMethodParams.new(name, type)
           end
         end
-      end
-
-      def execute_method(receiver, arguments, parent, position)
-        args = arguments&.transform_keys(&:id)
-        receiver
-          .instance_exec(args, parent, position, &body)
       end
     end
   end
