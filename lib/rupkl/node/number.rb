@@ -30,8 +30,8 @@ module RuPkl
 
       def b_op_mul(r_operand, position)
         case r_operand
-        when DataSize then r_operand.b_op_mul(self, position)
-        else b_op_arithmetic(:*, r_operand, false, position)
+        when Number then b_op_arithmetic(:*, r_operand, false, position)
+        else r_operand.b_op_mul(self, position)
         end
       end
 
@@ -73,6 +73,17 @@ module RuPkl
           # end
           define_builtin_property(:#{unit}) do
             DataSize.new(self, self, :#{unit}, position)
+          end
+        P
+      end
+
+      [:ns, :us, :ms, :s, :min, :h, :d].each do |unit|
+        class_eval(<<~P, __FILE__, __LINE__ + 1)
+          # define_builtin_property(:ns) do
+          #   Duration.new(self, self, :ns, position)
+          # end
+          define_builtin_property(:#{unit}) do
+            Duration.new(self, self, :#{unit}, position)
           end
         P
       end
@@ -155,7 +166,7 @@ module RuPkl
 
       def valid_r_operand?(operator, operand)
         case operator
-        when :* then operand in Number | DataSize
+        when :* then operand in Number | DataSize | Duration
         else operand in Number
         end
       end
