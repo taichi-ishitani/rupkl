@@ -15,7 +15,7 @@ module RuPkl
         end
 
         def class_name
-          @class_name || basename.to_sym
+          @class_name ||= to_s.split('::').last.to_sym
         end
 
         def builtin_property(name)
@@ -62,6 +62,10 @@ module RuPkl
 
       def null?
         false
+      end
+
+      def class_name
+        self.class.class_name
       end
 
       private

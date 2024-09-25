@@ -37,7 +37,7 @@ module RuPkl
         evaluated = condition.evaluate(context)
         return evaluated.value if evaluated.is_a?(Boolean)
 
-        message = "expected type 'Boolean', but got type '#{evaluated.class.basename}'"
+        message = "expected type 'Boolean', but got type '#{evaluated.class_name}'"
         raise EvaluationError.new(message, position)
       end
     end

@@ -7,7 +7,6 @@ require 'digest/sha2'
 require 'singleton'
 require 'stringio'
 require 'parslet'
-require 'facets/module/basename'
 require 'regexp_parser'
 
 require_relative 'rupkl/version'

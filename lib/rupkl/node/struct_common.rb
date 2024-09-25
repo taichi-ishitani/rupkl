@@ -82,11 +82,11 @@ module RuPkl
       def check_members
         message =
           if properties_not_allowed?
-            "'#{self.class.basename}' cannot have a property"
+            "'#{class_name}' cannot have a property"
           elsif entries_not_allowed?
-            "'#{self.class.basename}' cannot have an entry"
+            "'#{class_name}' cannot have an entry"
           elsif elements_not_allowed?
-            "'#{self.class.basename}' cannot have an element"
+            "'#{class_name}' cannot have an element"
           end
         message &&
           (raise EvaluationError.new(message, position))
@@ -177,7 +177,7 @@ module RuPkl
       end
 
       def to_string_object(context)
-        "new #{self.class.basename} #{to_string_members(context)}"
+        "new #{class_name} #{to_string_members(context)}"
       end
 
       def to_string_members(context)

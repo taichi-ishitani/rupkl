@@ -25,7 +25,7 @@ module RuPkl
             .resolve_structure(context)
         t.respond_to?(:body) ||
           begin
-            message = "cannot amend the target type #{t.class.basename}"
+            message = "cannot amend the target type #{t.class_name}"
             raise EvaluationError.new(message, position)
           end
         do_amend(t.copy(parent))

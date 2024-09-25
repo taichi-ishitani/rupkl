@@ -31,7 +31,7 @@ module RuPkl
           elements
             &.map { _1.to_pkl_string(context) }
             &.join(', ')
-        "#{self.class.basename}(#{element_string})"
+        "#{class_name}(#{element_string})"
       end
 
       def ==(other)

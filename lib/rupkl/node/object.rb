@@ -252,7 +252,7 @@ module RuPkl
 
         message =
           'expected type \'Boolean\', ' \
-          "but got type '#{result.class.basename}'"
+          "but got type '#{result.class_name}'"
         raise EvaluationError.new(message, position)
       end
     end
@@ -317,7 +317,7 @@ module RuPkl
           end
         else
           message =
-            "cannot iterate over value of type '#{iterable_object.class.basename}'"
+            "cannot iterate over value of type '#{iterable_object.class_name}'"
           raise EvaluationError.new(message, position)
         end
       end

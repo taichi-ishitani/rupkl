@@ -57,7 +57,7 @@ module RuPkl
 
       def raise_invalid_key_error(operator, key, position)
         message =
-          "invalid key operand type #{key.class.basename} is given " \
+          "invalid key operand type #{key.class_name} is given " \
           "for operator '#{operator}'"
         raise EvaluationError.new(message, position)
       end
@@ -90,7 +90,7 @@ module RuPkl
 
       def raise_invalid_r_operand_error(operator, r_operand, position)
         message =
-          "invalid operand type #{r_operand.class.basename} is given " \
+          "invalid operand type #{r_operand.class_name} is given " \
           "for operator '#{operator}'"
         raise EvaluationError.new(message, position)
       end
@@ -112,9 +112,7 @@ module RuPkl
         return if
           [:==, :'!='].any?(operator) || defined_operator?(operator)
 
-        message =
-          "operator '#{operator}' is not defined for " \
-          "#{self.class.basename} type"
+        message = "operator '#{operator}' is not defined for #{class_name} type"
         raise EvaluationError.new(message, position)
       end
 
