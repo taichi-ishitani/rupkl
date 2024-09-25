@@ -19,11 +19,21 @@ RSpec.describe RuPkl::Node::ForGenerator do
           }
         }
       }
-      c = new Listing {
+      c = new Mapping {
+        for (v in a) {
+          [v] = v
+        }
+      }
+      d = new Listing {
         for (v in a) {
           when (v.isOdd) {
             v
           }
+        }
+      }
+      e = new Listing {
+        for (v in a) {
+          v
         }
       }
     PKL
@@ -35,11 +45,21 @@ RSpec.describe RuPkl::Node::ForGenerator do
           }
         }
       }
-      c = new Listing {
+      c = new Mapping {
+        for (k, v in a) {
+          [k] = v
+        }
+      }
+      d = new Listing {
         for (k, v in a) {
           when (v.isOdd) {
             k; v
           }
+        }
+      }
+      e = new Listing {
+        for (k, v in a) {
+          k; v
         }
       }
     PKL
@@ -50,12 +70,18 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = IntSeq(1, 5)
       #{pkl_strings[0]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[1] = 1; m[3] = 3; m[5] = 5
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[1] = 1; m[2] = 2; m[3] = 3; m[4] = 4; m[5] = 5
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 1; l << 3; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 1; l << 2; l << 3; l << 4; l << 5
       end)
     end
 
@@ -63,13 +89,23 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = IntSeq(1, 5)
       #{pkl_strings[1]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[0] = 1; m[2] = 3; m[4] = 5;
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[0] = 1; m[1] = 2; m[2] = 3; m[3] = 4; m[4] = 5
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 0; l << 1
         l << 2; l << 3
+        l << 4; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 0; l << 1
+        l << 1; l << 2
+        l << 2; l << 3
+        l << 3; l << 4
         l << 4; l << 5
       end)
     end
@@ -78,12 +114,18 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = List(1, 2, 3, 4, 5)
       #{pkl_strings[0]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b,c )|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[1] = 1; m[3] = 3; m[5] = 5
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[1] = 1; m[2] = 2; m[3] = 3; m[4] = 4; m[5] = 5
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 1; l << 3; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 1; l << 2; l << 3; l << 4; l << 5
       end)
     end
 
@@ -91,13 +133,23 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = List(1, 2, 3, 4, 5)
       #{pkl_strings[1]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[0] = 1; m[2] = 3; m[4] = 5;
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[0] = 1; m[1] = 2; m[2] = 3; m[3] = 4; m[4] = 5;
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 0; l << 1
         l << 2; l << 3
+        l << 4; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 0; l << 1
+        l << 1; l << 2
+        l << 2; l << 3
+        l << 3; l << 4
         l << 4; l << 5
       end)
     end
@@ -106,12 +158,18 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = Set(1, 2, 3, 4, 5)
       #{pkl_strings[0]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b,c )|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[1] = 1; m[3] = 3; m[5] = 5
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[1] = 1; m[2] = 2; m[3] = 3; m[4] = 4; m[5] = 5
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 1; l << 3; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 1; l << 2; l << 3; l << 4; l << 5
       end)
     end
 
@@ -119,13 +177,23 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = Set(1, 2, 3, 4, 5)
       #{pkl_strings[1]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[0] = 1; m[2] = 3; m[4] = 5;
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[0] = 1; m[1] = 2; m[2] = 3; m[3] = 4; m[4] = 5;
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 0; l << 1
         l << 2; l << 3
+        l << 4; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 0; l << 1
+        l << 1; l << 2
+        l << 2; l << 3
+        l << 3; l << 4
         l << 4; l << 5
       end)
     end
@@ -134,12 +202,18 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = Map("1", 1, "2", 2, "3", 3, "4", 4, "5", 5)
       #{pkl_strings[0]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b,c )|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[1] = 1; m[3] = 3; m[5] = 5
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[1] = 1; m[2] = 2; m[3] = 3; m[4] = 4; m[5] = 5
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 1; l << 3; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 1; l << 2; l << 3; l << 4; l << 5
       end)
     end
 
@@ -147,13 +221,23 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = Map("1", 1, "2", 2, "3", 3, "4", 4, "5", 5)
       #{pkl_strings[1]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m['1'] = 1; m['3'] = 3; m['5'] = 5;
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m['1'] = 1; m['2'] = 2; m['3'] = 3; m['4'] = 4; m['5'] = 5;
+      end)
+      expect(d.value).to (be_listing do |l|
         l << '1'; l << 1
         l << '3'; l << 3
+        l << '5'; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << '1'; l << 1
+        l << '2'; l << 2
+        l << '3'; l << 3
+        l << '4'; l << 4
         l << '5'; l << 5
       end)
     end
@@ -162,12 +246,18 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = new Listing { 1; 2; 3; 4; 5 }
       #{pkl_strings[0]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b,c )|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[1] = 1; m[3] = 3; m[5] = 5
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[1] = 1; m[2] = 2; m[3] = 3; m[4] = 4; m[5] = 5
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 1; l << 3; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 1; l << 2; l << 3; l << 4; l << 5
       end)
     end
 
@@ -175,13 +265,23 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = new Listing { 1; 2; 3; 4; 5 }
       #{pkl_strings[1]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[0] = 1; m[2] = 3; m[4] = 5;
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[0] = 1; m[1] = 2; m[2] = 3; m[3] = 4; m[4] = 5;
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 0; l << 1
         l << 2; l << 3
+        l << 4; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 0; l << 1
+        l << 1; l << 2
+        l << 2; l << 3
+        l << 3; l << 4
         l << 4; l << 5
       end)
     end
@@ -190,12 +290,18 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = new Mapping { ["1"] = 1; ["2"] = 2; ["3"] = 3; ["4"] = 4; ["5"] = 5 }
       #{pkl_strings[0]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b,c )|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[1] = 1; m[3] = 3; m[5] = 5
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[1] = 1; m[2] = 2; m[3] = 3; m[4] = 4; m[5] = 5
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 1; l << 3; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 1; l << 2; l << 3; l << 4; l << 5
       end)
     end
 
@@ -203,13 +309,23 @@ RSpec.describe RuPkl::Node::ForGenerator do
       a = new Mapping{ ["1"] = 1; ["2"] = 2; ["3"] = 3; ["4"] = 4; ["5"] = 5 }
       #{pkl_strings[1]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m['1'] = 1; m['3'] = 3; m['5'] = 5;
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m['1'] = 1; m['2'] = 2; m['3'] = 3; m['4'] = 4; m['5'] = 5;
+      end)
+      expect(d.value).to (be_listing do |l|
         l << '1'; l << 1
         l << '3'; l << 3
+        l << '5'; l << 5
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << '1'; l << 1
+        l << '2'; l << 2
+        l << '3'; l << 3
+        l << '4'; l << 4
         l << '5'; l << 5
       end)
     end
@@ -222,12 +338,20 @@ RSpec.describe RuPkl::Node::ForGenerator do
       }
       #{pkl_strings[0]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m[1] = 1; m[3] = 3; m[5] = 5; m[7] = 7
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m[0] = 0; m[1] = 1; m[2] = 2; m[3] = 3;
+        m[4] = 4; m[5] = 5; m[6] = 6; m[7] = 7; m[8] = 8
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 1; l << 3; l << 5; l << 7
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 0; l << 1; l << 2; l << 3;
+        l << 4; l << 5; l << 6; l << 7; l << 8
       end)
     end
 
@@ -239,15 +363,31 @@ RSpec.describe RuPkl::Node::ForGenerator do
       }
       #{pkl_strings[1]}
     PKL
-    node.evaluate(nil).properties[-2..].then do |(b, c)|
+    node.evaluate(nil).properties[-4..].then do |(b, c, d, e)|
       expect(b.value).to (be_mapping do |m|
         m['b'] = 1; m['d'] = 3; m["f"] = 5; m[1] = 7
       end)
-      expect(c.value).to (be_listing do |l|
+      expect(c.value).to (be_mapping do |m|
+        m['a'] = 0; m['b'] = 1; m['c'] = 2;
+        m['d'] = 3; m['e'] = 4; m['f'] = 5;
+        m[0]   = 6; m[1]   = 7; m[2]   = 8
+      end)
+      expect(d.value).to (be_listing do |l|
         l << 'b'; l << 1
         l << 'd'; l << 3
         l << 'f'; l << 5
         l << 1  ; l << 7
+      end)
+      expect(e.value).to (be_listing do |l|
+        l << 'a'; l << 0
+        l << 'b'; l << 1
+        l << 'c'; l << 2
+        l << 'd'; l << 3
+        l << 'e'; l << 4
+        l << 'f'; l << 5
+        l << 0  ; l << 6
+        l << 1  ; l << 7
+        l << 2  ; l << 8
       end)
     end
 

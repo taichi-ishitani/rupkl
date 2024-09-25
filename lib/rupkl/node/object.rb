@@ -266,7 +266,7 @@ module RuPkl
         @value_name = value_name
         @iterable = iterable
         @body = body
-        @results = results
+        @results = results&.map { _1.items.last }
       end
 
       attr_reader :key_name
@@ -281,8 +281,7 @@ module RuPkl
 
       def copy(parent = nil, position = @position)
         if results
-          copies = results.map(&:copy)
-          self.class.new(parent, key_name, value_name, nil, nil, copies, position)
+          self.class.new(parent, key_name, value_name, nil, nil, copy_result, position)
         else
           copies = [iterable, body].map { _1&.copy }
           self.class.new(parent, key_name, value_name, *copies, nil, position)
@@ -299,6 +298,10 @@ module RuPkl
 
       attr_reader :results
 
+      def copy_result
+        results.map { _1.parent.copy }
+      end
+
       ITERATION_METHODS = {
         IntSeq => :iterate_intseq,
         List => :iterate_collection,
@@ -313,7 +316,7 @@ module RuPkl
         iterable_object = evaluate_iterable(context)
         if (method = ITERATION_METHODS[iterable_object.class])
           __send__(method, iterable_object)&.map do |(k, v)|
-            body.copy(self).then { resolve_body(_1, k, v) }
+            resolve_body(k, v)
           end
         else
           message =
@@ -372,28 +375,32 @@ module RuPkl
         ]
       end
 
-      def resolve_body(body, key, value)
-        create_iterator_property(body, key_name, key) if key_name
-        create_iterator_property(body, value_name, value)
-        body.resolve_generator(body.current_context)
+      def resolve_body(key, value)
+        env = create_evaluation_env(key, value)
         body
+          .copy(env)
+          .tap { _1.resolve_generator(_1.current_context) }
       end
 
-      def create_iterator_property(body, name, value)
-        ObjectProperty.new(body, name, value, { local: true }, name.position)
+      def create_evaluation_env(key, value)
+        iterators = []
+        iterators << create_iterator(key_name, key) if key_name
+        iterators << create_iterator(value_name, value)
+        ObjectBody.new(self, iterators, position)
+      end
+
+      def create_iterator(name, value)
+        ObjectProperty.new(nil, name, value, { local: true }, name.position)
       end
 
       def collect_members_from_body(body, klass)
         body
           .collect_members(klass)
-          &.tap { |members| filter_iterators(members, klass) }
+          &.tap { |members| check_no_properties(members, klass) }
       end
 
-      def filter_iterators(members, klass)
-        return if klass != ObjectProperty
-
-        members.delete_if { [key_name, value_name].any?(_1.name) }
-        return if members.empty?
+      def check_no_properties(members, klass)
+        return if members.empty? || klass != ObjectProperty
 
         message = 'cannot generate object properties'
         raise EvaluationError.new(message, position)
