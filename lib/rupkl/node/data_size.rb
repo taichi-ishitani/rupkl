@@ -38,11 +38,12 @@ module RuPkl
         DataSize.new(nil, value.u_op_minus(position), unit, position)
       end
 
-      [
-        :b_op_lt, :b_op_gt,
-        :b_op_le, :b_op_ge,
-        :b_op_eq, :b_op_ne
-      ].each do |method_name|
+      def ==(other)
+        other.is_a?(DataSize) &&
+          calc_byte_size(self).value == calc_byte_size(other).value
+      end
+
+      [:b_op_lt, :b_op_gt, :b_op_le, :b_op_ge].each do |method_name|
         class_eval(<<~M, __FILE__, __LINE__ + 1)
           # def b_op_lt(r_operand, position)
           # l = calc_byte_size(self)
