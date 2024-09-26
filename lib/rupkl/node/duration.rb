@@ -217,33 +217,36 @@ module RuPkl
 
         parts = value.value.negative? && ['-PT'] || ['PT']
         iso8601_elements.each do |unit, n|
-          parts << format_second(unit, n)
+          parts << format_iso8601_element(unit, n)
         end
 
         parts.join
       end
 
       def iso8601_elements
-        second = calc_second(self).value.abs
-        [:h, :min, :s].each_with_object({}) do |unit, elements|
-          n =
-            if unit == :s
-              second
-            else
-              q, r = second.divmod(UNIT_FACTOR[unit])
-              second = r
-              q
+        result, _ =
+          [:h, :min, :s]
+            .inject([{}, calc_second(self).value.abs]) do |(elements, sec), unit|
+              q, r =
+                if unit == :s
+                  sec
+                else
+                  sec.divmod(UNIT_FACTOR[unit])
+                end
+              elements[unit] = q if q.positive?
+
+              [elements, r]
             end
-          elements[unit] = n if n.positive?
-        end
+
+        result
       end
 
-      def format_second(unit, second)
+      def format_iso8601_element(unit, value)
         s =
-          if unit != :s || second.to_i == second
-            second
+          if unit != :s || value.to_i == value
+            value
           else
-            format('%.12f', second).sub(/0+\Z/, '')
+            format('%.12f', value).sub(/0+\Z/, '')
           end
         "#{s}#{unit[0].upcase}"
       end
