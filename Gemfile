@@ -24,4 +24,5 @@ group 'development_local' do
   gem 'bump', '~> 0.10.0', require: false
   gem 'debug', require: false
   gem 'ruby-lsp', require: false
+  gem 'ruby-lsp-rspec', require: false
 end
