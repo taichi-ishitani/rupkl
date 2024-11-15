@@ -33,9 +33,9 @@ jobs:
         run: bundle exec rake coverage
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           name: ${{ matrix.ruby  }}
-          file: ./coverage/coverage.xml
+          files: ./coverage/coverage.xml
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
