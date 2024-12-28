@@ -444,7 +444,7 @@ module RuPkl
       end
 
       def fields(visibility: :lexical)
-        [*properties(visibility: visibility), *entries, *elements]
+        [*properties(visibility:), *entries, *elements]
       end
 
       def definitions
@@ -452,7 +452,7 @@ module RuPkl
       end
 
       def members(visibility: :lexical)
-        [*fields(visibility: visibility), *definitions]
+        [*fields(visibility:), *definitions]
       end
 
       def evaluate(context = nil)

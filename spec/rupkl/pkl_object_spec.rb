@@ -314,20 +314,32 @@ RSpec.describe RuPkl::PklObject do
   end
 
   describe '#to_s' do
+    def eq_string(string)
+      expectation =
+        if RUBY_VERSION >= Gem::Version.new('3.4.0')
+          string
+            .gsub(/:(\w+)=>/) { "#{$1}: "}
+            .gsub(/=>/, ' => ')
+        else
+          string
+        end
+      eq(expectation)
+    end
+
     it 'should return a string representing itself' do
-      expect(objects[0].to_s).to eq '{}'
-      expect(objects[1].to_s).to eq '{:foo=>0, :bar=>1}'
-      expect(objects[2].to_s).to eq '{"baz"=>2, "qux"=>3}'
-      expect(objects[3].to_s).to eq '[4, 5]'
-      expect(objects[4].to_s).to eq '{:foo=>0, :bar=>1, "baz"=>2, "qux"=>3, 4, 5}'
-      expect(objects[5].to_s).to eq <<~'S'.chomp.tr("\n", ' ')
+      expect(objects[0].to_s).to eq_string '{}'
+      expect(objects[1].to_s).to eq_string '{:foo=>0, :bar=>1}'
+      expect(objects[2].to_s).to eq_string '{"baz"=>2, "qux"=>3}'
+      expect(objects[3].to_s).to eq_string '[4, 5]'
+      expect(objects[4].to_s).to eq_string '{:foo=>0, :bar=>1, "baz"=>2, "qux"=>3, 4, 5}'
+      expect(objects[5].to_s).to eq_string <<~'S'.chomp.tr("\n", ' ')
         {:mixedObject=>{:name=>"Pigeon", :lifespan=>8, :extinct=>false,
         "wing"=>"Not related to the _element_ \"wing\"",
         false=>{:description=>"Construed object example"}, "wing", "claw", 42}}
       S
-      expect(objects[6].to_s).to eq '{:foo=>{:foo=>0, :bar=>1, :baz=>{...}}}'
-      expect(objects[7].to_s).to eq '{:foo=>{"foo"=>0, "bar"=>1, "baz"=>{...}}}'
-      expect(objects[8].to_s).to eq '{:foo=>[0, 1, [...]]}'
+      expect(objects[6].to_s).to eq_string '{:foo=>{:foo=>0, :bar=>1, :baz=>{...}}}'
+      expect(objects[7].to_s).to eq_string '{:foo=>{"foo"=>0, "bar"=>1, "baz"=>{...}}}'
+      expect(objects[8].to_s).to eq_string '{:foo=>[0, 1, [...]]}'
     end
   end
 

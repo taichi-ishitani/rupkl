@@ -14,7 +14,7 @@ module RuPkl
       attr_reader :body
 
       def properties(visibility: :object)
-        @body&.properties(visibility: visibility)
+        @body&.properties(visibility:)
       end
 
       def entries
@@ -26,7 +26,7 @@ module RuPkl
       end
 
       def members(visibility: :object)
-        @body&.members(visibility: visibility)
+        @body&.members(visibility:)
       end
 
       def items

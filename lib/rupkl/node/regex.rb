@@ -158,7 +158,7 @@ module RuPkl
 
       def to_ruby(context = nil)
         {
-          value: value, start: start_offset, end: end_offset, groups: groups
+          value:, start: start_offset, end: end_offset, groups:
         }.transform_values { |v| v.to_ruby(context) }
       end
 

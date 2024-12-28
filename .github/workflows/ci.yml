@@ -11,10 +11,10 @@ jobs:
     strategy:
       matrix:
         ruby:
+          - '3.4'
           - '3.3'
           - '3.2'
           - '3.1'
-          - '3.0'
     env:
       BUNDLE_WITH: 'development_common development_test'
       BUNDLE_WITHOUT: 'development_lint development_local'

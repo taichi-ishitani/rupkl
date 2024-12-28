@@ -76,8 +76,8 @@ module RuPkl
       class << self
         private
 
-        def define_helper(name, &body)
-          private define_method(name, &body)
+        def define_helper(...)
+          private define_method(...)
         end
       end
 
@@ -111,12 +111,12 @@ module RuPkl
     class << self
       private
 
-      def define_parser(&body)
-        Parser.class_eval(&body)
+      def define_parser(&)
+        Parser.class_eval(&)
       end
 
-      def define_transform(&body)
-        Transform.class_eval(&body)
+      def define_transform(&)
+        Transform.class_eval(&)
       end
     end
 
@@ -128,7 +128,7 @@ module RuPkl
     private
 
     def parse_string(string, filename, root)
-      parser.parse(string, filename: filename, root: root)
+      parser.parse(string, filename:, root:)
     end
 
     def parser
@@ -136,7 +136,7 @@ module RuPkl
     end
 
     def transform_tree(tree, filename)
-      transform.apply(tree, filename: filename)
+      transform.apply(tree, filename:)
     end
 
     def transform

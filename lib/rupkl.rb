@@ -66,12 +66,12 @@ module RuPkl
         else
           string_or_io
         end
-      node = Parser.new.parse(pkl, filename: filename, root: :pkl_module)
+      node = Parser.new.parse(pkl, filename:, root: :pkl_module)
       node.to_ruby(nil)
     end
 
     def load_file(filename)
-      File.open(filename, 'r') { |io| load(io, filename: filename) }
+      File.open(filename, 'r') { |io| load(io, filename:) }
     end
   end
 end
