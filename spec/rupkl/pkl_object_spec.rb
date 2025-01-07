@@ -27,6 +27,19 @@ RSpec.describe RuPkl::PklObject do
     o << RuPkl.load('foo { 0; 1; this }')
   end
 
+  def eq_string(string)
+    expectation =
+      if Gem::Version.new('3.4') <= RUBY_VERSION
+        string
+          .gsub(/:(\w+)=>/) { "#{$1}: "}
+          .gsub(/=>/, ' => ')
+          .gsub(/ +$/, '')
+      else
+        string
+      end
+    eq(expectation)
+  end
+
   it 'should have accessor methods for each property' do
     expect(objects[0]).not_to respond_to(:foo, :bar)
     expect(objects[1].foo).to eq 0
@@ -314,18 +327,6 @@ RSpec.describe RuPkl::PklObject do
   end
 
   describe '#to_s' do
-    def eq_string(string)
-      expectation =
-        if RUBY_VERSION >= Gem::Version.new('3.4.0')
-          string
-            .gsub(/:(\w+)=>/) { "#{$1}: "}
-            .gsub(/=>/, ' => ')
-        else
-          string
-        end
-      eq(expectation)
-    end
-
     it 'should return a string representing itself' do
       expect(objects[0].to_s).to eq_string '{}'
       expect(objects[1].to_s).to eq_string '{:foo=>0, :bar=>1}'
@@ -345,22 +346,22 @@ RSpec.describe RuPkl::PklObject do
 
   describe '#pretty_print' do
     it 'should return pretty printed output representing itself' do
-      expect { pp objects[0] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[0] }.to output(eq_string(<<~'OUT')).to_stdout
         {}
       OUT
-      expect { pp objects[1] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[1] }.to output(eq_string(<<~'OUT')).to_stdout
         {:foo=>0, :bar=>1}
       OUT
-      expect { pp objects[2] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[2] }.to output(eq_string(<<~'OUT')).to_stdout
         {"baz"=>2, "qux"=>3}
       OUT
-      expect { pp objects[3] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[3] }.to output(eq_string(<<~'OUT')).to_stdout
         [4, 5]
       OUT
-      expect { pp objects[4] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[4] }.to output(eq_string(<<~'OUT')).to_stdout
         {:foo=>0, :bar=>1, "baz"=>2, "qux"=>3, 4, 5}
       OUT
-      expect { pp objects[5] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[5] }.to output(eq_string(<<~'OUT')).to_stdout
         {:mixedObject=>
           {:name=>"Pigeon",
            :lifespan=>8,
@@ -371,13 +372,13 @@ RSpec.describe RuPkl::PklObject do
            "claw",
            42}}
       OUT
-      expect { pp objects[6] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[6] }.to output(eq_string(<<~'OUT')).to_stdout
         {:foo=>{:foo=>0, :bar=>1, :baz=>{...}}}
       OUT
-      expect { pp objects[7] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[7] }.to output(eq_string(<<~'OUT')).to_stdout
         {:foo=>{"foo"=>0, "bar"=>1, "baz"=>{...}}}
       OUT
-      expect { pp objects[8] }.to output(<<~'OUT').to_stdout
+      expect { pp objects[8] }.to output(eq_string(<<~'OUT')).to_stdout
         {:foo=>[0, 1, [...]]}
       OUT
     end

@@ -140,8 +140,12 @@ module RuPkl
       end
     end
 
-    def pp_hash_pair(pp, key, value)
-      pp.group do
+    if Gem::Version.new('3.4') <= RUBY_VERSION
+      def pp_hash_pair(pp, key, value)
+        pp.pp_hash_pair(key, value)
+      end
+    else
+      def pp_hash_pair(pp, key, value)
         pp.pp(key)
         pp.text('=>')
         pp.group(1) do
