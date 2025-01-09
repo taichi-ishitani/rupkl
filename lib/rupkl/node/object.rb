@@ -425,9 +425,9 @@ module RuPkl
         if all
           @properties
         elsif visibility == :lexical
-          @properties&.select { _1.visibility == :lexical || _1.parent.equal?(self) }
+          lexical_properties
         else
-          @properties&.select { !_1.local? }
+          public_properties
         end
       end
 
@@ -490,6 +490,14 @@ module RuPkl
       end
 
       private
+
+      def lexical_properties
+        @properties&.select { _1.visibility == :lexical || _1.parent.equal?(self) }
+      end
+
+      def public_properties
+        @properties&.reject(&:local?)
+      end
 
       GENERATOR_CLASSES = [
         WhenGenerator,
