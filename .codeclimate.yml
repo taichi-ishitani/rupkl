@@ -15,6 +15,6 @@ plugins:
             mass_threshold: 40
   rubocop:
     enabled: true
-    channel: rubocop-1-56-3
+    channel: beta
 exclude_patterns:
   - "spec/"
