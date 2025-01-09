@@ -27,7 +27,7 @@ module RuPkl
       end
 
       def to_ruby(context = nil)
-        entries&.to_h { |e| e.map { _1.to_ruby(context) } } || {}
+        entries.to_h { |e| e.map { _1.to_ruby(context) } }
       end
 
       def to_pkl_string(context = nil)
