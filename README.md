@@ -1,6 +1,6 @@
 [![Gem Version](https://badge.fury.io/rb/rupkl.svg)](https://badge.fury.io/rb/rupkl)
 [![CI](https://github.com/taichi-ishitani/rupkl/actions/workflows/ci.yml/badge.svg)](https://github.com/taichi-ishitani/rupkl/actions/workflows/ci.yml)
-[![Maintainability](https://api.codeclimate.com/v1/badges/edd79a2a1a5903a440f2/maintainability)](https://codeclimate.com/github/taichi-ishitani/rupkl/maintainability)
+[![Maintainability](https://qlty.sh/badges/96b929ce-9492-4066-8be5-81416b1687b4/maintainability.svg)](https://qlty.sh/gh/taichi-ishitani/projects/rupkl)
 [![codecov](https://codecov.io/github/taichi-ishitani/rupkl/graph/badge.svg?token=CrcaXQ9FjI)](https://codecov.io/github/taichi-ishitani/rupkl)
 
 # RuPkl
