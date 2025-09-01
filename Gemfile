@@ -13,7 +13,7 @@ end
 group 'development_test' do
   gem 'rspec', '~> 3.13', require: false
   gem 'simplecov', '~> 0.22.0', require: false
-  gem 'simplecov-cobertura', '~> 3.0.0', require: false
+  gem 'simplecov-cobertura', '~> 3.1.0', require: false
 end
 
 group 'development_lint' do
